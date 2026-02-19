@@ -1,0 +1,9 @@
+langgraph
+crewai
+langchain
+langchain-openai
+langchain-google-genai
+python-dotenv
+psycopg2-binary
+requests
+pydantic
