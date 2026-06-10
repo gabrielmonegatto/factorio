@@ -1,0 +1,4 @@
+# Ignora todos os arquivos temporários criados pelos agentes nesta pasta
+*
+# Exceto o próprio gitignore
+!.gitignore

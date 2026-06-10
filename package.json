@@ -1,0 +1,24 @@
+{
+  "name": "factorio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "🏭 Factorio — Sistema Autônomo EternalL",
+  "scripts": {
+    "dev": "npx trigger.dev@latest dev",
+    "deploy": "npx trigger.dev@latest deploy",
+    "login": "npx trigger.dev@latest login"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@trigger.dev/sdk": "4.4.6",
+    "dotenv": "^16.6.1",
+    "openai": "^6.42.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3"
+  }
+}

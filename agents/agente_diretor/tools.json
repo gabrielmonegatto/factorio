@@ -1,0 +1,26 @@
+[
+    {
+      "name": "execute",
+      "source": "FilesystemBackend (DeepAgents middleware)",
+      "description": "Executa um comando local ou script Python para rodar lógicas da fábrica (ex: scripts em lib/ para acessar Baserow).",
+      "display_name": "execute"
+    },
+    {
+      "name": "read_file",
+      "source": "FilesystemBackend (DeepAgents middleware)",
+      "description": "Lê o conteúdo de um arquivo local.",
+      "display_name": "read_file"
+    },
+    {
+      "name": "write_file",
+      "source": "FilesystemBackend (DeepAgents middleware)",
+      "description": "Escreve conteúdo em um arquivo local (ex: gravar em memories/AGENTS.md).",
+      "display_name": "write_file"
+    },
+    {
+      "name": "ls",
+      "source": "FilesystemBackend (DeepAgents middleware)",
+      "description": "Lista arquivos e pastas.",
+      "display_name": "ls"
+    }
+]

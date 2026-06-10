@@ -1,0 +1,20 @@
+{
+  "name": "agente_diretor",
+  "model": "gemini-3.1-flash-lite-preview",
+  "description": "Diretor de Operações da Fábrica EternalL. Responsável por monitorar todas as áreas (Mineração, Inteligência, etc.), compilar backlogs departamentais em tarefas globais na tabela Operations > taskflows e garantir que a fábrica opere de forma orgânica e contínua.",
+  "runtime": "local",
+  "entrypoint": "agente.py",
+  "thread_id": "operations_director_1",
+  "memory": [
+    "AGENTS.md",
+    "memories/AGENTS.md"
+  ],
+  "skills": [],
+  "subagents": [],
+  "schedule": {
+    "note": "Será ativado diariamente ou acionado por webhook ao fim de sprints departamentais."
+  },
+  "interrupt_config": {
+    "note": "Aprovações estratégicas, se necessárias, serão gerenciadas via Baserow (status = Blocked)."
+  }
+}

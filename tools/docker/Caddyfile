@@ -1,0 +1,7 @@
+http://factorio.io {
+    reverse_proxy factorio_baserow:80
+}
+
+http://database.io {
+    reverse_proxy factorio_teable:3000
+}
