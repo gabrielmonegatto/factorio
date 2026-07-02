@@ -1,0 +1,6 @@
+node_modules
+.cache
+public/storage
+*.mp4
+props_*.json
+props_preview.json
