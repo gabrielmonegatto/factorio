@@ -6,19 +6,23 @@
   "scripts": {
     "dev": "npx trigger.dev@latest dev",
     "deploy": "npx trigger.dev@latest deploy",
-    "login": "npx trigger.dev@latest login"
+    "login": "npx trigger.dev@latest login",
+    "sync-wiki": "python tools/sync_wiki.py"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1068.0",
     "@trigger.dev/sdk": "4.4.6",
     "dotenv": "^16.6.1",
     "openai": "^6.42.0"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
-    "typescript": "^6.0.3"
+    "@types/pg": "^8.20.0",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.107.0"
   }
 }

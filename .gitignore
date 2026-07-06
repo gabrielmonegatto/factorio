@@ -1,5 +1,8 @@
 # Secrets
 .env
+.env.outline
+*.env*
+
 
 # Dependencies
 node_modules/
@@ -29,3 +32,36 @@ Thumbs.db
 
 # Media assets (too large for git)
 tools/remotion/public/storage/
+*.mp4
+
+# Databases and State
+*.db
+*.db-shm
+*.db-wal
+auth.json
+
+# Temporary / Scratch dirs
+temp/
+scratch/
+zoutputs/
+
+# Agent Caches and runtime states
+**/cache/
+**/*cache*.json
+**/.update_check
+**/.usage.json
+# Temporary documentation with secrets
+HANDOFF.md
+
+# Backup files
+*.bak
+
+# Hermes agent execution caches
+agents/builder/
+**/models_dev_cache.json
+**/provider_models_cache.json
+**/ollama_cloud_models_cache.json
+
+# Exclude sensitive config files containing API keys
+**/config.yaml
+**/*.bak_vps

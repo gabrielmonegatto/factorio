@@ -205,7 +205,12 @@ def insert_chapters_to_baserow(book_id, book_title, book_author, chapters):
 def update_book_status(book_id, status="scraped"):
     url = f"{BASEROW_URL}/api/database/rows/table/{TABLE_CONTENT_INDEX}/{book_id}/?user_field_names=true"
     payload = {
-        "status": status,
+        "pipeline_state": {
+            "mineracao": {
+                "status": status,
+                "updated_at": datetime.utcnow().isoformat()
+            }
+        },
         "scraped_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     }
     try:

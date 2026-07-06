@@ -1,0 +1,257 @@
+# --- FACTORIO CORE: INTELLIGENCE & ORCHESTRATION ---
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: factorio_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - factorio_network
+
+  factorio_agents:
+    build:
+      context: ../agents
+      dockerfile: Dockerfile
+    container_name: factorio_agents
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - BASEROW_URL=http://factorio_baserow
+      - BASEROW_TABLE_OPERATIONS=623
+    ports:
+      - "8001:8001"
+    volumes:
+      - ../agents:/app
+      - ../../:/factory
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    networks:
+      - factorio_network
+
+  mcp_universal:
+    build:
+      context: ./mcp_universal
+      dockerfile: Dockerfile
+    container_name: factorio_mcp_universal
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    ports:
+      - "3111:3111"
+    volumes:
+      - mcp_data:/app/data
+    networks:
+      - factorio_network
+
+  agent_memory:
+    image: ghcr.io/teableio/teable:latest
+    container_name: factorio_agent_memory
+    restart: unless-stopped
+    working_dir: /agentmemory
+    entrypoint: sh
+    environment:
+      - HOST=0.0.0.0
+      - HOSTNAME=0.0.0.0
+      - AGENTMEMORY_SECRET=factorio_secret
+      - AGENTMEMORY_VIEWER_HOST=0.0.0.0
+      - VIEWER_ALLOWED_HOSTS=localhost:3122,127.0.0.1:3122,localhost:3113,127.0.0.1:3113
+    volumes:
+      - agent_memory_data:/root/.agentmemory
+      - agent_memory_node_modules:/agentmemory/node_modules
+    ports:
+      - "3120:3111"
+      - "3122:3113"
+    command: ["-c", "echo '{}' > package.json && npm install @agentmemory/agentmemory@latest && sed -i 's/host: 127.0.0.1/host: 0.0.0.0/g' node_modules/@agentmemory/agentmemory/dist/iii-config.yaml && npx agentmemory"]
+    networks:
+      - factorio_network
+
+  reverse-proxy:
+    image: caddy:2-alpine
+    container_name: factorio_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - factorio_network
+    depends_on:
+      - teable
+
+  teable:
+    image: ghcr.io/teableio/teable:latest
+    container_name: factorio_teable
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - teable_data:/app/.assets:rw
+    env_file:
+      - ../.env
+    environment:
+      - TZ=${TIMEZONE:-America/Sao_Paulo}
+      - NEXT_ENV_IMAGES_ALL_REMOTE=true
+      - BACKEND_CACHE_PROVIDER=redis
+      - BACKEND_CACHE_REDIS_URI=redis://teable-cache:6379/0
+    networks:
+      - factorio_network
+    depends_on:
+      teable-db-migrate:
+        condition: service_completed_successfully
+      teable-cache:
+        condition: service_healthy
+
+  teable-db-migrate:
+    image: ghcr.io/teableio/teable-db-migrate:latest
+    container_name: factorio_teable_db_migrate
+    env_file:
+      - ../.env
+    environment:
+      - TZ=${TIMEZONE:-America/Sao_Paulo}
+    networks:
+      - factorio_network
+    depends_on:
+      teable-db:
+        condition: service_healthy
+
+  teable-db:
+    image: postgres:15-alpine
+    container_name: factorio_teable_db
+    restart: unless-stopped
+    ports:
+      - "42345:5432"
+    environment:
+      POSTGRES_DB: ${TEABLE_POSTGRES_DB}
+      POSTGRES_USER: ${TEABLE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TEABLE_POSTGRES_PASSWORD}
+    volumes:
+      - teable_db_data:/var/lib/postgresql/data
+    networks:
+      - factorio_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TEABLE_POSTGRES_USER} -d ${TEABLE_POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  teable-cache:
+    image: redis:7-alpine
+    container_name: factorio_teable_cache
+    restart: unless-stopped
+    networks:
+      - factorio_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # --- OUTLINE WIKI SELF-HOSTED STACK ---
+  outline:
+    image: outlinewiki/outline:latest
+    container_name: outline_app
+    depends_on:
+      outline_db:
+        condition: service_healthy
+      outline_redis:
+        condition: service_started
+      outline_minio:
+        condition: service_started
+    ports:
+      - "5000:3000"
+    env_file:
+      - .env.outline
+    networks:
+      - factorio_network
+    restart: always
+
+  outline_db:
+    image: postgres:16-alpine
+    container_name: outline_db
+    environment:
+      - POSTGRES_USER=outline
+      - POSTGRES_PASSWORD=outline_secret_db_pass
+      - POSTGRES_DB=outline
+    ports:
+      - "54322:5432"
+    volumes:
+      - outline_pg_data:/var/lib/postgresql/data
+    networks:
+      - factorio_network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U outline"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  outline_redis:
+    image: redis:7-alpine
+    container_name: outline_redis
+    networks:
+      - factorio_network
+    restart: always
+
+  outline_minio:
+    image: minio/minio:latest
+    container_name: outline_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin_secret_pass
+    volumes:
+      - outline_minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - factorio_network
+    restart: always
+
+  outline_minio_setup:
+    image: minio/mc:latest
+    container_name: outline_minio_setup
+    depends_on:
+      - outline_minio
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/curl -s http://outline_minio:9000/minio/health/live); do echo 'Aguardando MinIO...'; sleep 2; done;
+      /usr/bin/mc alias set myminio http://outline_minio:9000 minioadmin minioadmin_secret_pass;
+      /usr/bin/mc mb myminio/outline;
+      /usr/bin/mc anonymous set download myminio/outline;
+      echo 'Bucket local do MinIO configurado!';
+      exit 0;
+      "
+    networks:
+      - factorio_network
+
+networks:
+  factorio_network:
+    external: true
+
+volumes:
+  mcp_data:
+    name: factorio_mcp_data
+  teable_data:
+    name: factorio_teable_data
+  teable_db_data:
+    name: factorio_teable_db_data
+  caddy_data:
+    name: factorio_caddy_data
+  caddy_config:
+    name: factorio_caddy_config
+  agent_memory_data:
+    name: factorio_agent_memory_data
+  agent_memory_node_modules:
+    name: factorio_agent_memory_node_modules
+  outline_pg_data:
+    name: factorio_outline_pg_data
+  outline_minio_data:
+    name: factorio_outline_minio_data
+

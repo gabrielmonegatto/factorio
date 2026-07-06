@@ -1,0 +1,10 @@
+model:
+  default: gemini-2.5-flash
+  provider: gemini
+terminal:
+  cwd: C:/Users/Monegatto/Desktop/EternalL
+agent:
+  max_turns: 90
+skills:
+  external_dirs:
+    - C:/Users/Monegatto/Desktop/EternalL/_factorio/agents/agente_minerador/skills

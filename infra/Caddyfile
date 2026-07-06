@@ -1,0 +1,8 @@
+db.suaholding.com {
+    reverse_proxy factorio_teable:3000
+}
+
+docs.suaholding.com {
+    reverse_proxy outline_app:3000
+}
+

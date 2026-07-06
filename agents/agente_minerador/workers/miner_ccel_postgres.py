@@ -194,7 +194,14 @@ def update_book_status(book_id, status="scraped"):
         cur = conn.cursor()
         cur.execute("""
             UPDATE content_index 
-            SET status = %s, scraped_at = %s
+            SET pipeline_state = jsonb_set(
+                COALESCE(pipeline_state, '{}'::jsonb), 
+                '{mineracao}', 
+                COALESCE(pipeline_state->'mineracao', '{}'::jsonb) || jsonb_build_object(
+                    'status', %s::text,
+                    'updated_at', NOW()::text
+                )
+            ), scraped_at = %s
             WHERE id = %s
         """, (status, datetime.utcnow().date(), book_id))
         conn.commit()
