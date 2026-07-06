@@ -1,8 +1,35 @@
-db.suaholding.com {
+db.markeologia.com.br {
     reverse_proxy factorio_teable:3000
 }
 
-docs.suaholding.com {
-    reverse_proxy outline_app:3000
+admin.markeologia.com.br {
+    reverse_proxy outline_holding:3000
 }
 
+admin.br4nds.com.br {
+    reverse_proxy outline_br4nds:3000
+}
+
+mcp.markeologia.com.br {
+    reverse_proxy factorio_mcp_universal:3111
+}
+
+agents.markeologia.com.br {
+    reverse_proxy factorio_agents:8001
+}
+
+memory.markeologia.com.br {
+    reverse_proxy factorio_agent_memory:3111
+}
+
+memory-viewer.markeologia.com.br {
+    reverse_proxy factorio_agent_memory:3113
+}
+
+minio.markeologia.com.br {
+    reverse_proxy outline_minio:9001
+}
+
+s3.markeologia.com.br {
+    reverse_proxy outline_minio:9000
+}

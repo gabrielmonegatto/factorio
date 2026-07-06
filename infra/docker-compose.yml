@@ -153,9 +153,9 @@ services:
 
 
   # --- OUTLINE WIKI SELF-HOSTED STACK ---
-  outline:
+  outline_holding:
     image: outlinewiki/outline:latest
-    container_name: outline_app
+    container_name: outline_holding
     depends_on:
       outline_db:
         condition: service_healthy
@@ -166,7 +166,25 @@ services:
     ports:
       - "5000:3000"
     env_file:
-      - .env.outline
+      - .env.outline_holding
+    networks:
+      - factorio_network
+    restart: always
+
+  outline_br4nds:
+    image: outlinewiki/outline:latest
+    container_name: outline_br4nds
+    depends_on:
+      outline_db:
+        condition: service_healthy
+      outline_redis:
+        condition: service_started
+      outline_minio:
+        condition: service_started
+    ports:
+      - "5001:3000"
+    env_file:
+      - .env.outline_br4nds
     networks:
       - factorio_network
     restart: always
@@ -182,6 +200,7 @@ services:
       - "54322:5432"
     volumes:
       - outline_pg_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - factorio_network
     restart: always
@@ -223,9 +242,11 @@ services:
       /bin/sh -c "
       until (/usr/bin/curl -s http://outline_minio:9000/minio/health/live); do echo 'Aguardando MinIO...'; sleep 2; done;
       /usr/bin/mc alias set myminio http://outline_minio:9000 minioadmin minioadmin_secret_pass;
-      /usr/bin/mc mb myminio/outline;
-      /usr/bin/mc anonymous set download myminio/outline;
-      echo 'Bucket local do MinIO configurado!';
+      /usr/bin/mc mb myminio/outline-holding;
+      /usr/bin/mc mb myminio/outline-br4nds;
+      /usr/bin/mc anonymous set download myminio/outline-holding;
+      /usr/bin/mc anonymous set download myminio/outline-br4nds;
+      echo 'Buckets locais do MinIO configurados!';
       exit 0;
       "
     networks:
