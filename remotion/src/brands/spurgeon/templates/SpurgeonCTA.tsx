@@ -9,6 +9,11 @@ import {
 	interpolate,
 	spring,
 } from "remotion";
+import { resolveAsset } from "../../../core/library/resolveAsset";
+
+// Label humano-legível (limpo) exibido sob o QR. O QR em si codifica a URL de
+// redirect com UTM (mananciall.org/go?s=yt&v=NNNN) — ver props qrCodeUrl.
+const CLEAN_LINK_LABEL = "mananciall.org/en/treasures-spurgeon";
 
 /**
  * SPURGEON CTA SCREEN — 2 Cenas
@@ -230,7 +235,7 @@ const SceneSubscribe: React.FC<{ frame: number }> = ({ frame }) => {
 };
 
 // ─── SCENE 2: QR Code — Devotionals ──────────────────────────────────────────
-const SceneQRCode: React.FC<{ frame: number }> = ({ frame }) => {
+const SceneQRCode: React.FC<{ frame: number; qrCodeUrl?: string; linkLabel?: string }> = ({ frame, qrCodeUrl, linkLabel }) => {
 	const { fps } = useVideoConfig();
 
 	// Everything enters together, with small staggered delays
@@ -327,8 +332,8 @@ const SceneQRCode: React.FC<{ frame: number }> = ({ frame }) => {
 					padding: 20,
 					boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
 				}}>
-					<img
-						src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=https://mananciall.org/treasures-spurgeon&color=1a0f00&bgcolor=ffffff&qzone=2"
+					<Img
+						src={resolveAsset(qrCodeUrl)}
 						width={280}
 						height={280}
 						style={{ display: "block", borderRadius: 4 }}
@@ -342,7 +347,7 @@ const SceneQRCode: React.FC<{ frame: number }> = ({ frame }) => {
 					color: "rgba(255,255,255,0.7)",
 					fontStyle: "italic",
 				}}>
-					mananciall.org/treasures-spurgeon
+					{linkLabel || CLEAN_LINK_LABEL}
 				</span>
 			</div>
 
@@ -363,7 +368,7 @@ const SceneQRCode: React.FC<{ frame: number }> = ({ frame }) => {
 };
 
 // ─── COMPOSIÇÃO PRINCIPAL ────────────────────────────────────────────────────
-export const SpurgeonCTA: React.FC<{ ctaAudioUrl?: string }> = ({ ctaAudioUrl }) => {
+export const SpurgeonCTA: React.FC<{ ctaAudioUrl?: string; qrCodeUrl?: string; linkLabel?: string }> = ({ ctaAudioUrl, qrCodeUrl, linkLabel }) => {
 	const frame = useCurrentFrame();
 
 	const { durationInFrames } = useVideoConfig();
@@ -428,7 +433,7 @@ export const SpurgeonCTA: React.FC<{ ctaAudioUrl?: string }> = ({ ctaAudioUrl })
 			}} />
 
 			{/* ── NARRATIVE Audio (Kokoro) ── */}
-			{ctaAudioUrl && <RemotionAudio src={staticFile(ctaAudioUrl.replace(/^\/?/, ''))} />}
+			{ctaAudioUrl && <RemotionAudio src={resolveAsset(ctaAudioUrl)} />}
 
 			{/* ── CENA 1: Inscrição ── */}
 			<AbsoluteFill style={{ opacity: scene1Opacity }}>
@@ -437,7 +442,7 @@ export const SpurgeonCTA: React.FC<{ ctaAudioUrl?: string }> = ({ ctaAudioUrl })
 
 			{/* ── CENA 2: QR Code Devocionais ── */}
 			<AbsoluteFill style={{ opacity: scene2Opacity }}>
-				<SceneQRCode frame={scene2Frame} />
+				<SceneQRCode frame={scene2Frame} qrCodeUrl={qrCodeUrl} linkLabel={linkLabel} />
 			</AbsoluteFill>
 
 		</AbsoluteFill>

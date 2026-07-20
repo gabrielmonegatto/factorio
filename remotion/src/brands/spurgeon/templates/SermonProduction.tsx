@@ -1,4 +1,4 @@
-import { AbsoluteFill, Audio, staticFile } from "remotion";
+import { AbsoluteFill, Audio, Sequence } from "remotion";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { SermonMaster } from "./SermonMaster";
@@ -6,6 +6,7 @@ import { SpurgeonHook } from "./SpurgeonHook";
 import { SpurgeonCTA } from "./SpurgeonCTA";
 import { YouTubeEndScreen } from "./YouTubeEndScreen";
 import { SermonMasterProps } from "../schema";
+import { resolveAsset } from "../../../core/library/resolveAsset";
 
 /**
  * Composition wrapper V2 - Retenção de Algoritmo YouTube
@@ -29,21 +30,18 @@ export const SermonProduction: React.FC<SermonMasterProps & { totalSermonFrames:
 	// Cálculo do frame exato onde o sermão começa para entrar a BGM
 	const startSermonFrame = HOOK_DURATION + INTRO_CTA_DURATION - (2 * TRANSITION_DURATION);
 
-	const cleanPath = (path: string) => path?.startsWith("/") ? path.slice(1) : path;
-
 	return (
 		<AbsoluteFill style={{ backgroundColor: "black" }}>
-			{/* MÚSICA DE FUNDO GLOBAL (Começa no sermão e vai até o fim) */}
+			{/* MÚSICA DE FUNDO GLOBAL — entra no início do sermão (via Sequence) e vai até o fim */}
 			{props.bgmUrl && (
-				<Audio 
-					src={staticFile(cleanPath(props.bgmUrl))} 
-					volume={props.bgmVolume ?? 0.05} 
-					startFrom={0}
-					pauseWhenBuffering
-					loop
-					// Entra exatamente no início do bloco do sermão
-					startInFrame={startSermonFrame} 
-				/>
+				<Sequence from={startSermonFrame}>
+					<Audio
+						src={resolveAsset(props.bgmUrl)}
+						volume={props.bgmVolume ?? 0.05}
+						pauseWhenBuffering
+						loop
+					/>
+				</Sequence>
 			)}
 
 			<TransitionSeries>
@@ -63,7 +61,7 @@ export const SermonProduction: React.FC<SermonMasterProps & { totalSermonFrames:
 
 				{/* 2. INTRO CTA (Fixed) */}
 				<TransitionSeries.Sequence durationInFrames={INTRO_CTA_DURATION}>
-					<SpurgeonCTA ctaAudioUrl={props.introCtaAudioUrl} />
+					<SpurgeonCTA ctaAudioUrl={props.introCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} />
 				</TransitionSeries.Sequence>
 
 				<TransitionSeries.Transition 
@@ -98,7 +96,7 @@ export const SermonProduction: React.FC<SermonMasterProps & { totalSermonFrames:
 
 				{/* 5. OUTRO CTA (Fixed Subscribe Call over Background) */}
 				<TransitionSeries.Sequence durationInFrames={OUTRO_CTA_DURATION}>
-					<SpurgeonCTA ctaAudioUrl={props.outroCtaAudioUrl} />
+					<SpurgeonCTA ctaAudioUrl={props.outroCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} />
 				</TransitionSeries.Sequence>
 
 				<TransitionSeries.Transition 

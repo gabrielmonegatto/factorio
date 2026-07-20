@@ -24,6 +24,9 @@ const TBL_INDEX   = `"${SCHEMA}"."tblD7Kxoc7gFTgEWoWo"`;
 const SCHEMA_WORKFLOW = "bseWeczeNfCSaMlu2EC";
 const TBL_TASKS = `"${SCHEMA_WORKFLOW}"."tblVzN1Eo8tfk7GX2CJ"`;
 
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const MANANCIAPP_CONTENT_DIR = path.resolve(__dirname, "../../../apps/mananciapp/src/content/livros");
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

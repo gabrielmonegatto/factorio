@@ -1,17 +1,18 @@
 import React from "react";
-import { 
-	AbsoluteFill, 
-	Img, 
-	staticFile, 
-	useCurrentFrame, 
+import {
+	AbsoluteFill,
+	Img,
+	useCurrentFrame,
 	interpolate
 } from "remotion";
+import { resolveAsset } from "../../../core/library/resolveAsset";
 
 interface MarketingLayerProps {
 	qrCodeUrl?: string;
+	linkLabel?: string;
 }
 
-export const MarketingLayer: React.FC<MarketingLayerProps> = ({ qrCodeUrl }) => {
+export const MarketingLayer: React.FC<MarketingLayerProps> = ({ qrCodeUrl, linkLabel }) => {
 	const frame = useCurrentFrame();
 
 	// Animação do QR Code (Fade-in sutil no início)
@@ -38,9 +39,9 @@ export const MarketingLayer: React.FC<MarketingLayerProps> = ({ qrCodeUrl }) => 
 						borderRadius: 8,
 						boxShadow: "0 4px 15px rgba(0,0,0,0.5)"
 					}}>
-						<Img 
-							src={staticFile(qrCodeUrl)} 
-							style={{ width: 120, height: 120 }} 
+						<Img
+							src={resolveAsset(qrCodeUrl)}
+							style={{ width: 120, height: 120 }}
 						/>
 					</div>
 					<span style={{
@@ -52,7 +53,7 @@ export const MarketingLayer: React.FC<MarketingLayerProps> = ({ qrCodeUrl }) => 
 						textTransform: "uppercase",
 						textShadow: "0 2px 4px rgba(0,0,0,0.8)"
 					}}>
-						Books & Devotionals
+						{linkLabel || "Books & Devotionals"}
 					</span>
 				</div>
 			)}

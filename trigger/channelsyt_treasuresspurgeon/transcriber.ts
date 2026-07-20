@@ -1,7 +1,7 @@
 import { task } from "@trigger.dev/sdk/v3";
-import { getPythonPath, execFileAsync } from "../utils/pythonHelper";
+import { getPythonPath, execFileAsync } from "../utils/pythonHelper.ts";
 import * as path from "path";
-import { renderVideo } from "./renderer";
+import { renderVideo } from "./renderer.ts";
 
 
 interface TranscribePayload {

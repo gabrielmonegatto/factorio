@@ -1,0 +1,22 @@
+{
+  "narrationUrl": "storage/sermons/0002/sermon.wav",
+  "bgmUrl": "audio/worship_piano_01.mp3",
+  "bgmVolume": 0.05,
+  "backgroundImageUrl": "images/cathedral_bg_cf_10.png",
+  "preacherImageUrl": "images/spurgeon_bust_cf_2.png",
+  "transcriptSlug": "storage/sermons/0002/transcript.json",
+  "subtitleStyle": "classic",
+  "kenBurnsIntensity": "subtle",
+  "qrCodeUrl": "storage/sermons/0002/qr.png",
+  "ctaBookTitle": "The Best of Charles Spurgeon",
+  "sermonTitle": "Sermon 0002",
+  "sermonNumber": "0002",
+  "marketingTitle": "Why We So Easily Forget Christ (And How to Remember Him)",
+  "hookAudioUrl": "storage/sermons/0002/hook.wav",
+  "hookTranscriptSlug": "storage/sermons/0002/hook.json",
+  "outroHookAudioUrl": "storage/sermons/0002/cta_narration.wav",
+  "outroHookTranscriptSlug": "storage/sermons/0002/cta_narration.json",
+  "introCtaAudioUrl": "audio/introfixed.mp3",
+  "outroCtaAudioUrl": "audio/finalfixed.mp3",
+  "totalSermonFrames": 63084
+}

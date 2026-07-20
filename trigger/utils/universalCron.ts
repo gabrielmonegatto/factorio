@@ -4,13 +4,12 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import * as path from "path";
 import * as fs from "fs";
-import { publishMananciappBooks } from "../mananciapp/publishBook";
-import { migrateAudiobooks } from "../mananciapp/migrate";
-import { narrateAudio } from "../channelsyt_treasuresspurgeon/narrator";
-import { transcribeAudio } from "../channelsyt_treasuresspurgeon/transcriber";
-import { translateContent } from "../channelsyt_treasuresspurgeon/translator";
-
-import { getPythonPath, execFileAsync } from "./pythonHelper";
+import { publishMananciappBooks } from "../mananciapp/publishBook.ts";
+import { migrateAudiobooks } from "../mananciapp/migrate.ts";
+import { narrateAudio } from "../channelsyt_treasuresspurgeon/narrator.ts";
+import { transcribeAudio } from "../channelsyt_treasuresspurgeon/transcriber.ts";
+import { translateContent } from "../channelsyt_treasuresspurgeon/translator.ts";
+import { getPythonPath, execFileAsync } from "./pythonHelper.ts";
 
 
 interface PendingTask {

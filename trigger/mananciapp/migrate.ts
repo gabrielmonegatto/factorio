@@ -1,5 +1,5 @@
 import { task } from "@trigger.dev/sdk/v3";
-import { getPythonPath, execFileAsync } from "../utils/pythonHelper";
+import { getPythonPath, execFileAsync } from "../utils/pythonHelper.ts";
 import * as path from "path";
 
 export async function runAudiobookMigration() {

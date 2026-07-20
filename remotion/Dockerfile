@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala as bibliotecas de Python necessárias para o RunPod Serverless
-RUN pip3 install --no-cache-dir --break-system-packages runpod boto3
+# Instala as bibliotecas de Python necessárias para o RunPod Serverless + geração de QR
+RUN pip3 install --no-cache-dir --break-system-packages runpod boto3 "qrcode[pil]"
 
 # Configura o Puppeteer para usar o Chromium instalado no sistema
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
@@ -32,6 +32,9 @@ RUN npm ci
 
 # Copia o restante do código do Remotion
 COPY . .
+
+# Garante o navegador do Remotion (Chrome Headless Shell) — mais confiável que o chromium do sistema
+RUN npx remotion browser ensure
 
 # Comando de boot do container: inicia o handler do RunPod
 CMD ["python3", "-u", "rp_handler.py"]

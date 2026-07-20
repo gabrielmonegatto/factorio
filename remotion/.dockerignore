@@ -1,6 +1,12 @@
 node_modules
 .cache
 public/storage
+public/_stills
+public/audio
+public/images/cathedral_bg_cf_*.png
+public/images/spurgeon_bust_cf_*.png
 *.mp4
 props_*.json
 props_preview.json
+.git
+*.log

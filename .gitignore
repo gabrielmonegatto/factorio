@@ -69,3 +69,16 @@ agents/builder/
 # Proteção: nunca trackear (symlink pra config global + vault interno)
 claude/
 _brain/
+
+# Assets/estado de runtime do remotion (fonte canonica = R2)
+remotion/public/storage/
+remotion/public/audio/
+remotion/public/_stills/
+remotion/public/images/spurgeon_avatar.png
+remotion/_hybrid/
+remotion/out/
+
+# Estado de runtime das esteiras (nao e codigo)
+trigger/pending.json
+trigger/temp_pending.json
+.trigger/

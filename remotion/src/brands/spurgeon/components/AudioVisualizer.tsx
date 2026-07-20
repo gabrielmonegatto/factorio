@@ -2,12 +2,12 @@ import React from 'react';
 import {
     useCurrentFrame,
     useVideoConfig,
-    staticFile,
 } from 'remotion';
 import { useAudioData, visualizeAudio } from '@remotion/media-utils';
+import { resolveAsset } from '../../../core/library/resolveAsset';
 
 interface AudioVisualizerProps {
-    audioSrc: string;
+    audioSrc: string; // já resolvido (URL do R2 ou local) — resolveAsset é idempotente p/ URLs
     numberOfSamples?: number;
     color?: string;
 }
@@ -19,7 +19,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
 }) => {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
-    const audioData = useAudioData(staticFile(audioSrc));
+    const audioData = useAudioData(resolveAsset(audioSrc));
 
     if (!audioData) {
         return null;

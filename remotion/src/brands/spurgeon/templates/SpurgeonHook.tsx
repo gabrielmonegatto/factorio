@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { AbsoluteFill, Audio as RemotionAudio, Img, staticFile, useVideoConfig, delayRender, continueRender } from "remotion";
 import { SubtitleLayer, Word } from "../components/SubtitleLayer";
+import { resolveAsset } from "../../../core/library/resolveAsset";
 
 interface HookProps {
 	hookAudioUrl?: string;
 	hookTranscriptSlug?: string;
 	marketingTitle?: string;
 	disableBgm?: boolean;
+	bgmUrl?: string; // BGM do hook (fixo). Default: 432hz empacotado em public/audio/
 }
 
 export const SpurgeonHook: React.FC<HookProps> = ({
@@ -14,6 +16,7 @@ export const SpurgeonHook: React.FC<HookProps> = ({
 	hookTranscriptSlug,
 	marketingTitle,
 	disableBgm,
+	bgmUrl,
 }) => {
 	const [words, setWords] = useState<Word[]>([]);
 	const [handle] = useState(() => delayRender("Loading Hook Data"));
@@ -25,10 +28,8 @@ export const SpurgeonHook: React.FC<HookProps> = ({
 				return;
 			}
 			try {
-				const jsonPath = hookTranscriptSlug.replace(/^\/?/, '');
-				
-				const response = await fetch(staticFile(jsonPath));
-				if (!response.ok) throw new Error(`Failed to load: ${jsonPath}`);
+				const response = await fetch(resolveAsset(hookTranscriptSlug));
+				if (!response.ok) throw new Error(`Failed to load: ${hookTranscriptSlug}`);
 				
 				const data = await response.json();
 				if (data.words) setWords(data.words);
@@ -61,10 +62,10 @@ export const SpurgeonHook: React.FC<HookProps> = ({
 			</AbsoluteFill>
 
 			{/* Audio Track for the Hook (Kokoro) */}
-			{hookAudioUrl && <RemotionAudio src={staticFile(hookAudioUrl.replace(/^\/?/, ''))} />}
+			{hookAudioUrl && <RemotionAudio src={resolveAsset(hookAudioUrl)} />}
 
 			{/* BGM low volume for dramatic effect */}
-			{!disableBgm && <RemotionAudio src={staticFile("storage/audio/library/premium_frequencial/432hz_01.mp3")} volume={0.05} />}
+			{!disableBgm && <RemotionAudio src={resolveAsset(bgmUrl || "audio/frequencial_432hz_01.mp3")} volume={0.05} />}
 
 			{/* Visual Hook Layout: Big centered text */}
 			<AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>

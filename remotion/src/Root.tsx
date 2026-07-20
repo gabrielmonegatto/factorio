@@ -1,4 +1,6 @@
 import { Composition, getInputProps } from "remotion";
+import { getAudioDurationInSeconds } from "@remotion/media-utils";
+import { resolveAsset } from "./core/library/resolveAsset";
 import { BibleNarration } from "./brands/mana-diario/templates/BibleNarration";
 import { LetterboxDemo } from "./brands/mana-diario/templates/LetterboxDemo";
 import { FilmGrainDemo } from "./brands/mana-diario/templates/FilmGrainDemo";
@@ -24,6 +26,55 @@ import { SubscribePreview } from "./brands/spurgeon/templates/SubscribePreview";
 import { SpurgeonHook } from "./brands/spurgeon/templates/SpurgeonHook";
 import { SpurgeonBrandAd } from "./brands/spurgeon/templates/SpurgeonBrandAd";
 import { YouTubeEndScreen } from "./brands/spurgeon/templates/YouTubeEndScreen";
+import { SermonBodyBase, ClipIntro, calcClipIntro, ClipOutro, calcClipOutro } from "./brands/spurgeon/templates/HybridClips";
+
+const FPS = 30;
+const TRANSITION_FRAMES = 10; // deve casar com SermonProduction
+const SEGMENT_PAD = 15;       // 0.5s de respiro por segmento de marketing
+const SERMON_TAIL = 90;       // 3s de respiro no fim do sermão
+const ENDSCREEN_FRAMES = 20 * FPS;
+
+// Mede a duração de um áudio (segundos → frames). Se falhar/ausente, usa o fallback.
+const measureFrames = async (url: string | undefined, fallbackFrames: number, pad = 0): Promise<number> => {
+	if (!url) return fallbackFrames;
+	try {
+		const sec = await getAudioDurationInSeconds(resolveAsset(url));
+		return Math.ceil(sec * FPS) + pad;
+	} catch (e) {
+		console.warn(`[calculateMetadata] falha ao medir "${url}" — usando fallback ${fallbackFrames}f`, e);
+		return fallbackFrames;
+	}
+};
+
+/**
+ * calcula a duração REAL do vídeo a partir dos áudios (mata o bug do vídeo de 3h,
+ * que vinha de durationInFrames escrito na mão). Injeta as durações medidas de volta
+ * nos props pra que SermonProduction use exatamente os mesmos números.
+ */
+const calcSermonMetadata = async ({ props }: { props: any }) => {
+	const hook = await measureFrames(props.hookAudioUrl, 20 * FPS, SEGMENT_PAD);
+	const introCta = await measureFrames(props.introCtaAudioUrl, 16 * FPS, SEGMENT_PAD);
+	const sermon = await measureFrames(props.narrationUrl, 30 * 60 * FPS, SERMON_TAIL);
+	const outroHook = await measureFrames(props.outroHookAudioUrl, 24 * FPS, SEGMENT_PAD);
+	const outroCta = await measureFrames(props.outroCtaAudioUrl, 14 * FPS, SEGMENT_PAD);
+
+	// 6 sequências, 5 transições sobrepostas
+	const durationInFrames =
+		hook + introCta + sermon + outroHook + outroCta + ENDSCREEN_FRAMES - 5 * TRANSITION_FRAMES;
+
+	return {
+		durationInFrames,
+		fps: FPS,
+		props: {
+			...props,
+			hookDurationFrames: hook,
+			introCtaDurationFrames: introCta,
+			totalSermonFrames: sermon,
+			outroHookDurationFrames: outroHook,
+			outroCtaDurationFrames: outroCta,
+		},
+	};
+};
 
 export const RemotionRoot: React.FC = () => {
     return (
@@ -172,7 +223,8 @@ export const RemotionRoot: React.FC = () => {
             <Composition
                 id="Sermon-Full-Production"
                 component={SermonProduction}
-                durationInFrames={(733 + 480 + (63084 + 90) + 663 + 440 + 600) - 50} // Hook + IntroCTA + Sermon(+tail) + OutroHook(cut) + OutroCTA + EndScreen - 5 Transições
+                durationInFrames={18000} // fallback; a duração real é calculada por calculateMetadata (mede os áudios)
+                calculateMetadata={calcSermonMetadata}
                 fps={30}
                 width={1920}
                 height={1080}
@@ -204,6 +256,37 @@ export const RemotionRoot: React.FC = () => {
                     outroCtaDurationFrames: 440, // ~14.4s
 					marketingTitle: "The Only Safe Harbor in a World That Never Stops Changing",
                 }}
+            />
+
+            {/* ===== HÍBRIDO: clipes curtos (Remotion) — o corpo vai pro ffmpeg ===== */}
+            <Composition
+                id="Clip-Intro"
+                component={ClipIntro as any}
+                durationInFrames={1200}
+                calculateMetadata={calcClipIntro}
+                fps={30}
+                width={1920}
+                height={1080}
+                defaultProps={{ sermonNumber: "0001" } as any}
+            />
+            <Composition
+                id="Clip-Outro"
+                component={ClipOutro as any}
+                durationInFrames={1800}
+                calculateMetadata={calcClipOutro}
+                fps={30}
+                width={1920}
+                height={1080}
+                defaultProps={{ sermonNumber: "0001" } as any}
+            />
+            <Composition
+                id="Sermon-Body-Base"
+                component={SermonBodyBase as any}
+                durationInFrames={1}
+                fps={30}
+                width={1920}
+                height={1080}
+                defaultProps={{ sermonNumber: "0001" } as any}
             />
 
             {/* ===== SPURGEON MARKETING PREVIEWS (V2) ===== */}
