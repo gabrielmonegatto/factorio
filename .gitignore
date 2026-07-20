@@ -65,3 +65,7 @@ agents/builder/
 # Exclude sensitive config files containing API keys
 **/config.yaml
 **/*.bak_vps
+
+# Proteção: nunca trackear (symlink pra config global + vault interno)
+claude/
+_brain/
