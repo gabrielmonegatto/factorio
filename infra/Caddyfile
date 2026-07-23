@@ -2,14 +2,6 @@ db.markeologia.com.br {
     reverse_proxy factorio_teable:3000
 }
 
-admin.markeologia.com.br {
-    reverse_proxy outline_holding:3000
-}
-
-admin.br4nds.com.br {
-    reverse_proxy outline_br4nds:3000
-}
-
 mcp.markeologia.com.br {
     reverse_proxy factorio_mcp_universal:3111
 }
@@ -19,17 +11,25 @@ agents.markeologia.com.br {
 }
 
 memory.markeologia.com.br {
+    @websocket {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @websocket factorio_agent_memory:3112
     reverse_proxy factorio_agent_memory:3111
+
+    header Access-Control-Allow-Origin "https://memory-viewer.markeologia.com.br"
+    header Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+    header Access-Control-Allow-Headers "Authorization, Content-Type"
+    header Access-Control-Allow-Credentials "true"
 }
 
 memory-viewer.markeologia.com.br {
+    @websocket {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @websocket factorio_agent_memory:3112
+    reverse_proxy /agentmemory/* factorio_agent_memory:3111
     reverse_proxy factorio_agent_memory:3113
-}
-
-minio.markeologia.com.br {
-    reverse_proxy outline_minio:9001
-}
-
-s3.markeologia.com.br {
-    reverse_proxy outline_minio:9000
 }

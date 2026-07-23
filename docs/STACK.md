@@ -20,9 +20,6 @@ Agora, **toda a infraestrutura de produção roda na VPS** com IP público `187.
 | **AgentMemory API** | `https://memory.markeologia.com.br` | `factorio_agent_memory:3111` | API REST de memórias semânticas persistentes. |
 | **AgentMemory Streams** | — | `factorio_agent_memory:3112` | WebSocket para streams em tempo real. |
 | **Memory Viewer** | `https://memory-viewer.markeologia.com.br` | `factorio_agent_memory:3113` | Painel gráfico de visualização das memórias. |
-| **Wiki EternalL** | `https://wiki.markeologia.com.br` | `outline_holding:3000` | Outline Wiki da Holding (Documentação e SOPs). |
-| **Wiki Br4nds** | `https://wiki-br4nds.markeologia.com.br` | `outline_br4nds:3000` | Outline Wiki da marca Br4nds (Estratégias de produto). |
-| **MinIO Console** | `http://187.127.44.153:9001` | `outline_minio:9001` | Painel visual de armazenamento de objetos S3 local. |
 | **Postgres (Teable)** | — | `factorio_teable_db:5432` | Banco físico do Teable (porta mapeada no host: `42345`). |
 
 ---
@@ -49,13 +46,10 @@ Base de dados semântica (SQLite + ChromaDB) que armazena memórias duradouras d
 * Os agentes de IA se conectam a ela para registrar fatos importantes, credenciais geradas, decisões de design e tarefas executadas.
 * O painel pode ser acessado em `https://memory-viewer.markeologia.com.br` informando a chave `factorio_secret`.
 
-### 4. Outline Wiki (Holding & Br4nds)
-Plataforma de documentação rica e integrada para documentar processos e centralizar conhecimentos de negócio.
-* **Google OAuth:** A autenticação é integrada ao Google Client ID da holding.
-* **Storage:** Utiliza o MinIO local para salvar uploads e imagens das páginas de forma 100% autônoma.
+### 4. Wiki empresarial → NOTION (fora da VPS)
+A front door da wiki empresarial da holding é o **Notion** (superfície única para humanos + agentes), montado manualmente por Gabriel. A infra da VPS é o back-end: Teable (dado estruturado, views embedadas no Notion), R2 (binários), git (SOPs/código). Regra de fronteira: pipeline de agente mexe toda hora → Teable; humano cura por semana → database do Notion.
 
-### 5. MinIO Object Storage
-Serviço S3-compatible local que persistência as imagens e anexos anexados no Outline. Possui os buckets `outline-holding` e `outline-br4nds` rodando localmente de forma isolada.
+> **Histórico:** o Outline self-hosted (containers `outline_*` + MinIO local) foi avaliado e **removido da VPS em 23/07/2026** — fricção humana alta (sem database-in-doc, sem embed nativo). Backup do Postgres do Outline: `/root/outline_db_backup_20260721.sql.gz` + cópia em `C:\Users\Monegatto\Desktop\_archives\`. DNS `admin.markeologia.com.br` / `admin.br4nds.com.br` liberados.
 
 ---
 

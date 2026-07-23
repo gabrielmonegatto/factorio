@@ -21,7 +21,7 @@ Você está no QG da fábrica de negócios digitais da holding EternalL. Este re
 
 | Dado | Casa | Acesso |
 |---|---|---|
-| Narrativa de negócio | Outline | API REST (config pendente — F1.4) |
+| Narrativa de negócio | Notion (front door, manual) | superfície única humanos+agentes; back-end = Teable/R2/git |
 | Estado operacional | Teable | API REST — nunca SQL bruto (conserto da `tasks`: F1.6) |
 | Código, SOPs, docs técnicos | este repo (git) | nativo |
 | Produto em produção | D1/Workers | repos dos apps |

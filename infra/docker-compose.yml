@@ -43,6 +43,7 @@ services:
       - "3111:3111"
     volumes:
       - mcp_data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - factorio_network
 
@@ -57,7 +58,7 @@ services:
       - HOSTNAME=0.0.0.0
       - AGENTMEMORY_SECRET=factorio_secret
       - AGENTMEMORY_VIEWER_HOST=0.0.0.0
-      - VIEWER_ALLOWED_HOSTS=localhost:3122,127.0.0.1:3122,localhost:3113,127.0.0.1:3113
+      - VIEWER_ALLOWED_HOSTS=localhost:3122,127.0.0.1:3122,localhost:3113,127.0.0.1:3113,memory.markeologia.com.br,memory-viewer.markeologia.com.br
     volumes:
       - agent_memory_data:/root/.agentmemory
       - agent_memory_node_modules:/agentmemory/node_modules
@@ -74,6 +75,7 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -152,127 +154,30 @@ services:
       retries: 5
 
 
-  # --- OUTLINE WIKI SELF-HOSTED STACK ---
-  outline_holding:
-    image: outlinewiki/outline:latest
-    container_name: outline_holding
-    depends_on:
-      outline_db:
-        condition: service_healthy
-      outline_redis:
-        condition: service_started
-      outline_minio:
-        condition: service_started
-    ports:
-      - "5000:3000"
-    env_file:
-      - .env.outline_holding
-    networks:
-      - factorio_network
-    restart: always
-
-  outline_br4nds:
-    image: outlinewiki/outline:latest
-    container_name: outline_br4nds
-    depends_on:
-      outline_db:
-        condition: service_healthy
-      outline_redis:
-        condition: service_started
-      outline_minio:
-        condition: service_started
-    ports:
-      - "5001:3000"
-    env_file:
-      - .env.outline_br4nds
-    networks:
-      - factorio_network
-    restart: always
-
-  outline_db:
-    image: postgres:16-alpine
-    container_name: outline_db
-    environment:
-      - POSTGRES_USER=outline
-      - POSTGRES_PASSWORD=outline_secret_db_pass
-      - POSTGRES_DB=outline
-    ports:
-      - "54322:5432"
-    volumes:
-      - outline_pg_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
-    networks:
-      - factorio_network
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U outline"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  outline_redis:
-    image: redis:7-alpine
-    container_name: outline_redis
-    networks:
-      - factorio_network
-    restart: always
-
-  outline_minio:
-    image: minio/minio:latest
-    container_name: outline_minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin_secret_pass
-    volumes:
-      - outline_minio_data:/data
-    command: server /data --console-address ":9001"
-    networks:
-      - factorio_network
-    restart: always
-
-  outline_minio_setup:
-    image: minio/mc:latest
-    container_name: outline_minio_setup
-    depends_on:
-      - outline_minio
-    entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/curl -s http://outline_minio:9000/minio/health/live); do echo 'Aguardando MinIO...'; sleep 2; done;
-      /usr/bin/mc alias set myminio http://outline_minio:9000 minioadmin minioadmin_secret_pass;
-      /usr/bin/mc mb myminio/outline-holding;
-      /usr/bin/mc mb myminio/outline-br4nds;
-      /usr/bin/mc anonymous set download myminio/outline-holding;
-      /usr/bin/mc anonymous set download myminio/outline-br4nds;
-      echo 'Buckets locais do MinIO configurados!';
-      exit 0;
-      "
-    networks:
-      - factorio_network
-
 networks:
   factorio_network:
     external: true
 
 volumes:
   mcp_data:
+    external: true
     name: factorio_mcp_data
   teable_data:
+    external: true
     name: factorio_teable_data
   teable_db_data:
+    external: true
     name: factorio_teable_db_data
   caddy_data:
+    external: true
     name: factorio_caddy_data
   caddy_config:
+    external: true
     name: factorio_caddy_config
   agent_memory_data:
+    external: true
     name: factorio_agent_memory_data
   agent_memory_node_modules:
+    external: true
     name: factorio_agent_memory_node_modules
-  outline_pg_data:
-    name: factorio_outline_pg_data
-  outline_minio_data:
-    name: factorio_outline_minio_data
 
