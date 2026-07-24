@@ -56,6 +56,17 @@ def main() -> None:
     ):
         by_num[(c["brand"], c["ad_number"], c["aspect_ratio"] or "")].append(c)
 
+    # Indice de VIDEO por chave de nome. O acervo de video nao tem imagem para
+    # dHash; a ponte e o nome do arquivo ('BL29-IA-C7-...') que bate com o
+    # nome do ad de video no Meta.
+    by_vidkey: dict[tuple[str, str], list[str]] = defaultdict(list)
+    for c in db.query("SELECT id, r2_key, brand, drive_path FROM creatives "
+                      "WHERE type='video' AND r2_key IS NOT NULL"):
+        fn = (c["drive_path"] or "").rsplit("/", 1)[-1]
+        k = _vidkey(fn)
+        if k:
+            by_vidkey[(c["brand"], k)].append(c["r2_key"])
+
     # int uma vez so: hamming em hex string custa caro em 2500 x N.
     cand = [(int(c["dhash"], 16), c["r2_key"]) for c in creatives if c["r2_key"]]
 
@@ -65,10 +76,23 @@ def main() -> None:
     by_dist: dict[int, int] = defaultdict(int)
 
     by_name = 0
+    by_video = 0
     for i, ad in enumerate(ads, 1):
+        nm = ad.get("ad_name") or ""
+        # Ad de video: casa pelo nome do arquivo contra o acervo de video.
+        if ".mp4" in nm.lower() or ".mov" in nm.lower():
+            key = _from_videoname(nm, ad.get("brand"), by_vidkey)
+            if key:
+                by_video += 1
+                matched.append(
+                    f"UPDATE meta_ads SET r2_key={lit(key)}, match_method='video_name', "
+                    f"match_distance=NULL, match_confidence=0.8 WHERE ad_id={lit(ad['ad_id'])}"
+                )
+                continue
+
         if not ad["dhash"]:
-            # Sem imagem comparavel: so resta o nome.
-            key = _from_name(ad.get("ad_name"), ad.get("brand"), by_num)
+            # Sem imagem comparavel: so resta o numero no nome (estatico).
+            key = _from_name(nm, ad.get("brand"), by_num)
             if key:
                 by_name += 1
                 matched.append(
@@ -109,7 +133,8 @@ def main() -> None:
         if i % 200 == 0:
             log(f"  {i}/{len(ads)} avaliados")
 
-    log(f"casaram: {len(matched)} (imagem: {len(matched) - by_name}, nome do ad: {by_name}) "
+    img = len(matched) - by_name - by_video
+    log(f"casaram: {len(matched)} (imagem: {img}, video/nome: {by_video}, estatico/nome: {by_name}) "
         f"| ambiguos: {ambiguous} | sem candidato: {far}")
     if by_dist:
         log("distribuicao de distancia: " +
@@ -125,6 +150,27 @@ def main() -> None:
         "SELECT COUNT(*) n, SUM(CASE WHEN r2_key IS NOT NULL THEN 1 ELSE 0 END) m FROM meta_ads"
     )[0]
     log(f"estado: {tot['m']}/{tot['n']} ads com criativo atribuido")
+
+
+def _vidkey(name: str) -> str:
+    """Chave de casamento de video: base do nome sem extensao, so alfanumerico.
+
+    Igual a de catalog_videos.py. Se ha parentese com a fonte real
+    ('BL20-V3(BL7-IA-C7...)'), usa o conteudo do parentese."""
+    base = name.rsplit(".", 1)[0]
+    par = re.search(r"\(([^)]*BL\d[^)]*)\)", base, re.I)
+    if par:
+        base = par.group(1)
+    return re.sub(r"[^A-Z0-9]", "", base.upper())
+
+
+def _from_videoname(ad_name: str, brand: str | None, by_vidkey: dict) -> str | None:
+    """Extrai o nome do arquivo de video do ad_name e casa contra o acervo."""
+    m = re.search(r"([A-Za-z0-9][\w\-().]*\.(?:mp4|mov))", ad_name, re.I)
+    if not m:
+        return None
+    hits = by_vidkey.get((brand, _vidkey(m.group(1))), [])
+    return hits[0] if len(hits) == 1 else None
 
 
 def _from_name(ad_name: str | None, brand: str | None, by_num: dict) -> str | None:
