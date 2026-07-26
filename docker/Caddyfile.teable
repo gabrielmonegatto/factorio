@@ -1,0 +1,3 @@
+db.markeologia.com.br {
+    reverse_proxy teable:3000
+}

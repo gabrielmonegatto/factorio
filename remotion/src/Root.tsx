@@ -26,7 +26,7 @@ import { SubscribePreview } from "./brands/spurgeon/templates/SubscribePreview";
 import { SpurgeonHook } from "./brands/spurgeon/templates/SpurgeonHook";
 import { SpurgeonBrandAd } from "./brands/spurgeon/templates/SpurgeonBrandAd";
 import { YouTubeEndScreen } from "./brands/spurgeon/templates/YouTubeEndScreen";
-import { SermonBodyBase, ClipIntro, calcClipIntro, ClipOutro, calcClipOutro } from "./brands/spurgeon/templates/HybridClips";
+import { SermonBodyBase, ClipIntro, calcClipIntro, ClipOutro, calcClipOutro, Thumbnail } from "./brands/spurgeon/templates/HybridClips";
 
 const FPS = 30;
 const TRANSITION_FRAMES = 10; // deve casar com SermonProduction
@@ -277,6 +277,15 @@ export const RemotionRoot: React.FC = () => {
                 fps={30}
                 width={1920}
                 height={1080}
+                defaultProps={{ sermonNumber: "0001" } as any}
+            />
+            <Composition
+                id="Thumbnail"
+                component={Thumbnail as any}
+                durationInFrames={1}
+                fps={30}
+                width={1280}
+                height={720}
                 defaultProps={{ sermonNumber: "0001" } as any}
             />
             <Composition

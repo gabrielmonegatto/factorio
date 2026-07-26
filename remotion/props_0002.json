@@ -18,5 +18,6 @@
   "outroHookTranscriptSlug": "storage/sermons/0002/cta_narration.json",
   "introCtaAudioUrl": "audio/introfixed.mp3",
   "outroCtaAudioUrl": "audio/finalfixed.mp3",
-  "totalSermonFrames": 63084
+  "totalSermonFrames": 63084,
+  "thumbnailText": "YOU FORGOT HIM AGAIN"
 }

@@ -164,7 +164,8 @@ def main():
 
     # --- arquivos por-sermão (robusto a variações de nome) ---
     wanted = {
-        "sermon":     pick_first(sermon_keys, r"^sermon_\d+\.wav$", r"sermon.*\.wav$"),
+        # o acervo tem os dois formatos: 44 sermões em .wav e 68 em .mp3
+        "sermon":     pick_first(sermon_keys, r"^sermon_\d+\.(wav|mp3)$", r"sermon.*\.(wav|mp3)$"),
         "transcript": pick_first(sermon_keys, r"^transcript\.json$"),
         "hook_wav":   pick_first(sermon_keys, r"^hook\.wav$"),
         "hook_json":  pick_first(sermon_keys, r"^hook\.json$"),
@@ -177,7 +178,10 @@ def main():
         raise SystemExit(f"❌ Sermão {nnnn} sem arquivos essenciais: {missing}\n   Keys: {[k.rsplit('/',1)[-1] for k in sermon_keys]}")
 
     sd = os.path.join(public, "storage", "sermons", nnnn)
-    download(s3, wanted["sermon"],     os.path.join(sd, "sermon.wav"))
+    # preserva a extensão de origem (.wav ou .mp3) — renomear quebraria a leitura do áudio
+    sermon_ext = os.path.splitext(wanted["sermon"])[1].lower() or ".wav"
+    sermon_local = f"sermon{sermon_ext}"
+    download(s3, wanted["sermon"],     os.path.join(sd, sermon_local))
     download(s3, wanted["transcript"], os.path.join(sd, "transcript.json"))
     download(s3, wanted["hook_wav"],   os.path.join(sd, "hook.wav"))
     download(s3, wanted["hook_json"],  os.path.join(sd, "hook.json"))
@@ -222,7 +226,7 @@ def main():
     # --- props.json (caminhos relativos ao public/, resolvidos por staticFile) ---
     rel = f"storage/sermons/{nnnn}"
     props = {
-        "narrationUrl": f"{rel}/sermon.wav",
+        "narrationUrl": f"{rel}/{sermon_local}",
         "bgmUrl": f"audio/{bgm_name}",
         "bgmVolume": 0.05,
         "backgroundImageUrl": f"images/{bg_name}",
@@ -235,6 +239,8 @@ def main():
         "sermonTitle": sermon_title,
         "sermonNumber": nnnn,
         "marketingTitle": marketing.get("marketingTitle", sermon_title),
+        # texto CURTO e magnético da capa (≤6 palavras). Cai no título se ainda não existir.
+        "thumbnailText": marketing.get("thumbnailText", ""),
         # hook (dinâmico) + outro hook (dinâmico). CTAs fixos ficam SILENCIOSOS nesta v1
         # (SpurgeonCTA roda a animação por duração-fallback, sem narração) — simplifica e evita asset faltante.
         "hookAudioUrl": f"{rel}/hook.wav",

@@ -1,0 +1,33 @@
+# ─── FACTORIO TTS — Kokoro (narração) ───────────────────────────────────────
+# Container dedicado do TTS. Tira o Kokoro de dentro do `factorio_agents` legado
+# (era o bloqueio pra desligar aquele container).
+#
+# Roda em CPU (Kokoro tem 82M params — não precisa de GPU).
+# Uso: docker run --rm -v /srv/factorio/data:/data -v /srv/factorio/hfcache:/cache \
+#        factorio-tts --input /data/texto.txt --output /data/audio.wav --voice bm_george
+
+FROM python:3.11-slim
+
+# espeak-ng: G2P (fonemas) usado pelo Kokoro · libsndfile: leitura/escrita de wav · ffmpeg: conversões
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    espeak-ng \
+    libsndfile1 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# torch CPU-only (a versão padrão puxa CUDA e incha a imagem em GBs à toa)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+RUN pip install --no-cache-dir kokoro soundfile numpy
+
+# modelo do spacy que o Kokoro usa — embutido na imagem pra NÃO baixar 12.8MB a cada narração
+RUN python -m spacy download en_core_web_sm
+
+# Cache dos pesos do modelo — monte um volume aqui pra não rebaixar o modelo a cada run
+ENV HF_HOME=/cache
+ENV PHONEMIZER_ESPEAK_LIBRARY=/usr/lib/x86_64-linux-gnu/libespeak-ng.so.1
+
+WORKDIR /app
+COPY trigger/scripts/tts_kokoro.py /app/tts_kokoro.py
+
+ENTRYPOINT ["python3", "-u", "/app/tts_kokoro.py"]

@@ -72,6 +72,7 @@ export const ClipIntro: React.FC<SermonMasterProps> = (props) => {
 						hookAudioUrl={props.hookAudioUrl}
 						hookTranscriptSlug={props.hookTranscriptSlug}
 						marketingTitle={props.marketingTitle}
+						disableBgm
 					/>
 				</TransitionSeries.Sequence>
 				<TransitionSeries.Transition timing={linearTiming({ durationInFrames: TRANSITION })} presentation={fade()} />
@@ -118,6 +119,52 @@ export const ClipOutro: React.FC<SermonMasterProps> = (props) => {
 					<YouTubeEndScreen />
 				</TransitionSeries.Sequence>
 			</TransitionSeries>
+		</AbsoluteFill>
+	);
+};
+
+// ─── THUMBNAIL (1280x720) — capa do vídeo no YouTube ───
+// Regra de ouro de thumbnail: é vista PEQUENA. Texto grande, alto contraste, pouca informação.
+export const Thumbnail: React.FC<SermonMasterProps & { thumbnailText?: string }> = (props) => {
+	// prioriza o texto CURTO da capa (≤6 palavras). Título longo é pro YouTube, não pra thumbnail.
+	const title = (props.thumbnailText || props.marketingTitle || props.sermonTitle || "")
+		.replace(/^\d+\s*-\s*/, "");
+	return (
+		<AbsoluteFill style={{ backgroundColor: "#000" }}>
+			<Img
+				src={resolveAsset(props.backgroundImageUrl)}
+				style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }}
+			/>
+			<AbsoluteFill style={{
+				background: "linear-gradient(to right, rgba(0,0,0,0.95) 45%, rgba(0,0,0,0.25) 100%)",
+			}} />
+			{/* Spurgeon à direita */}
+			<AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "flex-end" }}>
+				<Img
+					src={resolveAsset(props.preacherImageUrl)}
+					style={{ height: "92%", mixBlendMode: "screen", opacity: 0.95, filter: "contrast(1.15) brightness(1.1)" }}
+				/>
+			</AbsoluteFill>
+			{/* Título à esquerda */}
+			<AbsoluteFill style={{ justifyContent: "center", padding: "0 4%", maxWidth: "62%" }}>
+				<div style={{
+					fontFamily: "Georgia, serif", fontSize: 26, color: "#c9a961",
+					textTransform: "uppercase", letterSpacing: 5, marginBottom: 18,
+				}}>
+					Charles Spurgeon
+				</div>
+				<div style={{
+					fontFamily: "Georgia, serif", fontSize: title.length > 46 ? 62 : 76,
+					fontWeight: "bold", color: "#fff", lineHeight: 1.1,
+					textShadow: "0 6px 30px rgba(0,0,0,0.95)", textTransform: "uppercase",
+				}}>
+					{title}
+				</div>
+				<div style={{
+					marginTop: 24, width: 160, height: 5,
+					background: "linear-gradient(90deg,#c9a961,#f0d080)", borderRadius: 3,
+				}} />
+			</AbsoluteFill>
 		</AbsoluteFill>
 	);
 };

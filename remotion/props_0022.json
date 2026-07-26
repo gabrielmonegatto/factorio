@@ -1,0 +1,23 @@
+{
+  "narrationUrl": "storage/sermons/0022/sermon.wav",
+  "bgmUrl": "audio/worship_pads_01.mp3",
+  "bgmVolume": 0.05,
+  "backgroundImageUrl": "images/cathedral_bg_cf_7.png",
+  "preacherImageUrl": "images/spurgeon_bust_cf_2.png",
+  "transcriptSlug": "storage/sermons/0022/transcript.json",
+  "subtitleStyle": "classic",
+  "kenBurnsIntensity": "subtle",
+  "qrCodeUrl": "storage/sermons/0022/qr.png",
+  "ctaBookTitle": "The Best of Charles Spurgeon",
+  "sermonTitle": "Sermon 0022",
+  "sermonNumber": "0022",
+  "marketingTitle": "The Sin God Hates Most: Why Christians Fall Through Presumption",
+  "thumbnailText": "YOU THINK YOU STAND.",
+  "hookAudioUrl": "storage/sermons/0022/hook.wav",
+  "hookTranscriptSlug": "storage/sermons/0022/hook.json",
+  "outroHookAudioUrl": "storage/sermons/0022/cta_narration.wav",
+  "outroHookTranscriptSlug": "storage/sermons/0022/cta_narration.json",
+  "introCtaAudioUrl": "audio/introfixed.mp3",
+  "outroCtaAudioUrl": "audio/finalfixed.mp3",
+  "totalSermonFrames": 63084
+}

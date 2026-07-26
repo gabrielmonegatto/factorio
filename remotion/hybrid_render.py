@@ -87,14 +87,13 @@ def main():
     body = os.path.join(work, "body.mp4")
     ass_ff = ass.replace("\\", "/").replace(":", "\\:")  # escape p/ filtro subtitles
     vf = f"scale=1920:1080,subtitles='{ass_ff}'"
+    # corpo SEM música — a BGM vira uma faixa CONTÍNUA no concat final (sem quebra entre segmentos)
     sh([
         "ffmpeg", "-y", "-loglevel", "error",
         "-loop", "1", "-i", base,
         "-i", narration,
-        "-stream_loop", "-1", "-i", bgm,
-        "-filter_complex",
-        f"[0:v]{vf}[v];[2:a]volume={bgm_vol}[bg];[1:a][bg]amix=inputs=2:duration=first:dropout_transition=0[a]",
-        "-map", "[v]", "-map", "[a]", "-t", f"{dur:.2f}",
+        "-filter_complex", f"[0:v]{vf}[v]",
+        "-map", "[v]", "-map", "1:a", "-t", f"{dur:.2f}",
         "-r", "30", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-shortest", body,
     ])
@@ -103,16 +102,20 @@ def main():
     print(f"\n=== [5/6] concat (fade preto) ===")
     di, db, do = ffprobe_dur(intro), ffprobe_dur(body), ffprobe_dur(outro)
     F = 0.3
+    # vídeo: fade-pra-preto nas junções · áudio: concatena as vozes e mistura UMA BGM contínua por cima
     fc = (
         f"[0:v]fade=t=out:st={di-F:.2f}:d={F}[v0];"
         f"[1:v]fade=t=in:st=0:d={F},fade=t=out:st={db-F:.2f}:d={F}[v1];"
         f"[2:v]fade=t=in:st=0:d={F}[v2];"
-        f"[v0][0:a][v1][1:a][v2][2:a]concat=n=3:v=1:a=1[v][a]"
+        f"[v0][0:a][v1][1:a][v2][2:a]concat=n=3:v=1:a=1[v][ca];"
+        f"[3:a]volume={bgm_vol}[bg];"
+        f"[ca][bg]amix=inputs=2:normalize=0:duration=first:dropout_transition=0[a]"
     )
     final = os.path.join(work, f"{nnnn}.mp4")
     sh([
         "ffmpeg", "-y", "-loglevel", "error",
         "-i", intro, "-i", body, "-i", outro,
+        "-stream_loop", "-1", "-i", bgm,  # BGM contínua looping por todo o vídeo
         "-filter_complex", fc, "-map", "[v]", "-map", "[a]",
         "-r", "30", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", final,
@@ -125,11 +128,17 @@ def main():
         print(f"\n=== [6/6] upload R2 ===")
         import boto3
         from botocore.config import Config
+        # credenciais: .env local (dev) OU variáveis de ambiente (container na VPS)
         env = {}
-        for l in open(os.path.join(HERE, "..", ".env"), encoding="utf-8"):
-            l = l.replace("\r", "").strip()
-            if l and not l.startswith("#") and "=" in l:
-                k, v = l.split("=", 1); env[k] = v
+        envfile = os.path.join(HERE, "..", ".env")
+        if os.path.exists(envfile):
+            for l in open(envfile, encoding="utf-8"):
+                l = l.replace("\r", "").strip()
+                if l and not l.startswith("#") and "=" in l:
+                    k, v = l.split("=", 1); env[k] = v
+        for k in ("R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_ENDPOINT", "R2_PUBLIC_URL"):
+            if os.environ.get(k):
+                env[k] = os.environ[k]
         s3 = boto3.client("s3", endpoint_url=env["R2_ENDPOINT"], aws_access_key_id=env["R2_ACCESS_KEY_ID"],
                           aws_secret_access_key=env["R2_SECRET_ACCESS_KEY"],
                           config=Config(signature_version="s3v4"), region_name="auto")
