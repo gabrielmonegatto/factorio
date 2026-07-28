@@ -22,7 +22,7 @@ import subprocess
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from schedule_channel import load_env, s3c, list_ready_sermons, video_rendered
+from schedule_channel import load_env, s3c, list_ready_sermons, assets_cutoff, video_fresh
 
 FACTORY = os.path.join(HERE, "..", "docker", "factory.sh")
 
@@ -37,8 +37,11 @@ def render_one(nnnn, cpus):
 
 
 def next_pending(s3):
+    # "pendente" = sem render OU com render velho (mp4 mais antigo que os CTAs fixos).
+    # Assim, trocar introfixed/finalfixed no R2 dispara refazer tudo, sem apagar nada.
     ready = list_ready_sermons(s3)
-    pend = [n for n in ready if not video_rendered(s3, n)]
+    cutoff = assets_cutoff(s3)
+    pend = [n for n in ready if not video_fresh(s3, n, cutoff)]
     return ready, pend
 
 

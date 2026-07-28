@@ -22,6 +22,14 @@
   - Verificar: `ssh ... "cat /etc/cron.d/factory; tail /var/log/factory_schedule.log"`
 - **Acervo:** ~113 sermões, 112 narrados (Kokoro), copy visceral gerado nos 113 (`generate_marketing.py`: título "(Charles Spurgeon)" + thumbnailText ≤6 palavras + videoDescription SEM revelar fonte). Buffer inicial de 14 vídeos renderizando quando este handoff foi escrito.
 
+## Correção do CTA "comentário fixado" (28/07)
+
+O CTA de abertura (`introfixed.mp3`) narrava "Link in the pinned comment", mas o link vive na DESCRIÇÃO (a API do YouTube posta comentário mas NÃO fixa). Corrigido:
+- Re-gravado `introfixed.mp3` (Kokoro `bm_george` 0.9) → "Link in the description below". No R2 `_assets/introfixed.mp3` (velho salvo em `_assets/introfixed.pinnedcomment.bak.mp3`). `finalfixed.mp3` não menciona comentário, ficou intacto.
+- **Mecanismo de frescor (permanente):** `assets_cutoff()` + `video_fresh()` em `schedule_channel.py`. Um render é "velho" se o mp4 é mais antigo que os CTAs fixos (`_assets/introfixed.mp3`/`finalfixed.mp3`). O produtor refaz os velhos (sobrescrevendo, sem apagar nada) e o agendador não sobe render velho. **Trocar qualquer CTA no futuro dispara re-render de tudo sozinho.**
+- Os 14 vídeos que já estavam no YouTube (voz velha) foram DELETADOS via API; estado do agendador resetado (`scheduled={}`, `channel_start=2026-07-29`); `SEEDED={}`. Tudo re-sobe fresco.
+- Bug corrigido de brinde: a extração do videoId no agendador colava lixo (`VID"}`) — agora regex de 11 chars.
+
 ## Próximos passos (em ordem)
 
 1. **Housekeeping do Gabriel (não-técnico, sem pressa):** derrubar a Hostinger; revogar tokens expostos no chat (`HETZNER_API_TOKEN`, PAT Docker Hub).

@@ -36,8 +36,9 @@ EVENING_UTC = 23          # ~19:00 ET
 BUFFER_DAYS = 14          # quantos dias à frente manter agendado
 MAX_UPLOADS_PER_RUN = 5   # cota do YouTube ~6 uploads/dia; folga de segurança
 
-# vídeos já subidos manualmente (privados) — o agendador só define o publishAt deles
-SEEDED = {"0001": "t12Ml4-C5m0", "0002": "A21zMhdAvoM", "0003": "Rgh2fyiEYmI"}
+# vídeos já subidos manualmente (privados) — o agendador só define o publishAt deles.
+# Vazio: os antigos foram deletados (troca de CTA em 28/07); tudo re-sobe fresco via publish_sermon.
+SEEDED = {}
 
 
 def load_env():
@@ -115,6 +116,36 @@ def video_rendered(s3, nnnn):
         return False
 
 
+# CTAs/áudios fixos que ficam EMBUTIDOS no vídeo. Se um deles muda no R2, todo
+# render feito ANTES dessa troca fica velho (voz/fala desatualizada) e precisa refazer.
+CTA_ASSET_KEYS = [
+    f"{CHANNEL_PREFIX}/_assets/introfixed.mp3",
+    f"{CHANNEL_PREFIX}/_assets/finalfixed.mp3",
+]
+
+
+def assets_cutoff(s3):
+    """LastModified mais recente entre os CTAs fixos. Render mais antigo que isso = velho."""
+    latest = None
+    for k in CTA_ASSET_KEYS:
+        try:
+            lm = s3.head_object(Bucket=BUCKET, Key=k)["LastModified"]
+            if latest is None or lm > latest:
+                latest = lm
+        except Exception:
+            pass
+    return latest
+
+
+def video_fresh(s3, nnnn, cutoff):
+    """True só se o mp4 existe E é mais novo que os CTAs fixos (não precisa refazer)."""
+    try:
+        lm = s3.head_object(Bucket=BUCKET, Key=f"renders/spurgeon/{nnnn}.mp4")["LastModified"]
+    except Exception:
+        return False
+    return cutoff is None or lm >= cutoff
+
+
 def schedule_existing(env, video_id, publish_at, token):
     """Só define o publishAt de um vídeo já subido (privado → agendado)."""
     body = json.dumps({"id": video_id, "status": {"privacyStatus": "private",
@@ -153,6 +184,7 @@ def main():
     print(f"📅 channel_start={channel_start} | sermões prontos: {len(ready)} | horizonte: {horizon.date()}")
     print(f"   já agendados: {len(state['scheduled'])}\n")
 
+    cutoff = assets_cutoff(s3)   # renders mais antigos que os CTAs fixos = velhos, não sobem
     token = None if args.dry_run else yt_token(env)
     uploads = 0
     to_render = []
@@ -176,10 +208,10 @@ def main():
                 state["scheduled"][nnnn] = {"videoId": SEEDED[nnnn], "publishAt": pa}
             continue
 
-        # precisa estar renderizado
-        if not video_rendered(s3, nnnn):
+        # precisa estar renderizado E fresco (mp4 mais novo que os CTAs fixos)
+        if not video_fresh(s3, nnnn, cutoff):
             to_render.append(nnnn)
-            print(f"  ⏳ {nnnn} → {pa} (FALTA RENDERIZAR — pula neste run)")
+            print(f"  ⏳ {nnnn} → {pa} (SEM RENDER FRESCO — pula neste run)")
             continue
 
         if uploads >= args.max:
@@ -198,10 +230,11 @@ def main():
                  "--sermon", str(int(nnnn)), "--publish-at", pa],
                 capture_output=True, text=True)
             out = r.stdout + r.stderr
+            # extrai o videoId (11 chars) — regex evita colar lixo do JSON (ex: VID"})
+            import re as _re
             vid = ""
-            for line in out.splitlines():
-                if "youtu.be/" in line:
-                    vid = line.split("youtu.be/")[-1].split()[0].strip()
+            for m in _re.finditer(r"youtu\.be/([A-Za-z0-9_-]{11})", out):
+                vid = m.group(1)
             if r.returncode == 0 and vid:
                 state["scheduled"][nnnn] = {"videoId": vid, "publishAt": pa}
                 uploads += 1
