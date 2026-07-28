@@ -1,0 +1,1041 @@
+{
+  "Business [B.S.]": {
+    "id": "52ab8509-80de-4cbb-9255-2338591ee976",
+    "rows": [
+      {
+        "_id": "fee38e62-c438-4907-afa3-0ac97b59a5fa",
+        "Criado em": "2024-03-08T12:27:00.000Z",
+        "Nome": "Inteligência ⏳"
+      },
+      {
+        "_id": "214d9a84-e08e-41df-810d-71e8c7f19545",
+        "Criado em": "2024-03-08T12:20:00.000Z",
+        "Nome": "Holding ⏳"
+      },
+      {
+        "_id": "94a5bae6-bd91-4ff0-97dd-739b875e1aca",
+        "Criado em": "2024-03-08T12:20:00.000Z",
+        "Nome": "Financeiro 🏗️"
+      }
+    ]
+  },
+  "Marketing [B.S.]": {
+    "id": "fd2007f8-e4e8-4991-936b-cfc0c818300a",
+    "rows": [
+      {
+        "_id": "bf0c907c-df32-4a44-be04-70465771dd6f",
+        "Criado em": "2024-06-06T23:08:00.000Z",
+        "Nome": "Conteúdo 🏗️"
+      },
+      {
+        "_id": "7927dff1-b2bb-45c5-a9ec-33ed5ee0bdfe",
+        "Criado em": "2024-04-16T22:37:00.000Z",
+        "Nome": "Estratégia 🏗️"
+      },
+      {
+        "_id": "146579f0-ca59-480c-8b54-6a521e2383d7",
+        "Criado em": "2024-03-08T12:23:00.000Z",
+        "Nome": "Conversão ⏳"
+      }
+    ]
+  },
+  "Operations [B.S.]": {
+    "id": "68e8ed2d-053d-472f-b9d2-7dff9d8a80fa",
+    "rows": [
+      {
+        "_id": "8a00cd40-7376-424a-a70c-3ce175bf4943",
+        "Criado em": "2024-03-08T13:51:00.000Z",
+        "Nome": "Metas 🏗️"
+      },
+      {
+        "_id": "8919a302-b1a1-450d-afc7-1c8f36a61e45",
+        "Criado em": "2024-03-08T13:51:00.000Z",
+        "Nome": "Projetos 🏗️"
+      },
+      {
+        "_id": "a8966dac-b27f-46dd-92cd-3c0734dbce04",
+        "Criado em": "2024-03-08T13:51:00.000Z",
+        "Nome": "Sprints 🏗️"
+      }
+    ]
+  },
+  "Compass [LifeSystem]": {
+    "id": "e4229177-5473-460f-9e6a-d67308b52494",
+    "rows": [
+      {
+        "_id": "6fde74e6-186d-4b3a-ac7f-9e706a8002c6",
+        "Criado em": "2024-07-12T11:54:00.000Z",
+        "Nome": "Metas"
+      },
+      {
+        "_id": "1eff9ef8-af7a-4973-a874-f027d48df105",
+        "Criado em": "2024-06-06T15:28:00.000Z",
+        "Nome": "Navegação"
+      },
+      {
+        "_id": "863485fc-0eb2-4969-b44f-162d1c7a8dc9",
+        "Criado em": "2024-06-06T15:28:00.000Z",
+        "Nome": "Tarefas"
+      },
+      {
+        "_id": "c1b96f4b-aa97-4299-bba2-29a99a816c68",
+        "Criado em": "2024-06-06T15:28:00.000Z",
+        "Nome": "Projetos"
+      },
+      {
+        "_id": "b181697f-9ba9-4865-bcc0-6d44c691c235",
+        "Criado em": "2024-06-06T15:26:00.000Z",
+        "Nome": "Polaris"
+      }
+    ]
+  },
+  "Trevvo [LifeSystem]": {
+    "id": "34d36861-fd0a-4cc3-8bcd-2380a5f27467",
+    "rows": [
+      {
+        "_id": "8249f3f4-07a4-4f93-a8c7-68d392c41afe",
+        "Criado em": "2024-07-18T18:11:00.000Z",
+        "Nome": "Mapa"
+      },
+      {
+        "_id": "9e92a99b-ca31-4ebe-abd2-79209e73d1be",
+        "Criado em": "2024-07-17T15:53:00.000Z",
+        "Nome": "Sabedoria"
+      },
+      {
+        "_id": "7bc0e3ef-bb6d-4a5e-9f06-ecd7f09c0517",
+        "Criado em": "2024-07-17T01:34:00.000Z",
+        "Nome": "Orçamento"
+      },
+      {
+        "_id": "007d4460-84ba-4eb4-9f86-511914c65c25",
+        "Criado em": "2024-07-17T01:34:00.000Z",
+        "Nome": "Patrimônio"
+      },
+      {
+        "_id": "7fef1f91-6783-45e9-b332-dca35adf1963",
+        "Criado em": "2024-07-15T22:07:00.000Z",
+        "Nome": "Fluxo"
+      }
+    ]
+  },
+  "Entelekkia [LifeSystem]": {
+    "id": "1425b1d6-013b-49ad-bc8a-bba2aca05ca6",
+    "rows": []
+  },
+  "Calendar [B.S.]": {
+    "id": "00cd93ac-7e86-41e3-9462-46f8e86d1f92",
+    "rows": []
+  },
+  "Calendar - [L.S.]": {
+    "id": "7ff914cb-7f1f-4d2e-ad79-7cb1b791281b",
+    "rows": [
+      {
+        "_id": "75a75464-c6f3-440a-acc8-9d8027795232",
+        "Data": "2024-08-12",
+        "Nome": "Lançar Negócio"
+      },
+      {
+        "_id": "d7c77840-750a-43d8-9306-69f475a6a1e3",
+        "Data": "2024-07-31",
+        "Nome": "Terminar Business System"
+      },
+      {
+        "_id": "76c95ff8-bb11-412f-8b4f-b34a885a3227",
+        "Data": "2024-07-19",
+        "Nome": "Terminar Life System"
+      }
+    ]
+  },
+  "Metas": {
+    "id": "bf45bcc1-e142-4c11-a4aa-09fd93bfdee3",
+    "rows": [
+      {
+        "_id": "08daea94-455f-4262-b1c4-391212facd88",
+        "Nome do projeto": "Começar a Treinar Artes Sociais",
+        "Status": "No Gelo"
+      },
+      {
+        "_id": "ad05ec9f-ac97-4252-a5c5-14fb1907b320",
+        "Nome do projeto": "Começar a Treinar Artes Marciais",
+        "Status": "No Gelo"
+      },
+      {
+        "_id": "97793005-9069-405e-b570-e32a62e10b45",
+        "Nome do projeto": "Dominar Flexibilidade p/ Chutes",
+        "Status": "No Gelo"
+      },
+      {
+        "_id": "c8db5c6d-506b-42ee-a1d2-6f82031bc29c",
+        "Nome do projeto": "Dominar Handstand",
+        "Status": "No Gelo"
+      },
+      {
+        "_id": "58feee6e-aaa0-4b1b-9cd0-744d1a4cbd25",
+        "Nome do projeto": "Passar no Bar Brothers Requiriments",
+        "Status": "No Gelo"
+      },
+      {
+        "_id": "0cdef33d-2060-472f-9f30-a22dddc67141",
+        "Nome do projeto": "Tirar Cidadania Italiana",
+        "Status": "No Gelo"
+      },
+      {
+        "_id": "8007892f-390e-4f7d-87bb-bd8d744e1d0c",
+        "Nome do projeto": "Entrar no Modo Sem Limites",
+        "Status": "No Gelo"
+      },
+      {
+        "_id": "f289deae-303d-4008-b01b-567623a703b5",
+        "Tarefa": [
+          "21811d29-46ba-4e77-86b4-b891da4cda32",
+          "e2088ed8-4df4-4d87-86e9-89caf2977978",
+          "fa1ae19a-f89c-447c-8d80-d6530685b1ac"
+        ],
+        "Nome do projeto": "Construir Life System 1.0",
+        "Status": "Ativa",
+        "Prioridade": "Major"
+      },
+      {
+        "_id": "1a1b9afe-7e75-4d29-b12c-a280b6945cdc",
+        "Nome do projeto": "Lançar Holding",
+        "Status": "Ativa",
+        "Prioridade": "Major"
+      },
+      {
+        "_id": "5385e8e4-ec21-4322-8ad1-6b4c5dbad807",
+        "Nome do projeto": "Construir Business System 1.0",
+        "Status": "Ativa",
+        "Prioridade": "Major"
+      },
+      {
+        "_id": "89b01c07-22e2-4162-9ad2-05db96d29dad",
+        "Nome do projeto": "Ler a Bíblia NTLH",
+        "Status": "Ativa",
+        "Prioridade": "Major"
+      }
+    ]
+  },
+  "Projetos": {
+    "id": "65598cba-60f0-4be8-ae39-e98330bf5d7c",
+    "rows": [
+      {
+        "_id": "d8a999d3-151c-4602-a62f-909fa2961f74",
+        "Nome do projeto": "Segundo Cérebro",
+        "Status": "Backlog",
+        "Tarefas": [
+          "18d35916-7048-49a9-b2d5-01e678b61866",
+          "f29e11d2-83c5-47fd-b930-5efbbdd96c2a",
+          "93b64e94-754c-4039-b8af-153196d9073c",
+          "d9ae5132-390c-4784-b589-c5dfc4d17e52"
+        ]
+      },
+      {
+        "_id": "c63da237-1f5d-43b6-849c-02d9ff11db10",
+        "Nome do projeto": "Biblioteca",
+        "Status": "Backlog"
+      },
+      {
+        "_id": "dd92cf16-2e3f-4cea-80c1-8ed4544443c3",
+        "Nome do projeto": "Guarda-Roupa",
+        "Status": "Backlog"
+      },
+      {
+        "_id": "8f3d64bb-bd32-4432-a065-ecf9af1a0e0f",
+        "Nome do projeto": "Cenário",
+        "Status": "Backlog"
+      }
+    ]
+  },
+  "Tarefas": {
+    "id": "47f4f8cf-eeb2-4ea8-81da-ee379207b3f4",
+    "rows": [
+      {
+        "_id": "2ab6a9d8-181e-4893-8367-eaca9da9b5a8",
+        "Nome da tarefa": "Falar com treinador Andre sobre a condição especial inbox",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "9c4757d2-f599-4727-b145-252f0dab2c6c",
+        "Nome da tarefa": "verificar contas ENEL e COMGÁS",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "3d6f44df-fc54-4f95-b8e7-008449f834b2",
+        "Nome da tarefa": "sacar betano",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "29f03e66-91ee-4274-aa2f-2a07b4365255"
+        ],
+        " ": false
+      },
+      {
+        "_id": "1195602a-05d9-4116-b061-129374352a64",
+        "Nome da tarefa": "cancelar vivo",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "29f03e66-91ee-4274-aa2f-2a07b4365255"
+        ],
+        " ": false
+      },
+      {
+        "_id": "465b6881-6f93-45ab-b6d7-6ce0b22b49a3",
+        "Nome da tarefa": "verificar tio/vó camiseta azul",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "29f03e66-91ee-4274-aa2f-2a07b4365255"
+        ],
+        " ": false
+      },
+      {
+        "_id": "6084fe25-2e5a-450b-a183-b0ed27adc59f",
+        "Nome da tarefa": "pegar minha jaqueta no Japa",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "29f03e66-91ee-4274-aa2f-2a07b4365255"
+        ],
+        " ": false
+      },
+      {
+        "_id": "71e2cfd0-ee9f-496a-9c63-29fdb8aac9dc",
+        "Nome da tarefa": "quadro jace mindsculpter",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "29f03e66-91ee-4274-aa2f-2a07b4365255"
+        ],
+        " ": false
+      },
+      {
+        "_id": "5104e3fe-f459-40a3-be94-d5817317a7bb",
+        "Nome da tarefa": "desenho padrão parede",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "29f03e66-91ee-4274-aa2f-2a07b4365255"
+        ],
+        " ": false
+      },
+      {
+        "_id": "29f03e66-91ee-4274-aa2f-2a07b4365255",
+        "Nome da tarefa": "terminar cenário",
+        "Status": "A fazer",
+        "Subtarefas": [
+          "5104e3fe-f459-40a3-be94-d5817317a7bb",
+          "71e2cfd0-ee9f-496a-9c63-29fdb8aac9dc",
+          "6084fe25-2e5a-450b-a183-b0ed27adc59f",
+          "465b6881-6f93-45ab-b6d7-6ce0b22b49a3",
+          "1195602a-05d9-4116-b061-129374352a64",
+          "3d6f44df-fc54-4f95-b8e7-008449f834b2"
+        ],
+        " ": false
+      },
+      {
+        "_id": "d985e4d7-9cda-44a6-a5e4-28cf46b7204f",
+        "Nome da tarefa": "tirar visto",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "22a158a8-16de-4519-b45b-337f4470140e",
+        "Nome da tarefa": "tirar passaporte",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "4fa56594-ac60-4c05-b15a-47a2f22215ad",
+        "Nome da tarefa": "conectar Chipak na operação",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "23115f75-50a9-47f9-b464-ff8cb09b962e",
+        "Nome da tarefa": "encerrar empresa atual ou mudar quadro",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "31938c21-6e30-489b-801d-aa69d280dac1",
+        "Nome da tarefa": "Patrimônio/Carteira",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "e2088ed8-4df4-4d87-86e9-89caf2977978"
+        ],
+        " ": false
+      },
+      {
+        "_id": "bf002a34-c022-4d3b-86d9-00c95bc66f95",
+        "Nome da tarefa": "Contas a Pagar/Receber",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "e2088ed8-4df4-4d87-86e9-89caf2977978"
+        ],
+        " ": false
+      },
+      {
+        "_id": "47dfcc83-0344-4297-a11b-584cd13ad8ff",
+        "Nome da tarefa": "Entradas/Saídas Mensal",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "e2088ed8-4df4-4d87-86e9-89caf2977978"
+        ],
+        " ": false
+      },
+      {
+        "_id": "d2ae0adb-fd58-432f-98e5-27b5c2857570",
+        "Nome da tarefa": "Previsões/Projeções",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "e2088ed8-4df4-4d87-86e9-89caf2977978"
+        ],
+        " ": false
+      },
+      {
+        "_id": "f2a1e8f2-a1e0-4c94-b9c2-933bbd16b786",
+        "Nome da tarefa": "Orçamento",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "e2088ed8-4df4-4d87-86e9-89caf2977978"
+        ],
+        " ": false
+      },
+      {
+        "_id": "98d8f1d2-8586-4c21-b10d-ffb6fbe37009",
+        "Nome da tarefa": "Caixa Atual",
+        "Status": "A fazer",
+        "Tarefa principal": [
+          "e2088ed8-4df4-4d87-86e9-89caf2977978"
+        ],
+        " ": false
+      },
+      {
+        "_id": "fa1ae19a-f89c-447c-8d80-d6530685b1ac",
+        "Meta": [
+          "f289deae-303d-4008-b01b-567623a703b5"
+        ],
+        "Nome da tarefa": "Construir Entelekkia 1.0",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "e2088ed8-4df4-4d87-86e9-89caf2977978",
+        "Meta": [
+          "f289deae-303d-4008-b01b-567623a703b5"
+        ],
+        "Nome da tarefa": "Construir Trevvo 1.0",
+        "Status": "A fazer",
+        "Subtarefas": [
+          "98d8f1d2-8586-4c21-b10d-ffb6fbe37009",
+          "f2a1e8f2-a1e0-4c94-b9c2-933bbd16b786",
+          "d2ae0adb-fd58-432f-98e5-27b5c2857570",
+          "47dfcc83-0344-4297-a11b-584cd13ad8ff",
+          "bf002a34-c022-4d3b-86d9-00c95bc66f95",
+          "31938c21-6e30-489b-801d-aa69d280dac1"
+        ],
+        " ": false
+      },
+      {
+        "_id": "21811d29-46ba-4e77-86b4-b891da4cda32",
+        "Meta": [
+          "f289deae-303d-4008-b01b-567623a703b5"
+        ],
+        "Nome da tarefa": "Construir Compass 1.0",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "d9ae5132-390c-4784-b589-c5dfc4d17e52",
+        "Nome da tarefa": "Curadoria dos livros ainda não lidos",
+        "Status": "A fazer",
+        " ": false,
+        "Projeto": [
+          "d8a999d3-151c-4602-a62f-909fa2961f74"
+        ]
+      },
+      {
+        "_id": "93b64e94-754c-4039-b8af-153196d9073c",
+        "Nome da tarefa": "Extração dos livros já lidos",
+        "Status": "A fazer",
+        " ": false,
+        "Projeto": [
+          "d8a999d3-151c-4602-a62f-909fa2961f74"
+        ]
+      },
+      {
+        "_id": "f29e11d2-83c5-47fd-b930-5efbbdd96c2a",
+        "Nome da tarefa": "Planejamento para construir 2C",
+        "Status": "A fazer",
+        " ": false,
+        "Projeto": [
+          "d8a999d3-151c-4602-a62f-909fa2961f74"
+        ]
+      },
+      {
+        "_id": "18d35916-7048-49a9-b2d5-01e678b61866",
+        "Nome da tarefa": "Pesquisa para construir 2C",
+        "Status": "Concluída",
+        " ": false,
+        "Projeto": [
+          "d8a999d3-151c-4602-a62f-909fa2961f74"
+        ]
+      },
+      {
+        "_id": "d56b88cf-beee-494a-a4b5-c411c1bd9f7d",
+        "Nome da tarefa": "organizar arquivos segundo cérebro",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "8f4a8515-979f-4f81-94fb-4ac11f57e0e1",
+        "Nome da tarefa": "contratar um designer",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "09021887-e8b7-4075-a536-c11b597b5d3d",
+        "Nome da tarefa": "montar organograma markeologia",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "2e9b570e-ac7a-4e45-8a93-003b0683715a",
+        "Nome da tarefa": "passar os favoritos pruma lista e limpar navegador ",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "888a9282-45a9-4da2-8cb3-dabbeb77e34b",
+        "Nome da tarefa": "compras Hezion",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "900c4698-3aec-4514-9dc4-8b01fc69522f",
+        "Observações": "liberar espaço drive",
+        "Nome da tarefa": "passar meus vídeos para canal yt",
+        "Status": "A fazer",
+        "Deadline": "2024-07-13",
+        " ": false
+      },
+      {
+        "_id": "fe3bbe15-5c98-4f4f-99c5-d19e15a74b16",
+        "Nome da tarefa": "revisitar material de consultoria Frank Kern",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "f9abd324-0075-4789-81d4-f00f0edf627a",
+        "Nome da tarefa": "trocar o óculos",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "4334190d-cf96-4a7b-aa3b-237f89a8d9fc",
+        "Nome da tarefa": "situação coworking",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "891e6b6f-bbfc-4112-8bcb-36890698792d",
+        "Nome da tarefa": "email cactus",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "c2e51795-c3b6-478d-a37c-f7d00f9b460b",
+        "Nome da tarefa": "falar com Douglas Dale Carnegie",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "b70498a9-068d-467c-8e93-1f2885fe6b93",
+        "Nome da tarefa": "terminar orçamento",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "f974bc0c-eef3-4bac-b239-96d4e148afc7",
+        "Nome da tarefa": "preparar para viajar ao exterior",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "6c606cc1-f23b-4492-a33e-54d53a190b13",
+        "Nome da tarefa": "comprar livros martins",
+        "Status": "A fazer",
+        " ": false,
+        "categoria": "Monegatto"
+      },
+      {
+        "_id": "f482edec-40ae-4e48-b0f2-c8fb284f2251",
+        "Nome da tarefa": "mapeamento miss right e plano de atração",
+        "Status": "A fazer",
+        " ": false,
+        "categoria": "Monegatto"
+      },
+      {
+        "_id": "ee8398b7-d536-4e63-b773-74f083926eef",
+        "Nome da tarefa": "criar caderno de oração",
+        "Status": "A fazer",
+        " ": false,
+        "categoria": "Monegatto"
+      },
+      {
+        "_id": "85d9d258-e567-4e9a-9ab6-ccc3a09d58d8",
+        "Nome da tarefa": "criação dos planos de desenvolvimento",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "2b15822f-37ed-48a2-bf14-0e9d256353dd",
+        "Nome da tarefa": "construir a página trevvo 1.0",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "baaef8dd-cd5a-494a-a553-388ef3457a42",
+        "Nome da tarefa": "construção plano financeiro",
+        "Status": "A fazer",
+        " ": false
+      },
+      {
+        "_id": "1eb3d7d4-576a-437d-bc9c-76d2b55a7c50",
+        "Nome da tarefa": "terminar de traçar minhas metas",
+        "Status": "A fazer",
+        " ": false
+      }
+    ]
+  },
+  "Polaris": {
+    "id": "7a2c3f80-59ad-4eaa-879a-fad6662453e2",
+    "rows": [
+      {
+        "_id": "2ad32dc3-0d45-437e-a9c8-68af4318f0b7",
+        "Categoria": "🏹",
+        "Name": "Transformação HighValueMan"
+      },
+      {
+        "_id": "be7728be-02ee-4acc-8cfd-8bbc67811e7e",
+        "Categoria": "🏹",
+        "Name": "Construir Marketing System 1.0"
+      },
+      {
+        "_id": "3619f765-c4bf-4161-9cf7-4ed378bdb98b",
+        "Categoria": "🏹",
+        "Name": "Construir Life System 1.0"
+      },
+      {
+        "_id": "1b84a6a1-8201-44b4-802c-ac28e3bd9379",
+        "Categoria": "🏹",
+        "Name": "Lançar Novo Negócio"
+      },
+      {
+        "_id": "312e62e5-beee-4663-8d4d-2b130e483606",
+        "Subitem": [
+          "065b9065-78e4-411c-bc7f-968f7bc1de47",
+          "755fd8a8-5429-4257-8eb0-123e86c2087a",
+          "7c2de27f-6751-4178-afd8-3e71f23e3012",
+          "4fb20270-dc97-4567-881b-74cf0a755046",
+          "21ebb9fb-a9f8-4fa2-a56a-492139724103"
+        ],
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Artes Sociais"
+      },
+      {
+        "_id": "7b35997e-f421-43d5-839b-a74c027a9910",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Artes Marciais (Brazillian Taijutsu)"
+      },
+      {
+        "_id": "7fb52d92-965a-49c1-8286-ff25ddee922c",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Teologia"
+      },
+      {
+        "_id": "60eb7e9c-ee15-4eff-90ab-e3398c220630",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Entrar no modo sem limites"
+      },
+      {
+        "_id": "79adefa3-79d9-4478-9ba3-891df2d71e8c",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Forjar a mente Entelekkia"
+      },
+      {
+        "_id": "d999251f-ecc2-441c-be83-36a7a2f742c9",
+        "Item principal": [
+          "0493352c-0dc8-447b-8458-09e8a87d1746"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Construção: Laboratório Pessoal (Escritório) "
+      },
+      {
+        "_id": "dd8a8b1f-fd85-46cd-8248-c3e5bfad384e",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Xadrez (MN)"
+      },
+      {
+        "_id": "f61a2efd-4df5-482b-bf8d-707120aaf534",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Impactar positivamente amigos e familiares"
+      },
+      {
+        "_id": "065b9065-78e4-411c-bc7f-968f7bc1de47",
+        "Item principal": [
+          "312e62e5-beee-4663-8d4d-2b130e483606"
+        ],
+        "Categoria": "📦",
+        "Name": "Mapa de Network"
+      },
+      {
+        "_id": "5caf6345-9ad9-422f-87d6-3901b72f901f",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Construir sistema pessoal: COMPASS"
+      },
+      {
+        "_id": "755fd8a8-5429-4257-8eb0-123e86c2087a",
+        "Item principal": [
+          "312e62e5-beee-4663-8d4d-2b130e483606"
+        ],
+        "Categoria": "📦",
+        "Name": "CRM Social e Profissional"
+      },
+      {
+        "_id": "76b2865c-3350-48be-aee3-b03294dac64c",
+        "Item principal": [
+          "0493352c-0dc8-447b-8458-09e8a87d1746"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Construção: Sala de Jogos"
+      },
+      {
+        "_id": "e649259c-37f1-4dce-8d33-5b9085bb31e3",
+        "Subitem": [
+          "bf2f4f61-62fd-4370-bbae-fb1a287a6f87"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Consolidar: Markeologia"
+      },
+      {
+        "_id": "7bb36eca-4635-4693-8589-e38ad7584ce0",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Biblicismo"
+      },
+      {
+        "_id": "aa26ef83-ddd4-43f8-a48f-c13b15eff521",
+        "Subitem": [
+          "656565b5-552b-43da-ab59-c45eb805964a",
+          "bd653e94-a2c1-4ffb-8471-f6a7dc7783fc"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Independência Financeira"
+      },
+      {
+        "_id": "c43ce557-4af6-4df8-ba3b-a67427cd3d23",
+        "Tipo": [
+          "realização"
+        ],
+        "Categoria": "📦",
+        "Name": "Insígnia: Brazillian Traveller"
+      },
+      {
+        "_id": "e8422a5d-847e-4d7f-8d09-172bbf547742",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Marketing e Vendas"
+      },
+      {
+        "_id": "323c9a3b-5eb2-4dd6-b321-6e32957a856e",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Liderança"
+      },
+      {
+        "_id": "4fb20270-dc97-4567-881b-74cf0a755046",
+        "Item principal": [
+          "312e62e5-beee-4663-8d4d-2b130e483606"
+        ],
+        "Categoria": "📦",
+        "Name": "Desenvolver Modo Sherlock Holmes"
+      },
+      {
+        "_id": "7d53b4af-e76c-45a1-8dae-670cd64e4162",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Consolidar: Entelekkia"
+      },
+      {
+        "_id": "bd653e94-a2c1-4ffb-8471-f6a7dc7783fc",
+        "Item principal": [
+          "aa26ef83-ddd4-43f8-a48f-c13b15eff521"
+        ],
+        "Categoria": "📦",
+        "Name": "eliminação de todas as dívidas"
+      },
+      {
+        "_id": "112e6a15-457c-4433-bf03-ccea549c27a3",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Comprar uma Evoque"
+      },
+      {
+        "_id": "3a9d6ec5-edfe-4ac0-85f0-6b9e63354c79",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Comprar um Mustang"
+      },
+      {
+        "_id": "60f8e025-56a1-4b50-95aa-9f4a97d26fc7",
+        "Item principal": [
+          "0493352c-0dc8-447b-8458-09e8a87d1746"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Construção: Adega e Bar"
+      },
+      {
+        "_id": "77676c22-b0cc-4330-b399-312363651196",
+        "Subitem": [
+          "4342fa60-18be-4897-85bb-3bca6cac27e3"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Casar com uma mulher virtuosa"
+      },
+      {
+        "_id": "998ef38e-228d-4f84-b153-a66b39d96c56",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Consolidar: Monegatto (Marca Pessoal)"
+      },
+      {
+        "_id": "99d6fe8c-1056-4cd2-8a97-859e3c5f6497",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: VSM’s"
+      },
+      {
+        "_id": "e0193909-2394-4e4c-be97-55566d4edccf",
+        "Item principal": [
+          "0493352c-0dc8-447b-8458-09e8a87d1746"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Construção: Biblioteca"
+      },
+      {
+        "_id": "21ebb9fb-a9f8-4fa2-a56a-492139724103",
+        "Item principal": [
+          "312e62e5-beee-4663-8d4d-2b130e483606"
+        ],
+        "Categoria": "📦",
+        "Name": "Desenvolver Modo 12 Arqs"
+      },
+      {
+        "_id": "4342fa60-18be-4897-85bb-3bca6cac27e3",
+        "Item principal": [
+          "77676c22-b0cc-4330-b399-312363651196"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Construir uma “família Gracie”"
+      },
+      {
+        "_id": "7c2de27f-6751-4178-afd8-3e71f23e3012",
+        "Item principal": [
+          "312e62e5-beee-4663-8d4d-2b130e483606"
+        ],
+        "Categoria": "📦",
+        "Name": "Estar conectado com os maiores de diversos mercados"
+      },
+      {
+        "_id": "ae134e38-8b08-41c2-b760-3ad0a867e158",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Musical"
+      },
+      {
+        "_id": "bf2f4f61-62fd-4370-bbae-fb1a287a6f87",
+        "Item principal": [
+          "e649259c-37f1-4dce-8d33-5b9085bb31e3"
+        ],
+        "Categoria": "📦",
+        "Name": "Consolidar Hub de co-produção"
+      },
+      {
+        "_id": "0493352c-0dc8-447b-8458-09e8a87d1746",
+        "Subitem": [
+          "60f8e025-56a1-4b50-95aa-9f4a97d26fc7",
+          "e0193909-2394-4e4c-be97-55566d4edccf",
+          "508122b8-4911-467e-bdbd-9d0271d8c517",
+          "d999251f-ecc2-441c-be83-36a7a2f742c9",
+          "76b2865c-3350-48be-aee3-b03294dac64c"
+        ],
+        "Categoria": "📦",
+        "Name": "Construir a DreamHouse"
+      },
+      {
+        "_id": "244359b8-6107-4ad1-9ec9-0088db3d2666",
+        "Tipo": [
+          "realização"
+        ],
+        "Categoria": "📦",
+        "Name": "Insígnia: 101 aventuras"
+      },
+      {
+        "_id": "3cdfbc89-2546-43ae-b5e2-660ba11f1dfa",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Lançar Tactics Ogre Exodus"
+      },
+      {
+        "_id": "508122b8-4911-467e-bdbd-9d0271d8c517",
+        "Item principal": [
+          "0493352c-0dc8-447b-8458-09e8a87d1746"
+        ],
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Construção: Estúdio e Cenários"
+      },
+      {
+        "_id": "5ae8cb7b-bc66-4b5c-9cd0-edecc9191094",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Aparência"
+      },
+      {
+        "_id": "85382958-75da-4838-943f-23627df901db",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Business"
+      },
+      {
+        "_id": "d405272d-be8e-4bfd-a681-28acd86e7eeb",
+        "Tipo": [
+          "realização"
+        ],
+        "Categoria": "📦",
+        "Name": "Insígnia: 196 Countries"
+      },
+      {
+        "_id": "11ffa526-8298-4c89-b6d6-e674fbe11103",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Shape e Condicionamento"
+      },
+      {
+        "_id": "5e8ec257-91e8-46f7-8328-34a37cf52888",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Consolidar: Escola de Gaio"
+      },
+      {
+        "_id": "656565b5-552b-43da-ab59-c45eb805964a",
+        "Item principal": [
+          "aa26ef83-ddd4-43f8-a48f-c13b15eff521"
+        ],
+        "Categoria": "🏹",
+        "Name": "elaboração plano financeiro"
+      },
+      {
+        "_id": "6f61cb2f-863d-4b3a-9a52-afd799174875",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria - Biohacking"
+      },
+      {
+        "_id": "e6a80e77-055f-4db0-95f9-a1914e2df961",
+        "Tipo": [
+          "construção"
+        ],
+        "Categoria": "📦",
+        "Name": "Construir sistema de marketing: THE SYSTEM"
+      },
+      {
+        "_id": "b2a63aac-8bff-4ed3-8435-cab778d4282c",
+        "Tipo": [
+          "crescimento"
+        ],
+        "Categoria": "📦",
+        "Name": "Maestria: Memorização das Escrituras"
+      }
+    ]
+  }
+}
