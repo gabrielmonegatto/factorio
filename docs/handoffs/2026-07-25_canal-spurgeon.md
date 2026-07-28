@@ -13,10 +13,13 @@
 - **Teable migrado** pra Hetzner: `https://db.markeologia.com.br` (HTTP 307 ok, cert Caddy emitido, DNS nuvem CINZA na CF conta gabriel.monegatto). Dados validados íntegros (só drift de 37 thumbnails + migrations novas). Backup no R2 `backups/teable/teable_2026-07-25_hetzner.dump`.
   - Verificar: `curl -sI https://db.markeologia.com.br` → 307.
 - **YouTube:** canal Charles Spurgeon Treasures conectado (creds `.env` → `YT_CLIENT_ID/SECRET/REFRESH_TOKEN`). 3 vídeos AGENDADOS (privados→públicos): 0001→27/jul, 0002→28, 0003→29, 12:00 UTC.
-- **Automação (set-and-forget) ligada** — crons em `/etc/cron.d/factory` na VPS:
-  - `schedule_channel.py` (diário 06:00 UTC): agenda vídeos renderizados no calendário via `publishAt`. Calendário: 1/dia por 14 dias → 2/dia (12:00 e 23:00 UTC). Ordem sequencial. Estado em R2 `schedule/spurgeon_schedule.json`.
-  - `render_buffer.py` (a cada 4h, `--count 2`): mantém o estoque de render à frente.
-  - Verificar: `ssh ... "cat /etc/cron.d/factory; tail /var/log/factory_schedule.log /var/log/factory_render.log"`
+- **Produção 24/7 (fábrica viva)** — serviço systemd `factory-producer.service` na VPS (28/07):
+  - Roda `render_buffer.py --loop --cpus 8`: renderiza um sermão após o outro, sem parar, até a fila esvaziar; fila vazia → dorme 30min e recheca. `Restart=always` + `WantedBy=multi-user` → sobrevive a crash e reboot.
+  - Usa 8 dos 16 núcleos (deixa 8 pro Teable). Load típico em produção ~8-9.
+  - Verificar: `ssh ... "systemctl status factory-producer; tail -20 /var/log/factory_producer.log; docker ps"`.
+  - **O cron antigo `render_buffer --count 2` (a cada 4h) foi DESLIGADO** (comentado em `/etc/cron.d/factory`) — o serviço assumiu a produção. Não religar os dois juntos (render duplo = 16 núcleos, sufoca o Teable).
+- **Agendamento (publicação)** — cron `schedule_channel.py` (diário 06:00 UTC) em `/etc/cron.d/factory`: agenda vídeos renderizados no calendário via `publishAt`. Calendário: 1/dia por 14 dias → 2/dia (12:00 e 23:00 UTC). Ordem sequencial. Estado em R2 `schedule/spurgeon_schedule.json`.
+  - Verificar: `ssh ... "cat /etc/cron.d/factory; tail /var/log/factory_schedule.log"`
 - **Acervo:** ~113 sermões, 112 narrados (Kokoro), copy visceral gerado nos 113 (`generate_marketing.py`: título "(Charles Spurgeon)" + thumbnailText ≤6 palavras + videoDescription SEM revelar fonte). Buffer inicial de 14 vídeos renderizando quando este handoff foi escrito.
 
 ## Próximos passos (em ordem)

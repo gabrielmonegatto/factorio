@@ -8,9 +8,15 @@ Roda via cron (ex: a cada 3h renderiza 1) OU manual com --count N pra encher o b
 Uso (na VPS):
   python3 render_buffer.py --count 14     # enche o buffer inicial
   python3 render_buffer.py                # renderiza 1 (default, pro cron)
+  python3 render_buffer.py --loop         # PRODUTOR 24/7: renderiza sem parar
+                                          #   até a fila esvaziar, dorme e recheca
+
+O modo --loop é o que o serviço systemd factory-producer roda: mantém a fábrica
+viva, produzindo continuamente enquanto houver sermão pronto sem render.
 """
 import os
 import sys
+import time
 import argparse
 import subprocess
 
@@ -21,24 +27,58 @@ from schedule_channel import load_env, s3c, list_ready_sermons, video_rendered
 FACTORY = os.path.join(HERE, "..", "docker", "factory.sh")
 
 
+def render_one(nnnn, cpus):
+    print(f"🎬 renderizando {nnnn}...", flush=True)
+    env2 = {**os.environ, "FACTORY_CPUS": cpus, "FACTORY_MEM": "24g"}
+    r = subprocess.run(["bash", FACTORY, "render", str(int(nnnn))], env=env2)
+    ok = r.returncode == 0
+    print(f"   {'✅' if ok else '❌ rc='+str(r.returncode)} {nnnn}", flush=True)
+    return ok
+
+
+def next_pending(s3):
+    ready = list_ready_sermons(s3)
+    pend = [n for n in ready if not video_rendered(s3, n)]
+    return ready, pend
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--count", type=int, default=1)
     ap.add_argument("--cpus", default="12")
+    ap.add_argument("--loop", action="store_true",
+                    help="produtor 24/7: renderiza sem parar; fila vazia dorme e recheca")
+    ap.add_argument("--sleep", type=int, default=1800,
+                    help="segundos de espera quando a fila está vazia (modo --loop)")
     args = ap.parse_args()
 
     env = load_env()
     s3 = s3c(env)
-    ready = list_ready_sermons(s3)
-    pend = [n for n in ready if not video_rendered(s3, n)]
+
+    if args.loop:
+        print(f"♾️  PRODUTOR 24/7 ligado (cpus={args.cpus}, recheca a cada {args.sleep}s quando vazio)", flush=True)
+        # falhas consecutivas de UM mesmo sermão não travam a fábrica: pula pro próximo
+        fail_streak = {}
+        while True:
+            ready, pend = next_pending(s3)
+            pend = [n for n in pend if fail_streak.get(n, 0) < 3]
+            if not pend:
+                print(f"📦 prontos={len(ready)} | fila vazia — dormindo {args.sleep}s", flush=True)
+                time.sleep(args.sleep)
+                continue
+            nnnn = pend[0]
+            print(f"📦 prontos={len(ready)} | sem render={len(pend)} | próximo: {nnnn}", flush=True)
+            if not render_one(nnnn, args.cpus):
+                fail_streak[nnnn] = fail_streak.get(nnnn, 0) + 1
+            else:
+                fail_streak.pop(nnnn, None)
+        return
+
+    ready, pend = next_pending(s3)
     alvo = pend[:args.count]
     print(f"📦 prontos={len(ready)} | sem render={len(pend)} | vou renderizar: {' '.join(alvo) or '(nada)'}")
-
     for nnnn in alvo:
-        print(f"🎬 renderizando {nnnn}...")
-        env2 = {**os.environ, "FACTORY_CPUS": args.cpus, "FACTORY_MEM": "24g"}
-        r = subprocess.run(["bash", FACTORY, "render", str(int(nnnn))], env=env2)
-        print(f"   {'✅' if r.returncode == 0 else '❌ rc='+str(r.returncode)} {nnnn}")
+        render_one(nnnn, args.cpus)
 
 
 if __name__ == "__main__":
