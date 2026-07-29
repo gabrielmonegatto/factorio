@@ -1,10 +1,13 @@
 #!/usr/bin/env node
-// INSTANCIAR PLAYBOOK — clona um checklist-mestre do banco Playbooks pra Tasks
-// da unidade, com hierarquia e áreas preservadas. É a "linha de montagem".
+// INSTANCIAR PLAYBOOK — clona a árvore de um playbook do catálogo pras Tasks
+// da unidade de negócio. É a "linha de montagem".
 //
-// Uso: node notion-instanciar-playbook.mjs "<Marca>" ["<Nome do Playbook>"]
+// Estrutura esperada (v3): banco Playbooks = catálogo (1 linha por playbook);
+// dentro da PÁGINA de cada playbook vive um banco inline "Etapas" com a árvore.
+//
+// Uso: node notion-instanciar-playbook.mjs "<Marca>" ["<Playbook>"]
 // Ex.: node notion-instanciar-playbook.mjs "ZOAC"
-//      node notion-instanciar-playbook.mjs "Tonaface" "Implementação Funil Perpétuo"
+//      node notion-instanciar-playbook.mjs "Tonaface" "Perpétuo Lucrativo"
 import fs from 'node:fs';
 
 const ENV = 'C:/Users/Monegatto/Desktop/EternalL/_factorio/.env';
@@ -16,7 +19,7 @@ const DB_TASKS_BS  = '3a7f06f1-0ce3-81cd-8696-cc002c44f430';
 const DB_PROJ_BS   = '3a7f06f1-0ce3-81d2-9dd9-ddad8d16109c';
 const DB_UNIDADES  = '3a6f06f1-0ce3-816d-84ea-d6ce6ddeb89f';
 
-const [marcaNome, playbookNome = 'Implementação Funil Perpétuo'] = process.argv.slice(2);
+const [marcaNome, playbookNome = 'Perpétuo Lucrativo'] = process.argv.slice(2);
 if (!marcaNome) { console.error('uso: node notion-instanciar-playbook.mjs "<Marca>" ["<Playbook>"]'); process.exit(1); }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -53,38 +56,47 @@ const sel = n => ({ select: { name: n } });
 const rel = ids => ({ relation: ids.map(id => ({ id })) });
 const T = p => p?.title?.map(t => t.plain_text).join('') || '';
 
-// 1. achar a marca
+// 1. marca
 const marcas = await queryAll(DB_UNIDADES, { property: 'Nome', title: { equals: marcaNome } });
-if (!marcas.length) { console.error(`marca "${marcaNome}" não existe no Unidades`); process.exit(1); }
+if (!marcas.length) { console.error(`marca "${marcaNome}" não existe no banco Unidades`); process.exit(1); }
 const marcaId = marcas[0].id;
-console.log(`▸ marca: ${marcaNome} (${marcaId.slice(0, 8)})`);
+console.log(`▸ marca: ${marcaNome}`);
 
-// 2. etapas do playbook (a linha-raiz Nível=Playbook não vira task)
-const todas = await queryAll(DB_PLAYBOOKS, { property: 'Playbook', select: { equals: playbookNome } });
-const etapas = todas.filter(e => e.properties['Nível']?.select?.name !== 'Playbook');
-if (!etapas.length) { console.error(`playbook "${playbookNome}" vazio/não existe`); process.exit(1); }
-console.log(`▸ playbook "${playbookNome}": ${etapas.length} etapas`);
+// 2. playbook no catálogo
+const pbs = await queryAll(DB_PLAYBOOKS, { property: 'Playbook', title: { equals: playbookNome } });
+if (!pbs.length) { console.error(`playbook "${playbookNome}" não existe no catálogo`); process.exit(1); }
+const pbPage = pbs[0].id;
 
-// 3. criar o projeto-contêiner na marca
+// 3. achar o banco inline "Etapas" dentro da página do playbook
+const blocks = await api(`blocks/${pbPage}/children?page_size=100`, null, 'GET');
+const inlineBlock = (blocks.results || []).find(b => b.type === 'child_database');
+if (!inlineBlock) { console.error(`playbook "${playbookNome}" não tem banco inline de etapas`); process.exit(1); }
+const etapas = await queryAll(inlineBlock.id);
+if (!etapas.length) { console.error('banco de etapas vazio'); process.exit(1); }
+console.log(`▸ playbook "${playbookNome}": ${etapas.length} linhas na árvore`);
+
+// 4. projeto-contêiner na marca
 const proj = await api('pages', {
   parent: { database_id: DB_PROJ_BS },
   properties: {
     'Nome': title(`${playbookNome} — ${marcaNome}`),
     'Marca': rel([marcaId]),
     'Status': sel('Em andamento'),
-    'Notas': { rich_text: txt(`Instância do playbook "${playbookNome}" criada em ${new Date().toISOString().slice(0, 10)}.`) },
+    'Notas': { rich_text: txt(`Instância do playbook "${playbookNome}".`) },
   },
 });
 console.log(`▸ projeto criado: ${playbookNome} — ${marcaNome}`);
 
-// 4. clonar etapas como tasks (2 passes p/ hierarquia)
+// 5. clonar a árvore como tasks (2 passes: criar, depois religar hierarquia)
+const macro = etapas.filter(e => !(e.properties['Etapa principal']?.relation || []).length)
+  .sort((a, b) => (a.properties['Ordem']?.number ?? 999) - (b.properties['Ordem']?.number ?? 999));
+const filhas = etapas.filter(e => (e.properties['Etapa principal']?.relation || []).length);
 const map = {};
 let n = 0;
-for (const e of etapas) {
-  const p = e.properties;
-  const areas = p['Área']?.multi_select?.map(o => o.name) || [];
+for (const e of [...macro, ...filhas]) {
+  const areas = e.properties['Área']?.multi_select?.map(o => o.name) || [];
   const props = {
-    'Demanda': title(T(p['Etapa'])),
+    'Demanda': title(T(e.properties['Etapa'])),
     'Projeto': rel([proj.id]),
     'Marca': rel([marcaId]),
     'Status': sel('Iniciar'),
@@ -93,13 +105,13 @@ for (const e of etapas) {
   const nt = await api('pages', { parent: { database_id: DB_TASKS_BS }, properties: props });
   map[e.id.replace(/-/g, '')] = nt.id;
   n++;
-  if (n % 10 === 0) console.log(`  … ${n}/${etapas.length}`);
+  if (n % 15 === 0) console.log(`  … ${n}/${etapas.length}`);
 }
 let subs = 0;
-for (const e of etapas) {
-  const pais = (e.properties['Etapa principal']?.relation || []).map(r => map[r.id.replace(/-/g, '')]).filter(Boolean);
+for (const e of filhas) {
+  const pais = (e.properties['Etapa principal'].relation || []).map(r => map[r.id.replace(/-/g, '')]).filter(Boolean);
   if (pais.length) { await api(`pages/${map[e.id.replace(/-/g, '')]}`, { properties: { 'Subtarefa de': rel(pais) } }, 'PATCH'); subs++; }
 }
 
-console.log(`\n✅ instância criada: ${n} tasks (${subs} com hierarquia) na marca ${marcaNome}`);
-console.log('   agente/humano marca o progresso nas Tasks; o mestre em Playbooks fica intacto.');
+console.log(`\n✅ instância criada: ${n} tasks (${subs} aninhadas) na marca ${marcaNome}`);
+console.log('   agente/humano marca progresso nas Tasks; o playbook do catálogo fica intacto.');
