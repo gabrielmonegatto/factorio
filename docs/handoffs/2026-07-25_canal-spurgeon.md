@@ -30,6 +30,13 @@ O CTA de abertura (`introfixed.mp3`) narrava "Link in the pinned comment", mas o
 - Os 14 vídeos que já estavam no YouTube (voz velha) foram DELETADOS via API; estado do agendador resetado (`scheduled={}`, `channel_start=2026-07-29`); `SEEDED={}`. Tudo re-sobe fresco.
 - Bug corrigido de brinde: a extração do videoId no agendador colava lixo (`VID"}`) — agora regex de 11 chars.
 
+## ⚠️ BUG do cache de asset mutável (29/07) — LIÇÃO DURA
+
+Trocar o `introfixed.mp3` no R2 NÃO entrou nos vídeos por 1 dia. Causa: `build_job.download()` pulava se o arquivo já existisse (`os.path.exists`), e o volume `public/` é PERSISTENTE. A cópia velha do CTA ficou cacheada em `/srv/factorio/data/public/audio/introfixed.mp3` e todo re-render reusou a voz velha. O gate de frescor (mtime do mp4 > mtime do CTA) dava "fresco" mas o CONTEÚDO era velho.
+- **Corrigido:** `download(..., force=True)` pros CTAs (introfixed/finalfixed) — asset mutável nunca usa cache. Cache velho apagado do volume. Deploy feito.
+- **Lição (fundamento das Regras Vivas):** "nada é pronto sem verificação real". Certificação de áudio = TRANSCREVER o mp4 renderizado (extrair áudio → AssemblyAI), nunca confiar em timestamp/frescor. Foi assim que se provou o conserto: intro do 0001 fresco transcreveu "Link in the description below".
+- Vídeo 1 no ar (`z8XLjC1dv2s`) ficou com a voz velha DE PROPÓSITO (ordem do Gabriel: não trocar o que já está no ar). 0002+ re-sobem frescos.
+
 ## Próximos passos (em ordem)
 
 1. **Housekeeping do Gabriel (não-técnico, sem pressa):** derrubar a Hostinger; revogar tokens expostos no chat (`HETZNER_API_TOKEN`, PAT Docker Hub).

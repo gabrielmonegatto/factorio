@@ -77,9 +77,11 @@ def list_keys(s3, prefix):
     return keys
 
 
-def download(s3, key, dest):
+def download(s3, key, dest, force=False):
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    if os.path.exists(dest) and os.path.getsize(dest) > 0:
+    # force=True para assets MUTÁVEIS (CTAs): o volume public/ é persistente e o
+    # cache-por-existência já baixou "voz velha" pra dentro do vídeo uma vez. Nunca de novo.
+    if not force and os.path.exists(dest) and os.path.getsize(dest) > 0:
         print(f"  · já existe: {os.path.relpath(dest)}")
         return
     print(f"  ↓ {key}  ->  {os.path.relpath(dest)}")
@@ -215,9 +217,10 @@ def main():
     download(s3, f"{CHANNEL_PREFIX}/_assets/channelavatar.png", os.path.join(public, "images", "spurgeon_avatar.png"))
     # BGM fixa do hook (432hz)
     download(s3, f"{GLOBAL_WORSHIP_PREFIX}/frequencial_432hz_01.mp3", os.path.join(public, "audio", "frequencial_432hz_01.mp3"))
-    # narração de marketing FIXA das telas de CTA (inscrição + QR) — intro e outro
-    download(s3, f"{CHANNEL_PREFIX}/_assets/introfixed.mp3", os.path.join(public, "audio", "introfixed.mp3"))
-    download(s3, f"{CHANNEL_PREFIX}/_assets/finalfixed.mp3", os.path.join(public, "audio", "finalfixed.mp3"))
+    # narração de marketing FIXA das telas de CTA (inscrição + QR) — intro e outro.
+    # force=True: são mutáveis (regravadas ao trocar a copy). Sempre pegar a do R2, nunca cache.
+    download(s3, f"{CHANNEL_PREFIX}/_assets/introfixed.mp3", os.path.join(public, "audio", "introfixed.mp3"), force=True)
+    download(s3, f"{CHANNEL_PREFIX}/_assets/finalfixed.mp3", os.path.join(public, "audio", "finalfixed.mp3"), force=True)
 
     # --- QR real ---
     redirect_url = f"{REDIRECT_BASE}?s=yt&v={nnnn}"
