@@ -59,8 +59,9 @@ if (!marcas.length) { console.error(`marca "${marcaNome}" não existe no Unidade
 const marcaId = marcas[0].id;
 console.log(`▸ marca: ${marcaNome} (${marcaId.slice(0, 8)})`);
 
-// 2. etapas do playbook
-const etapas = await queryAll(DB_PLAYBOOKS, { property: 'Playbook', select: { equals: playbookNome } });
+// 2. etapas do playbook (a linha-raiz Nível=Playbook não vira task)
+const todas = await queryAll(DB_PLAYBOOKS, { property: 'Playbook', select: { equals: playbookNome } });
+const etapas = todas.filter(e => e.properties['Nível']?.select?.name !== 'Playbook');
 if (!etapas.length) { console.error(`playbook "${playbookNome}" vazio/não existe`); process.exit(1); }
 console.log(`▸ playbook "${playbookNome}": ${etapas.length} etapas`);
 
