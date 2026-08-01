@@ -18,14 +18,17 @@ Houve um susto: a tabela `content_chunks` do Teable virou fantasma (tabela físi
 
 **E os audiobooks — R2 `mananciall`, prefixo `audiobooks/`:** 9 livros, **1.214 capítulos narrados** (mp3) + 1.213 JSONs com `text` e `words` (timestamp por palavra). Servidos publicamente por `https://pub-cd23eb57aece4069a2df4818e6b9eed3.r2.dev` (verificado: HTTP 200, `audio/mpeg`).
 
-### ⚠️ Buraco aberto (31/07): áudio pronto e invisível
+### ✅ Áudio ligado (31/07)
 
-Só **23 de 2.201** capítulos têm `chapters.audio_url` preenchido. Os outros 1.214 narrados existem no R2 mas o site não os serve. A narração foi paga e está invisível.
+Antes: só **23 de 2.201** capítulos tinham `chapters.audio_url`. Os 1.214 narrados existiam no R2 e o site não servia nenhum — narração paga e invisível.
 
-- Casamento verificado 1:1 nos 9 livros: 734/366/20/20/16/16/15/14/13 batem exato entre R2 e D1.
-- Script pronto: `trigger/scripts/link_audiobooks_d1.py` (gera `link_audio.sql`, 1.214 UPDATEs idempotentes).
-- Diferença de slug entre R2 e D1 já tratada no script: `morning-and-evening-daily-readings`→`morning-and-evening`, `faith-s-checkbook-of-decisive-testimony`→`faiths-checkbook`, `essentials-of-prayer`→`the-essentials-of-prayer`.
-- **Pendente: gate humano** (rodar muda o site no ar).
+Resolvido: **1.214 de 1.214** capítulos dos 9 livros narrados agora têm áudio (1.192 UPDATEs; ~22 já estavam preenchidos e foram pulados pela cláusula idempotente).
+
+- Script: `trigger/scripts/link_audiobooks_d1.py` → gera `link_audio.sql` (UPDATE só onde `audio_url` está vazio, então roda de novo sem risco).
+- Casamento 1:1 verificado: 734/366/20/20/16/16/15/14/13 batem exato entre R2 e D1.
+- Diferença de slug já tratada: `morning-and-evening-daily-readings`→`morning-and-evening`, `faith-s-checkbook-of-decisive-testimony`→`faiths-checkbook`, `essentials-of-prayer`→`the-essentials-of-prayer`.
+
+**Regra de negócio (definida 31/07): livro e audiobook são produtos SEPARADOS, comprados à parte.** O `audio_url` no capítulo é só o dado; a apresentação e o controle de acesso (quem comprou o quê) ficam para depois — provavelmente via `entitlements`, que já existe no schema e está vazia.
 
 ## 2. Onde cada coisa mora hoje
 
@@ -63,6 +66,17 @@ Só **23 de 2.201** capítulos têm `chapters.audio_url` preenchido. Os outros 1
 Fluxo: a **fábrica produz no Postgres → publica no D1 → o site serve do edge.**
 
 Forçar tudo no D1 quebraria a fábrica (SQLite não faz claim atômico direito, e as tabelas de mineração já passam de 74k linhas e crescem). Forçar tudo no Postgres deixaria o site lento e penduraria o negócio numa VPS só.
+
+### A Cloudflare tem Postgres? Não.
+
+O banco da Cloudflare é o **D1, que é SQLite**. Não existe Postgres gerenciado deles.
+(⚠️ Quem comprou a **Neon** foi a **Databricks** em 2025, não a Cloudflare. Fácil confundir.)
+
+O que existe é o **Hyperdrive**: não é banco, é acelerador. Mantém um pool de conexões distribuído na rede da Cloudflare e faz cache de query, deixando um **Postgres externo** rápido de ler a partir dos Workers.
+
+**Isso mantém a porta aberta pra banco único.** Se um dia a divisão em duas faixas doer (ex.: relatório que cruza fábrica e vendas), o caminho é **Postgres pra tudo + Hyperdrive no edge** — migração de dado, não reescrita. Já existe inclusive um Supabase (Postgres gerenciado) parado no `.env`, então nem dependeria da VPS.
+
+**Por que não agora:** o D1 já funciona, é grátis e mora no edge por natureza; Hyperdrive custa e é mais uma peça móvel; e o problema que resolveria (fragmentação) a regra das duas faixas já resolve.
 
 ## 4. Como VER os bancos do Cloudflare
 
