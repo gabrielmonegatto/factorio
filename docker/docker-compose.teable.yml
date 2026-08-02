@@ -1,5 +1,6 @@
 # Teable enxuto — só o banco (sem Outline/legado). Migrado da Hostinger pra Hetzner.
-# env_file aponta pro .env do repo (../.env relativo a este arquivo em docker/).
+# env_file aponta pro docker/.env (SO as vars do stack). O .env do repo NAO entra aqui:
+# ele tem 83 credenciais da fabrica e o Teable so precisa de 7.
 services:
   teable:
     image: ghcr.io/teableio/teable:latest
@@ -7,7 +8,7 @@ services:
     restart: unless-stopped
     ports: ["3000:3000"]
     volumes: ["teable_data:/app/.assets:rw"]
-    env_file: ["../.env"]
+    env_file: [".env"]
     environment:
       - TZ=America/Sao_Paulo
       - NEXT_ENV_IMAGES_ALL_REMOTE=true
@@ -23,7 +24,7 @@ services:
   teable-db-migrate:
     image: ghcr.io/teableio/teable-db-migrate:latest
     container_name: factorio_teable_db_migrate
-    env_file: ["../.env"]
+    env_file: [".env"]
     environment: ["TZ=America/Sao_Paulo"]
     networks: ["factorio_network"]
     depends_on:
