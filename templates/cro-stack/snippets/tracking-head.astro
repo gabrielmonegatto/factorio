@@ -1,0 +1,103 @@
+---
+// cro-stack :: snippet de tracking
+// Colar DENTRO do <body> do Layout global (antes do </body>).
+//
+// Expõe `window.croTrack(eventName, data)`: dispara pixel do browser E CAPI
+// server-side com o MESMO event_id, pra Meta deduplicar (senão cada evento
+// conta em dobro).
+//
+// Convenção de event_id (nomenclatura da casa):
+//   PageView          -> pv-<sid>-<rand>   (cada carregamento é um evento real)
+//   Lead              -> lead-<sid>        (ESTÁVEL: "chegou na tela de oferta",
+//                                           NÃO depende de email)
+//   InitiateCheckout  -> ic-<sid>-<offer>  (ESTÁVEL: reabrir não duplica)
+//   Purchase          -> <sale_id>         (worker purchase-check, não aqui)
+//
+// Variáveis públicas opcionais (.env): PUBLIC_FB_PIXEL_ID, PUBLIC_GTM_ID.
+// O pixel do browser é opcional: o CAPI sozinho já mede. Se PUBLIC_FB_PIXEL_ID
+// não existir, só o server-side roda (sem quebrar nada).
+---
+
+<script>
+  if (typeof window !== 'undefined') {
+    var PIXEL_ID = import.meta.env.PUBLIC_FB_PIXEL_ID || '';
+    var GTM_ID = import.meta.env.PUBLIC_GTM_ID || '';
+
+    function getCookie(name) {
+      var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : '';
+    }
+
+    // ── Pixel do browser (opcional, env-gated) ────────────────────────────
+    if (PIXEL_ID) {
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', PIXEL_ID);
+      // NÃO dispara PageView aqui: quem dispara é croTrack, com event_id
+      // compartilhado com o CAPI. Disparar aqui contaria o evento em dobro.
+    }
+
+    if (GTM_ID) {
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer',GTM_ID);
+    }
+
+    // ── CAPI server-side ──────────────────────────────────────────────────
+    function sendCAPI(eventName, eventId, data) {
+      return fetch('/api/tracker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_name: eventName,
+          event_id: eventId,
+          event_source_url: window.location.href,
+          product: data.product || '',
+          value: data.value || undefined,
+          currency: data.currency || undefined,
+          user_data: {
+            fbp: getCookie('_fbp'),
+            fbc: getCookie('_fbc'),
+            em: data.em || '',
+            ph: data.ph || '',
+            fn: data.fn || '',
+            ln: data.ln || '',
+          },
+          event_time: Math.floor(Date.now() / 1000),
+          session_id: getCookie('_bnd_sid'),
+        }),
+        keepalive: true,
+      }).catch(function (e) { console.log('[cro] CAPI err:', e); });
+    }
+
+    // ── API pública ───────────────────────────────────────────────────────
+    // croTrack('Lead', { eventId: 'lead-' + sid })
+    window.croTrack = function (eventName, data) {
+      data = data || {};
+      var sid = getCookie('_bnd_sid') || 'nosid';
+      var eventId = data.eventId ||
+        (eventName.toLowerCase() === 'pageview'
+          ? 'pv-' + sid + '-' + Math.random().toString(36).slice(2, 10)
+          : eventName.toLowerCase() + '-' + sid);
+
+      // Mesmo event_id nos dois canais = Meta deduplica.
+      if (window.fbq) {
+        var custom = {};
+        if (data.value) { custom.value = data.value; custom.currency = data.currency || 'BRL'; }
+        window.fbq('track', eventName, custom, { eventID: eventId });
+      }
+      return sendCAPI(eventName, eventId, data);
+    };
+
+    window.addEventListener('DOMContentLoaded', function () {
+      window.croTrack('PageView');
+    });
+  }
+</script>

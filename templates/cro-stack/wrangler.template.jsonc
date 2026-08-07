@@ -1,0 +1,27 @@
+{
+  // cro-stack :: config do projeto Pages
+  // Substituir {{PLACEHOLDERS}} e salvar como `wrangler.jsonc` na raiz do projeto.
+  //
+  // ⚠️ Pages NÃO aceita `account_id` no arquivo: vai por env na hora do deploy:
+  //    CLOUDFLARE_ACCOUNT_ID={{ACCOUNT_ID}} wrangler pages deploy dist --project-name {{PROJECT}}
+  //
+  // ⚠️ O projeto Astro NÃO pode ter adapter Cloudflare: o adapter gera
+  //    `dist/_worker.js`, e quando esse arquivo existe o Pages IGNORA a pasta
+  //    `functions/` inteira: o tracking morre silenciosamente. Use output 'static'.
+
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "{{PROJECT}}",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": "dist",
+
+  "d1_databases": [
+    {
+      "binding": "CRO_DB",
+      "database_name": "{{D1_NAME}}",
+      "database_id": "{{D1_ID}}"
+    }
+  ],
+
+  "observability": { "enabled": true }
+}
