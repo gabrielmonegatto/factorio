@@ -1,8 +1,0 @@
-agent:
-  max_turns: 90
-  reasoning_effort: medium
-model:
-  default: gemini-2.5-flash
-  provider: gemini
-terminal:
-  cwd: C:/Users/Monegatto/Desktop/EternalL

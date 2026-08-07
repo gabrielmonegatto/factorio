@@ -82,3 +82,8 @@ remotion/out/
 trigger/pending.json
 trigger/temp_pending.json
 .trigger/
+
+# Runtime de agente (sessoes, dumps, snapshots) - sanitizacao 07/08/2026
+agents/*/sessions/
+agents/*/cron/output/
+**/.skills_prompt_snapshot.json
