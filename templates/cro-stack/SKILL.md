@@ -171,6 +171,12 @@ Cron de 5min: busca vendas PAGAS no caixa → dedup no livro-caixa → casa pelo
   não pode sujar o pixel).
 - Se o gateway devolver endereço, é daqui que saem `zp/ct/st/country` da
   Fase 3. Nada disso é gravado no nosso banco: hash, envia, descarta.
+- **Instantâneo (opcional): webhook como CAMPAINHA** (`functions/api/webhook-venda.js`
+  + migration 006). O gateway avisa, o endpoint autentica, loga o payload cru e
+  dispara UMA rodada imediata do worker. A lógica de venda continua num lugar só
+  (o worker, com o dedup dele); o webhook apenas antecipa o relógio de 5min pra
+  segundos. O cron NUNCA sai: webhook perde venda quando o endpoint pisca,
+  polling só atrasa. Pra Meta, 5min tanto faz; o ganho é o SEU tempo real.
 
 ## FASE 5 · Teste A/B
 
@@ -188,10 +194,14 @@ conferir sorteio, encerrar). Duas regras que viajam junto:
 ## FASE 6 · Backup e BI
 
 - Backup semanal D1 → R2 com **restauração testada** (backup sem restore
-  provado não é backup).
+  provado não é backup). Peça pronta no kit: `workers/backup-d1/` (NDJSON
+  fatiado + manifest + `restore.mjs`; paginação por rowid; retenção desligada
+  por padrão porque apagar dado é gate humano).
 - BI (Evidence) lê D1 + gateway. É da HOLDING, não da marca (domínio neutro), e
   atrás de Cloudflare Access (One-time PIN por email; o provedor precisa ser
   CRIADO, não vem por padrão). O guarda de host do BI muda JUNTO com o DNS.
+  Receita completa + guarda de domínio prontos em `bi/` do kit (Access não cobre
+  `*.pages.dev`: sem o guarda, porta trancada ao lado de porta escancarada).
 - Dado individual de saúde NUNCA no BI público: exportação local sob demanda.
 
 ## FASE 7 · QA antes de tráfego

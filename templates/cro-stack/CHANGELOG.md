@@ -75,6 +75,27 @@ Extração inicial do motor do `apps/br4nds/bluue` (laboratório mais maduro).
 - Worker `purchase-check` com adapters de gateway (`b4you.js` pronto no bluue, `ghl.js` a nascer)
 - Fábrica de páginas (componentes + tokens de design)
 
+## 0.3.0: 07/08/2026 (velocidade + memória fora da Cloudflare)
+
+Decisões de pesquisa registradas no `LINHA_DE_MONTAGEM_CRO.md` (raiz do
+EternalL): Astro CONFIRMADO como stack (HTML puro + porteiro dependem dele;
+adapter mata `functions/`), e a fábrica de páginas vira **registry shadcn**
+(`funnel-matrix`, template vizinho) em vez de pasta de copiar.
+
+- **functions/api/webhook-venda.js + d1/006_webhook.sql**: venda quase
+  instantânea SEM segundo caminho de código. O webhook do gateway é CAMPAINHA:
+  autentica, loga o payload cru (auditoria) e dispara uma rodada imediata do
+  purchase-check. Toda a lógica de venda (casamento, EMQ, dedup) continua só no
+  worker. O cron NUNCA sai: webhook perde venda quando o endpoint pisca,
+  polling só atrasa.
+- **workers/backup-d1/**: extraído do bluue e generalizado (`CRO_DB` +
+  `PROJECT_SLUG`). NDJSON fatiado por rowid + manifest + ponteiro `latest.json`
+  + `restore.mjs` (INSERT OR REPLACE, idempotente). Retenção desligada por
+  padrão: apagar dado é gate humano.
+- **bi/**: guarda de domínio (`Access não cobre *.pages.dev`) + receita
+  Evidence completa (consultas padrão, gotcha do fan-out em JOIN de vendas,
+  gotcha do wasm >25MB, One-time PIN criado via API, endereço é da HOLDING).
+
 ## 0.2.0 — 04/08/2026 (a semana da virada do bluue.io)
 
 Sincroniza o kit com tudo que a operação real ensinou entre 31/07 e 04/08:

@@ -1,0 +1,31 @@
+{
+  // backup-d1: D1 -> R2 em NDJSON fatiado + manifest. Peça da FASE 6 (backup/BI).
+  //
+  // ⚠️ Instalação SÓ termina depois de um restore testado (restore.mjs ao lado).
+  // ⚠️ RETENTION_DAYS desligado por padrão: apagar dado é gate humano.
+  "name": "{{PROJECT}}-backup-d1",
+  "account_id": "{{CF_ACCOUNT_ID}}",
+  "main": "src/index.js",
+  "compatibility_date": "2025-06-01",
+  "observability": { "enabled": true },
+  // Semanal: segunda 05:00 UTC = 02:00 BRT (fora do pico). Diário se o projeto
+  // tiver volume de venda alto: ["0 5 * * *"].
+  "triggers": { "crons": ["0 5 * * 1"] },
+  "d1_databases": [
+    { "binding": "CRO_DB", "database_name": "{{D1_NAME}}", "database_id": "{{D1_ID}}" }
+  ],
+  "r2_buckets": [
+    // Criar antes: npx wrangler r2 bucket create {{PROJECT}}-backups
+    { "binding": "BACKUPS", "bucket_name": "{{PROJECT}}-backups" }
+  ],
+  "vars": {
+    // Prefixo das chaves no bucket (d1/<slug>/...) e nome no manifest.
+    "PROJECT_SLUG": "{{PROJECT}}",
+    // Linhas por arquivo: pequeno o bastante pra memória do Worker e pra
+    // reprocessar um pedaço sozinho na restauração.
+    "CHUNK_SIZE": "2000",
+    "RETENTION_DAYS": ""
+  }
+  // Secret opcional (wrangler secret put): CRON_SECRET — protege o disparo manual
+  // via HTTP (e é o mesmo que a campainha do webhook-venda usa pro purchase-check).
+}
