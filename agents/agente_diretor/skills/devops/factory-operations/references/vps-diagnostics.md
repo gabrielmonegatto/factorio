@@ -6,7 +6,7 @@ Full diagnostic procedure to run when checking VPS health. Can be run manually (
 
 | Check | Command | What to look for |
 |-------|---------|------------------|
-| **Containers** | `docker ps` | All 9 containers UP |
+| **Containers** | `docker ps` | All 12+ containers UP. Current: agents, proxy, teable+db+cache, agent_memory, redis, postgres, mcp_universal, outline_app(holding+br4nds), outline_db, outline_redis, outline_minio |
 | **Gateway State** | `cat /root/.hermes/gateway_state.json` | `running`, Discord `connected` |
 | **Gateway Process** | `ps aux \| grep hermes \| grep -v grep` | **Must match** gateway_state PID |
 | **Disk** | `df -h /` | < 80% used |
@@ -59,30 +59,19 @@ process has died. Always cross-check with `ps aux | grep hermes`.
 | `Gateway shutting down` | SIGTERM received | Check what sent it |
 | `Platform discord: disconnected` | Discord connection lost | May auto-reconnect |
 
-## SSH from Windows without sshpass
+## SSH from Windows
 
-If the local machine lacks `sshpass` (common on git-bash/Windows):
-
-### Option A: Delegate to a subagent (recommended)
+SSH key auth is required (see main SKILL.md SSH section). After setup:
 
 ```python
-# The subagent runs a Python script with paramiko or pexpect
-# to do password-based SSH auth
+import paramiko, os
+key_path = os.path.join(os.path.expanduser("~"), ".ssh", "id_ed25519_factorio")
+client = paramiko.SSHClient()
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+client.connect(HOST, port=PORT, username=USER, key_filename=key_path, timeout=15)
 ```
 
-Use Hermes `delegate_task()` with a subagent that has `terminal` + `file`
-toolsets. The subagent can write a Python script, execute it, and return
-results. This avoids any local sshpass dependency.
-
-### Option B: Install sshpass on Windows
-
-```bash
-# Via scoop
-scoop install sshpass
-
-# Via MSYS2 (if using git-bash)
-pacman -S sshpass
-```
+**Never** ask for password interactively or use `sshpass`.
 
 ## What to Check After Restart
 
