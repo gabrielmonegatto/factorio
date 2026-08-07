@@ -59,6 +59,11 @@ export async function onRequest(context) {
   const referrer = request.headers.get('referer') || '';
   const landingUrl = url.toString();
 
+  // Lição 0.1.2 (crawler do FB inflou o funil da ZOAC em 8x): o PageView
+  // server-side também classifica bot, não só o /api/tracker. O filtro por
+  // status < 400 lá embaixo NÃO cobre isso — crawler acessa página real com 200.
+  const { isBot, botReason } = detectBot(userAgent);
+
   // Config do domínio: uma leitura só, reaproveitada pelo rewrite e pelo log.
   const config = await loadDomainConfig(env, host);
 
@@ -134,7 +139,7 @@ export async function onRequest(context) {
       element(el) {
         if (experiment.content) {
           el.prepend(
-            `<script>window.__BLUUE_CONTENT__=${safeJsonForScript(experiment.content)}</script>`,
+            `<script>window.__CRO_CONTENT__=${safeJsonForScript(experiment.content)}</script>`,
             { html: true }
           );
         }
@@ -174,7 +179,7 @@ export async function onRequest(context) {
             fbclid, gclid, fbp, fbc,
             utmSource, utmMedium, utmCampaign, utmContent, utmTerm,
             clientIp, userAgent, referrer, landingUrl, externalId,
-            0, '', 'unknown', experiment.label || null
+            isBot ? 1 : 0, botReason, 'unknown', experiment.label || null
           ).run();
         }
       } catch (e) {
@@ -473,4 +478,22 @@ function computeSubDomainIndex(host) {
   const lastTwo = parts.slice(-2).join('.');
   if (CC_TLDS.has(lastTwo)) return 2;
   return 1;
+}
+// ---------------------------------------------------------------------------
+// Bot / crawler (lição 0.1.2). Ao ler o funil: SEMPRE filtrar is_bot = 0.
+// ---------------------------------------------------------------------------
+function detectBot(userAgent) {
+  if (!userAgent || userAgent.length < 10) return { isBot: true, botReason: 'Missing or short user-agent' };
+  const patterns = [
+    { p: /facebookexternalhit|facebot|meta-externalads/i, r: 'Facebook crawler' },
+    { p: /googlebot|google-inspectiontool/i, r: 'Googlebot' },
+    { p: /whatsapp/i, r: 'WhatsApp preview' },
+    { p: /slackbot|telegrambot|twitterbot|linkedinbot|discordbot/i, r: 'Social crawler' },
+    { p: /bot|crawler|spider|scraper|headless/i, r: 'Generic bot' },
+    { p: /python-requests|axios|node-fetch|curl|wget|httpie|go-http/i, r: 'HTTP library' },
+  ];
+  for (const { p, r } of patterns) {
+    if (p.test(userAgent)) return { isBot: true, botReason: r };
+  }
+  return { isBot: false, botReason: '' };
 }

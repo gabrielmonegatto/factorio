@@ -75,6 +75,28 @@ Extração inicial do motor do `apps/br4nds/bluue` (laboratório mais maduro).
 - Worker `purchase-check` com adapters de gateway (`b4you.js` pronto no bluue, `ghl.js` a nascer)
 - Fábrica de páginas (componentes + tokens de design)
 
+## 0.3.1: 07/08/2026 (estreia na ZOAC: 1º adapter GHL + 2 regressões pegas)
+
+Instalação real na ZOAC (2ª marca, conta CF própria) no mesmo dia do 0.3.0:
+
+- **`workers/purchase-check/adapters/ghl.index.js`**: adapter GHL/Conversion
+  Goat DE PRATELEIRA, validado com venda real (match por sck + fbp/fbc). O que
+  ele sabe: API é `services.leadconnectorHQ.com` (sem "hq" = NXDOMAIN); o pedido
+  NÃO carrega o sck, o CONTATO carrega (`attributionSource.url` preserva a query
+  `?_sid=` do order form); `amount` vem em unidades da moeda, não centavos;
+  filtro por `sourceId` é obrigatório (location compartilhada tinha 8.504
+  pedidos de outros produtos); gênero SEM fallback (público misto).
+- **Regressão corrigida: middleware gravava `is_bot=0` chumbado.** O fix 0.1.2
+  se perdeu quando o middleware foi ressincronizado da bluue no 0.2.0 (a bluue
+  nunca teve o fix). `detectBot()` de volta no PageView server-side; filtro por
+  status < 400 NÃO cobre crawler (ele acessa página real com 200).
+- **Gap corrigido: 004 não criava `event_map`** (a bluue tinha de migration
+  própria; o worker consulta a coluna e quebraria em projeto novo).
+- `__BLUUE_CONTENT__` → `__CRO_CONTENT__` no middleware (nome de marca vazou).
+- Gotcha novo: conta CF nova não tem subdomínio workers.dev (registrar via
+  `PUT /accounts/{id}/workers/subdomain`; o comando do wrangler morreu no v4) e
+  R2 precisa ser ATIVADO no dashboard (gate humano, pode pedir cartão).
+
 ## 0.3.0: 07/08/2026 (velocidade + memória fora da Cloudflare)
 
 Decisões de pesquisa registradas no `LINHA_DE_MONTAGEM_CRO.md` (raiz do

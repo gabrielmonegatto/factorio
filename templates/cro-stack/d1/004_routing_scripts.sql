@@ -38,3 +38,8 @@ ALTER TABLE domain_config ADD COLUMN clarity_id TEXT;
 -- Política de pool de domínios (producao | reserva | homologacao | legado |
 -- terceiro). Operação: 1 rodando + reservas frias, pro dia do aperto.
 ALTER TABLE domain_config ADD COLUMN pool_status TEXT;
+
+-- Espelho de nome de evento na SAÍDA pro pixel (JSON {"Purchase":"p"}). Domínio
+-- que herdou adset otimizando em evento custom (caso Stape) traduz aqui; banco e
+-- ledger guardam SEMPRE o nome canônico. Vazio = nomes padrão.
+ALTER TABLE domain_config ADD COLUMN event_map TEXT;
