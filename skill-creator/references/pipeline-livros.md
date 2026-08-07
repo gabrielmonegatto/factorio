@@ -1,0 +1,36 @@
+# Pipeline de livros → destilado
+
+Livro nunca entra cru numa skill. Um livro de 300 páginas vira um destilado de 200-400 linhas que o Claude consegue carregar sob demanda. O destilado é reutilizável: mora em `destilados/` e várias skills podem apontar para ele.
+
+## Passo a passo
+
+1. **Receber**: Pedro deposita o livro em `livros/` (PDF, EPUB ou MD). Se EPUB, converter para texto antes de ler.
+2. **Verificar duplicata**: já existe destilado desse livro em `destilados/`? Se sim, use-o; no máximo complemente.
+3. **Mapear**: leia o sumário e identifique os capítulos relevantes PARA A SKILL em questão. Não destile o livro inteiro por padrão — destile o que serve ao job. (Se o Pedro disser "esse livro inteiro é a base", aí sim destilado completo.)
+4. **Extrair** (o que entra no destilado):
+   - **Frameworks e modelos** — os sistemas nomeados do autor, com os passos
+   - **Regras operacionais** — tudo que é "faça X / nunca Y" acionável
+   - **Vocabulário** — os termos que o autor cunhou, com definição de 1 linha
+   - **Exemplos canônicos** — os 2-3 melhores casos que o autor usa
+   - **Contra-intuitivos** — onde o autor contradiz o senso comum (é o que diferencia o destilado de conhecimento genérico que o Claude já tem)
+5. **Descartar** (o que NÃO entra): histórias motivacionais, biografia do autor, repetições, capítulos de venda do próximo livro, tudo que o Claude já sabe por conhecimento geral.
+6. **Formatar**: salvar em `destilados/<autor>-<titulo-curto>.md` com cabeçalho:
+
+```markdown
+# Destilado: <Título> — <Autor>
+> Fonte: <livro>, destilado em <data>. Capítulos cobertos: <quais>.
+> Usado pelas skills: <lista, manter atualizada>
+
+## Frameworks
+## Regras operacionais
+## Vocabulário
+## Exemplos canônicos
+## Contra-intuitivos
+```
+
+7. **Validar com o Pedro**: mostre o destilado e pergunte "o que desse livro você usa que não está aqui?". A resposta dele é frequentemente o insight mais valioso — quem leu e aplicou sabe o que o sumário não mostra.
+8. **Conectar**: na skill, o SKILL.md aponta: "Antes de <passo>, leia `references/<destilado>.md`". Copie o destilado para a `references/` da skill na instalação (skills instaladas precisam ser autocontidas).
+
+## Teste do destilado
+
+Pergunta de controle: "Se eu ler só o destilado, executo a tarefa no nível de quem leu o livro?" Se a resposta for não, falta regra operacional — volte ao passo 4. Se o destilado passou de ~500 linhas, sobrou teoria — volte ao passo 5.

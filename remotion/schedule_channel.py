@@ -30,7 +30,11 @@ BUCKET = "mananciall"
 STATE_KEY = "schedule/spurgeon_schedule.json"
 CHANNEL_PREFIX = "channels/channels_youtube/treasures_charlesspurgeon"
 
-WARMUP_DAYS = 14          # 1/dia nesse período
+# Cadência do canal: 1 vídeo por dia, sempre. (Decisão do Gabriel em 04/08/2026:
+# "segue o fluxo de postar um por dia, não precisa de desespero".)
+# O modo 2/dia continua no código: é só baixar o WARMUP_DAYS pra reativar.
+UM_POR_DIA = True
+WARMUP_DAYS = 14          # 1/dia nesse período (ignorado enquanto UM_POR_DIA)
 MORNING_UTC = 12          # ~08:00 ET
 EVENING_UTC = 23          # ~19:00 ET
 BUFFER_DAYS = 14          # quantos dias à frente manter agendado
@@ -73,7 +77,9 @@ def yt_token(env):
 
 def slot_datetime(i, channel_start):
     """publishAt (UTC) do i-ésimo vídeo (0-indexed) segundo o calendário."""
-    if i < WARMUP_DAYS:
+    if UM_POR_DIA:
+        day, hour = i, MORNING_UTC
+    elif i < WARMUP_DAYS:
         day, hour = i, MORNING_UTC
     else:
         j = i - WARMUP_DAYS
@@ -189,15 +195,37 @@ def main():
     uploads = 0
     to_render = []
 
+    # ── REBASE DO CALENDÁRIO ────────────────────────────────────────────────
+    # MINA (04/08/2026): a versão antiga jogava TODO slot vencido em `now + 2h`.
+    # Depois da parada de 6 dias (token do YouTube expirado), 3 vídeos caíram no
+    # MESMO minuto. Remendar item a item não resolve: o atrasado colide com o
+    # slot futuro de quem vem depois.
+    # Conserto: desloca a régua inteira pra que o PRIMEIRO não agendado caia
+    # amanhã, e o resto siga 1/dia sem buraco nem empilhamento.
+    i0 = next((i for i, n in enumerate(ready) if n not in state["scheduled"]), None)
+    if i0 is not None:
+        amanha = (now + dt.timedelta(days=1)).date()
+        primeiro = dt.datetime(amanha.year, amanha.month, amanha.day,
+                               MORNING_UTC, 0, 0, tzinfo=dt.timezone.utc)
+        if slot_datetime(i0, channel_start) < primeiro:
+            channel_start = (primeiro - dt.timedelta(days=i0)).date()
+            horizon = now + dt.timedelta(days=BUFFER_DAYS)
+            print(f"   ↩️  calendário rebaseado: {ready[i0]} passa a sair "
+                  f"{primeiro.date()}, 1/dia a partir dali")
+
     for i, nnnn in enumerate(ready):
         when = slot_datetime(i, channel_start)
         if when > horizon:
             break                      # além do buffer — fica pra próximo run
         if nnnn in state["scheduled"]:
             continue                   # já agendado
-        # slot no passado (atrasado) — empurra pro próximo horário livre a partir de agora
+        # Slot no passado não deveria mais existir (o rebase acima cuida disso).
+        # Se acontecer, PULA em vez de empurrar pra `now`: empurrar era justamente
+        # o que empilhava vários vídeos no mesmo minuto. Melhor sair um dia depois
+        # do que sair três de uma vez.
         if when < now:
-            when = now + dt.timedelta(hours=2)
+            print(f"  ⏭️  {nnnn} → slot {when:%Y-%m-%d %H:%M} no passado, pulando (rebase pega no próximo run)")
+            continue
         pa = when.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # já existe vídeo subido (seed) → só agenda
