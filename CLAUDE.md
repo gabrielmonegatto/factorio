@@ -37,5 +37,6 @@ Catálogo em `.claude/skills/` (índice: `.claude/skills/README.md`). Toda skill
 - Nada é "pronto" sem verificação real (rodar, medir, conferir — nunca "deve funcionar").
 - Sessão que aprende algo atualiza skill/doc na hora (passo 8 do ciclo — o mais importante da fábrica).
 - Handoff entre frentes = doc + task, nunca combinado verbal (`/handoff-frente`).
+- **Raiz da _factorio não recebe arquivo.** Script nasce em `scripts/`, rascunho em `scratch/` (ignorado), doc em `docs/`. Sessão termina com `git status` limpo: trabalho real commitado na hora, na frente certa (sanitização 07/08/2026 removeu 68 pendências acumuladas; não deixar voltar).
 - Gates humanos permanentes: dinheiro · campanha/budget · publicação externa · deleção de dados · credenciais.
 - "Não minta, não tenha vergonha de falar a real, Deus abençoe."
