@@ -16,6 +16,20 @@ sem o problema de "relation quebra entre workspaces".
 | `notion-map.mjs` | Mapeia a árvore de páginas/bancos (recursa em colunas/toggles/callouts). Editar `ROOTS` no fim. |
 | `notion-dump.mjs` | Dump de conteúdo de bancos pra JSON (leitura, zero escrita). |
 
+## Dojo (treino pessoal — executado em 11/08/2026)
+
+`notion-dojo.mjs` + `notion-dojo-fontes.mjs` — dicionário de golpes/drills de boxe e kickboxing
+com sistema de faixas, dentro do Life System. Reprodutível: apaga a página e roda de novo.
+
+- Banco **Faixas** (5: Branca→Preta) = a progressão. Cada faixa exige Técnicas + Drills + um teste de passagem.
+  Lógica copiada do IKS do Shane Fazen (FIGHTTIPS/MAGNVS): a faixa se GANHA por critério, não por tempo.
+- Banco **Técnicas** (53) = o dicionário. Mecânica, erros comuns, vídeo, checkbox `Dominado`.
+- Banco **Drills** (25) = como se repete. Ligado às Técnicas que treina.
+- `% Domínio` na Faixa é **rollup `percent_checked`** sobre o checkbox `Dominado` das Técnicas —
+  por isso existe checkbox além do select `Domínio`: rollup de select não calcula percentual.
+- Conteúdo minerado de `Desktop\trainingcenter\{treino-boxe\boxe.db, treino-chutes\chutes.db}`
+  (1.482 + 1.069 vídeos) + os `docs\curriculo_*.md`. Fontes escritas verificadas foram pro banco Recursos.
+
 ## Builders (histórico executado em 23-24/07/2026 — reusáveis pra migração)
 
 Ordem de execução original:
@@ -33,7 +47,15 @@ Os `notion-*-ids.json` guardam os IDs criados por cada builder (os scripts segui
 
 ## IDs canônicos (workspace pessoal "Monegatto")
 
+⚠️ **A página-cofre "Newsystem" NÃO EXISTE MAIS** (404 desde ~08/2026). Gabriel arrastou os bancos
+pra fora e apagou, como estava planejado. Metas e Recursos hoje moram **inline dentro da página
+Life System** (`b9e16270-1b1c-463c-95bd-d7778ed94ab7`, filha do workspace) — o parent deles é
+`block_id` (callout dentro de coluna), não `page_id`. Builder novo deve criar página própria
+sob Life System / Business System, nunca sob o cofre.
+
 - Página Business System: `33d6bf27-9f65-4043-8a5d-c53fe0b241a3`
+- Página Life System: `b9e16270-1b1c-463c-95bd-d7778ed94ab7`
+- Dojo: página `3b9f06f1-0ce3-819e-9521-c7ab292d7acf` · Faixas `3b9f06f1-0ce3-818e-891b-c3157799f8c0` · Técnicas `3b9f06f1-0ce3-817d-8eb2-fb1eeff7ff31` · Drills `3b9f06f1-0ce3-810a-8047-eb0cb57de9e9`
 - Unidades `3a6f06f1-0ce3-816d-84ea-d6ce6ddeb89f` · Projetos `3a7f06f1-0ce3-81d2-9dd9-ddad8d16109c` · Tasks `3a7f06f1-0ce3-81cd-8696-cc002c44f430` (Business)
 - Projetos [L.S.] `3a6f06f1-0ce3-81c7-bb20-c668d4d85c38` · Tasks [L.S.] `3a6f06f1-0ce3-817a-9068-de47ac0b3b11`
 - Metas `3a7f06f1-0ce3-8153-a258-ebbff106eab9` · Recursos `3a7f06f1-0ce3-8177-950e-e703ebb71da3`
