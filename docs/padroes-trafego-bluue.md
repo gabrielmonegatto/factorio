@@ -47,6 +47,32 @@ marginal de verba adicional tende a ser menor que o observado (por isso a faixa)
 pior janela — cortar continua certo porque o real tem casa melhor. **A projeção
 não é promessa: é o tamanho do prêmio que justifica rodar os testes.**
 
+## Escada de escala (cenário hipotético mensal)
+
+Base: R$ 306k/mês a ROAS 1,85. Receita **não** escala linear: cada dobrada de
+verba custa eficiência (consenso de mercado: −8% a −22% de ROAS por dobrada;
+TAM grande como o nosso tende ao lado leve). Três faixas:
+
+| Verba/mês | Otimista (−8%/2×) | Base (−15%/2×) | Conservador (−22%/2×) |
+|---|---|---|---|
+| **1× · R$ 306k** | 1,85 · R$ 567k | 1,85 · R$ 567k | 1,85 · R$ 567k |
+| **2× · R$ 612k** | 1,70 · R$ 1,04M | 1,57 · R$ 962k | 1,44 · R$ 883k |
+| **3× · R$ 919k** | 1,62 · R$ 1,49M | 1,43 · R$ 1,31M | 1,25 · R$ 1,15M |
+| **4× · R$ 1,22M** | 1,57 · R$ 1,92M | 1,34 · R$ 1,64M | 1,13 · R$ 1,38M |
+
+**O número que decide não é o ROAS médio, é o marginal de cada degrau** (cenário
+base): 1×→2× rende 1,29 por real adicional; 2×→3× rende 1,14; 3×→4× rende 1,06.
+O degrau vale a pena enquanto o marginal ficar acima do teu breakeven de margem
+(ROAS mínimo = 1 ÷ margem de contribuição). Sem esse número, 4× pode faturar mais
+e lucrar menos.
+
+Ressalvas de execução: (a) nossos dados históricos não servem pra estimar esse
+decaimento — dias de gasto alto têm ROAS maior (1,79 vs 1,23) porque a verba
+SEGUE a performance, não o contrário; (b) subir 4× leva ~2 meses respeitando
++20%/dia sem resetar aprendizado; (c) escala 3-4× exige volume de criativo novo
+— o gargalo vira produção, não mídia; (d) o ganho de dayparting (+0,05 a +0,11
+de ROAS) soma em qualquer degrau e compensa ~metade de uma dobrada de decaimento.
+
 ## Hipóteses (loop do cookbook)
 
 `padrão (28d) → repete em 2 janelas? → hipótese → teste com controle → 7-14d → decisão`
