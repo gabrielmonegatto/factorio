@@ -5,6 +5,49 @@
 
 ---
 
+# 🔴🔴 INCIDENTE 11/08 — publicação no CANAL ERRADO
+
+A re-auth de 07/08 foi feita na **conta pessoal do Gabriel**, não no canal do
+projeto. Nada deu erro: o token renovava, a API respondia 200, o agendador
+reportava sucesso. E os vídeos subiam pro canal errado.
+
+| Sermão | Canal onde foi parar |
+|---|---|
+| 0001 a 0006 | ✅ Charles Spurgeon Treasures (`UCXqp7wuorli1uLZKJM96T6Q`) |
+| **0007 em diante** | ❌ **Gabriel Monegatto** (`UCdlZH_Y4pw9pyuQ5tWCWOFg`) |
+
+Resultado: canal do projeto parado desde **03/08** (sermão 0006), e 5 vídeos do
+projeto públicos no canal pessoal.
+
+## Contenção (feita 11/08)
+
+- [x] ✅ Cron do agendador **pausado** (`/etc/cron.d/factory`, backup `.bak_canal_errado`)
+- [x] ✅ **13 vídeos privados desagendados** — iam virar públicos sozinhos no canal
+      pessoal, 1/dia a partir de 12/08. Seguem privados, nada apagado.
+- [x] ✅ **Guardião de canal** em `schedule_channel.py` e `publish_youtube.py`:
+      toda obtenção de token confere `channels?mine=true` contra
+      `EXPECTED_CHANNEL_ID` e **aborta** se não bater. Testado: bloqueia hoje.
+
+## Conserto (pendente)
+
+- [ ] **I1 — Gabriel:** rodar `auth_youtube.py` de novo e, na tela de escolha,
+      selecionar **Charles Spurgeon Treasures**, não a conta pessoal.
+      O guardião agora recusa qualquer outra, então não dá pra errar calado.
+- [ ] **I2 — Gabriel (gate):** decidir o que fazer com os 5 públicos no canal
+      pessoal (0007, 0009, 0010, 0011, 0014): apagar ou deixar privado?
+- [ ] **I3** Depois do I1: limpar do estado do R2 os 18 vídeos do canal errado
+      pra eles voltarem à fila e subirem no canal certo.
+- [ ] **I4** Reativar o cron.
+
+## Lição
+
+**Token válido não prova canal certo.** Eu avisei o Gabriel pra escolher a conta
+certa mas não verifiquei por API depois — sendo que a verificação é uma chamada.
+Toda credencial nova agora tem que provar IDENTIDADE, não só validade.
+Vale pro TikTok e pro Meta quando chegarem.
+
+---
+
 # 🔴 P0 — Spurgeon parou de publicar
 
 **Diagnosticado em 04/08.** O canal está parado desde ~30/07 e ninguém foi avisado.

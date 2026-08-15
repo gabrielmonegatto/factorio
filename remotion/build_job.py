@@ -26,8 +26,11 @@ import re
 import boto3
 from botocore.config import Config
 
-BUCKET = "mananciall"
-CHANNEL_PREFIX = "channels/channels_youtube/treasures_charlesspurgeon"
+import canais
+
+# Preenchidos em main() a partir de canais.get(--canal).
+C = None
+BUCKET = CHANNEL_PREFIX = None
 GLOBAL_WORSHIP_PREFIX = "channels/channels_youtube/_globalassets/worship"
 REDIRECT_BASE = "https://mananciall.org/go"  # QR -> Worker de redirect (loga + UTM). Ver 04_ROADMAP.md.
 
@@ -146,11 +149,16 @@ def pick_first(keys, *needles):
 
 def main():
     ap = argparse.ArgumentParser()
+    canais.add_arg_canal(ap)
     ap.add_argument("--sermon", required=True, help="Número do sermão (1, 21, ...)")
     ap.add_argument("--public-dir", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "public"))
     ap.add_argument("--out", default=None, help="Caminho do props.json de saída")
     ap.add_argument("--env", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
     args = ap.parse_args()
+
+    global C, BUCKET, CHANNEL_PREFIX
+    C = canais.get(args.canal)
+    BUCKET, CHANNEL_PREFIX = C["bucket"], C["prefix"]
 
     env = load_env(os.path.abspath(args.env))
     for req in ("R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_ENDPOINT"):
@@ -238,7 +246,7 @@ def main():
         "subtitleStyle": "classic",
         "kenBurnsIntensity": "subtle",
         "qrCodeUrl": f"{rel}/qr.png",
-        "ctaBookTitle": "The Best of Charles Spurgeon",
+        "ctaBookTitle": C["cta_livro"],
         "sermonTitle": sermon_title,
         "sermonNumber": nnnn,
         "marketingTitle": marketing.get("marketingTitle", sermon_title),

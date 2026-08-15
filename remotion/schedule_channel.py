@@ -25,20 +25,41 @@ import datetime as dt
 import subprocess
 import urllib.request
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-BUCKET = "mananciall"
-STATE_KEY = "schedule/spurgeon_schedule.json"
-CHANNEL_PREFIX = "channels/channels_youtube/treasures_charlesspurgeon"
+import canais
 
-# Cadência do canal: 1 vídeo por dia, sempre. (Decisão do Gabriel em 04/08/2026:
-# "segue o fluxo de postar um por dia, não precisa de desespero".)
-# O modo 2/dia continua no código: é só baixar o WARMUP_DAYS pra reativar.
-UM_POR_DIA = True
-WARMUP_DAYS = 14          # 1/dia nesse período (ignorado enquanto UM_POR_DIA)
-MORNING_UTC = 12          # ~08:00 ET
-EVENING_UTC = 23          # ~19:00 ET
-BUFFER_DAYS = 14          # quantos dias à frente manter agendado
-MAX_UPLOADS_PER_RUN = 5   # cota do YouTube ~6 uploads/dia; folga de segurança
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+# Preenchidos em main() a partir de canais.get(--canal). Ficam como globais
+# porque as funções auxiliares abaixo já os usavam assim quando eram constantes.
+C = None
+BUCKET = STATE_KEY = CHANNEL_PREFIX = RENDERS_PREFIX = None
+EXPECTED_CHANNEL_ID = None
+CTA_ASSET_KEYS = []
+
+
+def aplicar_canal(slug=None):
+    """Carrega a config do canal e publica nas globais que a esteira usa."""
+    global C, BUCKET, STATE_KEY, CHANNEL_PREFIX, RENDERS_PREFIX
+    global EXPECTED_CHANNEL_ID, CTA_ASSET_KEYS, UM_POR_DIA, WARMUP_DAYS
+    global MORNING_UTC, EVENING_UTC, BUFFER_DAYS, MAX_UPLOADS_PER_RUN
+    C = canais.get(slug)
+    BUCKET = C["bucket"]
+    STATE_KEY = C["state_key"]
+    CHANNEL_PREFIX = C["prefix"]
+    RENDERS_PREFIX = C["renders_prefix"]
+    EXPECTED_CHANNEL_ID = C["youtube_channel_id"]
+    CTA_ASSET_KEYS = [f"{CHANNEL_PREFIX}/{k}" for k in C["cta_assets"]]
+    UM_POR_DIA = C["um_por_dia"]
+    WARMUP_DAYS = C["warmup_days"]
+    MORNING_UTC = C["morning_utc"]
+    EVENING_UTC = C["evening_utc"]
+    BUFFER_DAYS = C["buffer_days"]
+    MAX_UPLOADS_PER_RUN = C["max_uploads_per_run"]
+    return C
+
+# Cadência (1/dia, horários, buffer, cota por run) vem de canais.py via
+# aplicar_canal(). Decisão do Gabriel em 04/08: "um por dia, sem desespero".
+# O modo 2/dia continua vivo: é só pôr "um_por_dia": False na config do canal.
 
 # vídeos já subidos manualmente (privados) — o agendador só define o publishAt deles.
 # Vazio: os antigos foram deletados (troca de CTA em 28/07); tudo re-sobe fresco via publish_sermon.
@@ -67,12 +88,47 @@ def s3c(env):
 
 def yt_token(env):
     import urllib.parse
+    cid_, secret_, refresh_ = canais.creds_youtube(C, env)
     data = urllib.parse.urlencode({
-        "client_id": env["YT_CLIENT_ID"], "client_secret": env["YT_CLIENT_SECRET"],
-        "refresh_token": env["YT_REFRESH_TOKEN"], "grant_type": "refresh_token"}).encode()
+        "client_id": cid_, "client_secret": secret_,
+        "refresh_token": refresh_, "grant_type": "refresh_token"}).encode()
     req = urllib.request.Request("https://oauth2.googleapis.com/token", data=data, method="POST")
     with urllib.request.urlopen(req, timeout=40) as r:
-        return json.loads(r.read())["access_token"]
+        token = json.loads(r.read())["access_token"]
+    assert_canal_certo(token)
+    return token
+
+
+# ⚠️ INCIDENTE 11/08/2026 — o que este guardião existe pra impedir:
+# a re-auth de 07/08 foi feita na conta pessoal do Gabriel em vez do canal do
+# projeto. O token renovava, a API respondia 200, tudo "funcionava" — e 5 vídeos
+# foram parar públicos no canal PESSOAL enquanto o canal do projeto ficava parado
+# há 8 dias. Token válido não prova canal certo. Agora prova.
+# O ID esperado vem de canais.py (campo `youtube_channel_id`).
+
+
+def assert_canal_certo(token):
+    """Aborta se o token autenticado não for o do canal deste script."""
+    req = urllib.request.Request(
+        "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true",
+        headers={"Authorization": "Bearer " + token})
+    with urllib.request.urlopen(req, timeout=40) as r:
+        itens = json.loads(r.read()).get("items", [])
+    if not EXPECTED_CHANNEL_ID:
+        raise SystemExit(
+            f"❌ ABORTADO: canal {C['slug']!r} sem `youtube_channel_id` em canais.py.\n"
+            f"   Crie o canal, rode auth_youtube.py nele e preencha o ID.")
+    if not itens:
+        raise SystemExit("❌ ABORTADO: o token não devolveu canal nenhum.")
+    cid = itens[0]["id"]
+    titulo = itens[0]["snippet"]["title"]
+    if cid != EXPECTED_CHANNEL_ID:
+        raise SystemExit(
+            f"❌ ABORTADO: token autenticado no canal ERRADO.\n"
+            f"   esperado: {EXPECTED_CHANNEL_ID}\n"
+            f"   recebido: {cid} ({titulo})\n"
+            f"   Rode auth_youtube.py e escolha o canal do projeto.")
+    print(f"🔐 canal confirmado: {titulo} ({cid})")
 
 
 def slot_datetime(i, channel_start):
@@ -116,7 +172,7 @@ def list_ready_sermons(s3):
 
 def video_rendered(s3, nnnn):
     try:
-        s3.head_object(Bucket=BUCKET, Key=f"renders/spurgeon/{nnnn}.mp4")
+        s3.head_object(Bucket=BUCKET, Key=f"{RENDERS_PREFIX}/{nnnn}.mp4")
         return True
     except Exception:
         return False
@@ -124,10 +180,7 @@ def video_rendered(s3, nnnn):
 
 # CTAs/áudios fixos que ficam EMBUTIDOS no vídeo. Se um deles muda no R2, todo
 # render feito ANTES dessa troca fica velho (voz/fala desatualizada) e precisa refazer.
-CTA_ASSET_KEYS = [
-    f"{CHANNEL_PREFIX}/_assets/introfixed.mp3",
-    f"{CHANNEL_PREFIX}/_assets/finalfixed.mp3",
-]
+# (a lista concreta vem de canais.py e é montada em aplicar_canal())
 
 
 def assets_cutoff(s3):
@@ -146,7 +199,7 @@ def assets_cutoff(s3):
 def video_fresh(s3, nnnn, cutoff):
     """True só se o mp4 existe E é mais novo que os CTAs fixos (não precisa refazer)."""
     try:
-        lm = s3.head_object(Bucket=BUCKET, Key=f"renders/spurgeon/{nnnn}.mp4")["LastModified"]
+        lm = s3.head_object(Bucket=BUCKET, Key=f"{RENDERS_PREFIX}/{nnnn}.mp4")["LastModified"]
     except Exception:
         return False
     return cutoff is None or lm >= cutoff
@@ -165,8 +218,15 @@ def schedule_existing(env, video_id, publish_at, token):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--max", type=int, default=MAX_UPLOADS_PER_RUN)
+    ap.add_argument("--max", type=int, default=None)
+    canais.add_arg_canal(ap)
     args = ap.parse_args()
+
+    # tem que vir ANTES de qualquer uso das globais (BUCKET, STATE_KEY, cota...)
+    aplicar_canal(args.canal)
+    if args.max is None:
+        args.max = MAX_UPLOADS_PER_RUN
+    print(f"🏷️  canal: {C['slug']} ({C['nome']})")
 
     env = load_env()
     s3 = s3c(env)
@@ -204,14 +264,23 @@ def main():
     # amanhã, e o resto siga 1/dia sem buraco nem empilhamento.
     i0 = next((i for i, n in enumerate(ready) if n not in state["scheduled"]), None)
     if i0 is not None:
-        amanha = (now + dt.timedelta(days=1)).date()
-        primeiro = dt.datetime(amanha.year, amanha.month, amanha.day,
+        # Próximo slot de 12:00 UTC ainda alcançável (2h de folga pro upload).
+        # MINA (10/08): mirar sempre em "amanhã" furava um dia inteiro quando o
+        # cron das 06:00 rodava e o slot das 12:00 do MESMO dia ainda dava tempo.
+        base = now + dt.timedelta(hours=2)
+        pd = base.date() if base.hour < MORNING_UTC else (base + dt.timedelta(days=1)).date()
+        primeiro = dt.datetime(pd.year, pd.month, pd.day,
                                MORNING_UTC, 0, 0, tzinfo=dt.timezone.utc)
         if slot_datetime(i0, channel_start) < primeiro:
             channel_start = (primeiro - dt.timedelta(days=i0)).date()
+            # MINA (10/08): PERSISTIR o rebase. A 1ª versão só mexia na variável
+            # local; o run seguinte do cron recarregava o channel_start velho do
+            # R2 e recalculava de outra base → datas duplicadas (2 vídeos no
+            # mesmo dia) e dias sem vídeo nenhum.
+            state["channel_start"] = channel_start.isoformat()
             horizon = now + dt.timedelta(days=BUFFER_DAYS)
             print(f"   ↩️  calendário rebaseado: {ready[i0]} passa a sair "
-                  f"{primeiro.date()}, 1/dia a partir dali")
+                  f"{primeiro.date()}, 1/dia a partir dali (persistido)")
 
     for i, nnnn in enumerate(ready):
         when = slot_datetime(i, channel_start)
@@ -254,7 +323,11 @@ def main():
                  "-v", "/srv/factorio/data/hybrid:/app/_hybrid",
                  "-v", "/app/_factorio/remotion/publish_sermon.py:/app/publish_sermon.py",
                  "-v", "/app/_factorio/remotion/publish_youtube.py:/app/publish_youtube.py",
+                 # MINA: canais.py também precisa entrar no container, senão o
+                 # publish_sermon lá dentro cai no default e publica no canal errado.
+                 "-v", "/app/_factorio/remotion/canais.py:/app/canais.py",
                  "factorio-render:v5", "python3", "-u", "publish_sermon.py",
+                 "--canal", C["slug"],
                  "--sermon", str(int(nnnn)), "--publish-at", pa],
                 capture_output=True, text=True)
             out = r.stdout + r.stderr

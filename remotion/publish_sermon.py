@@ -16,8 +16,10 @@ import json
 import argparse
 import subprocess
 
+import canais
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-BUCKET = "mananciall"
+C = None      # config do canal, preenchida em main()
 
 
 def sh(cmd, **kw):
@@ -43,10 +45,15 @@ def descricao(video_desc, nnnn):
 
 def main():
     ap = argparse.ArgumentParser()
+    canais.add_arg_canal(ap)
     ap.add_argument("--sermon", required=True)
     ap.add_argument("--publish-at", help="ISO UTC — agenda; ausente = PRIVADO")
     ap.add_argument("--public-dir", default=os.path.join(HERE, "public"))
     args = ap.parse_args()
+
+    global C
+    C = canais.get(args.canal)
+    print(f"🏷️  canal: {C['slug']} ({C['nome']})")
 
     nnnn = f"{int(args.sermon):04d}"
     public = os.path.abspath(args.public_dir)
@@ -55,7 +62,7 @@ def main():
 
     # 1. build_job (garante props + assets + thumbnailText)
     print(f"=== [1/4] preparando assets do {nnnn} ===")
-    sh([py, os.path.join(HERE, "build_job.py"), "--sermon", str(int(args.sermon)),
+    sh([py, os.path.join(HERE, "build_job.py"), "--canal", C["slug"], "--sermon", str(int(args.sermon)),
         "--out", props, "--public-dir", public], cwd=HERE)
     P = json.load(open(props, encoding="utf-8"))
 
@@ -76,7 +83,7 @@ def main():
                           aws_secret_access_key=env["R2_SECRET_ACCESS_KEY"],
                           config=Config(signature_version="s3v4"), region_name="auto")
         video = os.path.join(HERE, f"_video_{nnnn}.mp4")
-        s3.download_file(BUCKET, f"renders/spurgeon/{nnnn}.mp4", video)
+        s3.download_file(C["bucket"], f'{C["renders_prefix"]}/{nnnn}.mp4', video)
 
     # 4. publica
     print("=== [4/4] subindo pro YouTube ===")
@@ -92,9 +99,11 @@ def main():
            "--video", video, "--title", title,
            "--description", descricao(video_desc, nnnn),
            "--thumbnail", thumb,
-           "--tags", "Charles Spurgeon,sermon,christian,gospel,faith,spurgeon sermons",
-           "--comment", f"📖 Get Charles Spurgeon's books & devotionals here 👉 {REDIRECT}{nnnn}",
+           "--tags", C["tags"],
+           "--canal", C["slug"],
            "--confirm"]
+    if C.get("cta_texto"):
+        cmd += ["--comment", C["cta_texto"].format(link=f'{C["redirect_base"]}{nnnn}')]
     if args.publish_at:
         cmd += ["--publish-at", args.publish_at]
     r = subprocess.run(cmd, cwd=HERE)

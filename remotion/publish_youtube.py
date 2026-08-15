@@ -6,9 +6,9 @@ A jogada: sobe como PRIVADO com `publishAt`. O YouTube publica sozinho na data m
 Assim a fábrica produz em lote (20 vídeos num fim de semana) e o canal parece diário.
 
 Credenciais (no .env ou ambiente):
-  YT_CLIENT_ID        — do OAuth 2.0 Client (Google Cloud Console)
-  YT_CLIENT_SECRET
-  YT_REFRESH_TOKEN    — gerado uma vez pelo fluxo de autorização (ver auth_youtube.py)
+  Por canal, via `env_prefix` de canais.py. Spurgeon usa o prefixo YT:
+  YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN.
+  Canal novo usa o SEU prefixo (ex.: YT_BIBLIA_*) — um refresh_token vale pra UM canal.
 
 Uso:
   python publish_youtube.py --video 0021.mp4 --title "..." --description "..." \
@@ -22,6 +22,8 @@ import sys
 import json
 import argparse
 import urllib.request
+
+import canais
 import urllib.parse
 
 TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -44,15 +46,48 @@ def load_env():
 
 def access_token(env):
     """Troca o refresh_token por um access_token (válido ~1h)."""
+    _cid, _secret, _refresh = canais.creds_youtube(C, env)
     data = urllib.parse.urlencode({
-        "client_id": env["YT_CLIENT_ID"],
-        "client_secret": env["YT_CLIENT_SECRET"],
-        "refresh_token": env["YT_REFRESH_TOKEN"],
+        "client_id": _cid, "client_secret": _secret, "refresh_token": _refresh,
         "grant_type": "refresh_token",
     }).encode()
     req = urllib.request.Request(TOKEN_URL, data=data, method="POST")
     with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())["access_token"]
+        token = json.loads(r.read())["access_token"]
+    assert_canal_certo(token)
+    return token
+
+
+# ⚠️ INCIDENTE 11/08/2026 — ver comentário gêmeo em schedule_channel.py.
+# A re-auth foi feita na conta pessoal do Gabriel; o upload subiu 5 vídeos
+# públicos no canal errado sem erro nenhum. Token válido ≠ canal certo.
+# O ID esperado vem de canais.py (campo `youtube_channel_id`) e é resolvido
+# em main() via --canal. Canal sem ID preenchido NÃO publica.
+C = None
+
+
+def assert_canal_certo(token):
+    """Aborta o upload se o token não for do canal deste script."""
+    esperado = (C or {}).get("youtube_channel_id")
+    if not esperado:
+        raise SystemExit(
+            "❌ ABORTADO: canal sem `youtube_channel_id` em canais.py.\n"
+            "   Crie o canal, rode auth_youtube.py nele e preencha o ID.")
+    req = urllib.request.Request(
+        "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true",
+        headers={"Authorization": "Bearer " + token})
+    with urllib.request.urlopen(req, timeout=40) as r:
+        itens = json.loads(r.read()).get("items", [])
+    if not itens:
+        raise SystemExit("❌ ABORTADO: o token não devolveu canal nenhum.")
+    cid, titulo = itens[0]["id"], itens[0]["snippet"]["title"]
+    if cid != esperado:
+        raise SystemExit(
+            f"❌ ABORTADO: token autenticado no canal ERRADO.\n"
+            f"   esperado: {esperado}\n"
+            f"   recebido: {cid} ({titulo})\n"
+            f"   Rode auth_youtube.py e escolha o canal do projeto.")
+    print(f"🔐 canal confirmado: {titulo} ({cid})")
 
 
 def upload(video_path, meta, token):
@@ -112,16 +147,18 @@ def main():
     ap.add_argument("--category", default="22")  # 22 = People & Blogs
     ap.add_argument("--comment", help="texto do 1º comentário (com o link). Postado, mas fixado é manual")
     ap.add_argument("--confirm", action="store_true", help="OBRIGATÓRIO — publicar é irreversível")
+    canais.add_arg_canal(ap)
     args = ap.parse_args()
+
+    global C
+    C = canais.get(args.canal)
 
     if not args.confirm:
         sys.exit("⛔ Falta --confirm. Publicar no YouTube é ação externa irreversível:\n"
                  "   revise título/descrição/data e rode de novo com --confirm.")
 
     env = load_env()
-    for k in ("YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"):
-        if not env.get(k):
-            sys.exit(f"❌ Falta {k} no .env (rode auth_youtube.py uma vez pra gerar o refresh token)")
+    canais.creds_youtube(C, env)   # erra alto e cedo se faltar credencial do canal
 
     meta = {
         "snippet": {
