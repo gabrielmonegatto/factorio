@@ -265,6 +265,7 @@ Com ~75 P1 e cadência de 1-2 lançamentos/semana, só o P1 alimenta **um ano in
 
 ## Próximos passos deste mapa
 
-1. Gabriel revisa prioridades (promover/rebaixar P1↔P2, cortar o que não tem cara de Mananciall)
-2. Carregar o mapa no Teable `content_index` com as colunas novas (`era`, `collection`, `priority`, `translation`, `pd_status`, `source_kind`), casando com as 545 linhas que já existem (upsert por título+autor, não duplicar)
-3. Aí sim: automações de mineração por fonte (CCEL ThML primeiro) e o resto da esteira do doc 13
+1. ✅ **16/08/2026: mapa carregado no Notion** como banco EDITÁVEL "Catálogo Estratégico Mananciall" (179 obras, sob a página Et3rnall - Manancial). Script: `scripts/notion_catalogo_mananciall.mjs` (idempotente; re-rodar NÃO sobrescreve Prioridade/Lançamento/Status editados pelo Gabriel). Divisão de responsabilidade: **Notion = plano de controle humano** (prioridade, lançamento, cortes) · **Teable/Postgres = dados massivos e fábrica** (texto minerado, chunks, pipeline_state).
+2. Gabriel revisa prioridades NO NOTION (promover/rebaixar P1↔P2, cortar, marcar Lançamento)
+3. Carregar o plano no Teable `content_index` com as colunas novas (`era`, `collection`, `priority`, `translation`, `pd_status`, `source_kind`), lendo do Notion e casando com as 545 linhas que já existem (upsert por título+autor, não duplicar)
+4. Aí sim: automações de mineração por fonte (CCEL ThML primeiro) e o resto da esteira do doc 13
