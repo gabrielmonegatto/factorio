@@ -1,22 +1,36 @@
-// Carrega o Mapa de Obras (docs/14_MAPA_DE_OBRAS_MANANCIALL.md) no Notion como
-// banco EDITÁVEL: "Catálogo Estratégico Mananciall". Este banco é o plano de controle
-// humano do catálogo (prioridade, lançamento, status). Difere do "Acervo — Mananciall",
-// que é espelho read-only do D1.
+// BIBLIOTECA MANANCIALL — referência única do catálogo no Notion.
 //
-// Direção: este script SEMEIA/atualiza a partir do mapa. Edições do Gabriel no Notion
-// (prioridade, lançamento, cortes) são respeitadas: o upsert só preenche campos de
-// catálogo (era, tradução, fonte), nunca sobrescreve Prioridade/Lançamento/Status de
-// linhas existentes.
+// Funde numa tabela só o que antes eram dois bancos:
+//   "Catálogo Estratégico Mananciall" (o plano: 179 obras do mapa docs/14)
+//   "Acervo — Mananciall"             (o realizado: espelho do D1 de produção)
+// É a mesma entidade (uma obra) em ESTADOS diferentes. Uma linha por obra, do
+// backlog ao publicado.
 //
-// Uso: node scripts/notion_catalogo_mananciall.mjs
+// Divisão de responsabilidade:
+//   NOTION  = plano de controle humano (Estado, Prioridade, Lançamento, Coleções, cortes)
+//   D1/Teable = dados massivos e fábrica (texto, chunks, áudio, pipeline_state)
+//
+// Quem escreve o quê:
+//   este script         → semeia/atualiza METADADO DE CATÁLOGO (era, tradução, fonte, autor)
+//   Gabriel no Notion   → Estado, Prioridade, Lançamento, Coleções, Destaque, Nota
+//   sync-notion.mjs     → campos de máquina (Slug, Capítulos, Faixas, Página, Preço)
+//     (esse mora no repo do site: apps/eternall/mananciall-site/scripts/sync-notion.mjs)
+//
+// Re-rodar é seguro: em linha que já existe, só metadado de catálogo é tocado.
+// Nada que o Gabriel editou é sobrescrito.
+//
+// Uso: node scripts/notion_biblioteca_mananciall.mjs
 // Credencial: NOTION_TOKEN em _factorio/.env
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const ENV_PATH = path.resolve(import.meta.dirname, '..', '.env');
-const PARENT_PAGE = '3a7f06f1-0ce3-81b1-ad55-dc0239ee270b'; // Et3rnall - Manancial
-const DB_TITLE = 'Catálogo Estratégico Mananciall';
+const PARENT_PAGE = '33d6bf27-9f65-4043-8a5d-c53fe0b241a3'; // Business System
+const DB_TITLE = 'Biblioteca Mananciall';
+// bancos da fase anterior, absorvidos por este (o de acervo ainda alimenta a migração)
+const OLD_CATALOGO = '3bef06f1-0ce3-81d0-8ce6-daa092972b00';
+const OLD_ACERVO = '3bdf06f1-0ce3-81c5-9be8-d68172f5a3bd';
 
 function env(key) {
   const raw = readFileSync(ENV_PATH, 'utf8');
@@ -208,7 +222,7 @@ const ROWS = [
   ['Sinners in the Hands of an Angry God + sermões selecionados', 'Jonathan Edwards', 8, 'P1', [], 'original EN', 'CCEL', V, false, ''],
   ['The Life and Diary of David Brainerd', 'Jonathan Edwards', 8, 'P1', ['Missions'], 'original EN', 'CCEL', V, false, ''],
   ['Freedom of the Will + Charity and Its Fruits', 'Jonathan Edwards', 8, 'P2', [], 'original EN', 'CCEL', V, false, '2 obras'],
-  ['Selected Sermons', 'George Whitefield', 8, 'P1', [], 'original EN', 'CCEL', V, false, ''],
+  ['Selected Sermons of George Whitefield', 'George Whitefield', 8, 'P1', [], 'original EN', 'CCEL', V, false, 'título desambiguado: "Selected Sermons" no D1 é o de Edwards'],
   ['The Journals', 'George Whitefield', 8, 'P2', [], 'original EN', 'Archive.org', V, false, ''],
   ['Fifty-Two Standard Sermons (seleções por volume)', 'John Wesley', 8, 'P2', [], 'original EN', 'CCEL', V, false, ''],
   ['A Plain Account of Christian Perfection', 'John Wesley', 8, 'P1', ['Holiness'], 'original EN', 'CCEL', V, false, ''],
@@ -249,96 +263,274 @@ const ROWS = [
 ];
 
 const ERAS = {
+  0: '0 Mananciall Originals',
   1: '1 Apostolic Fathers', 2: '2 Apocrypha', 3: '3 Apologists', 4: '4 Golden Age',
   5: '5 Medieval & Mystics', 6: '6 Reformation', 7: '7 Puritans', 8: '8 Awakening',
   9: '9 Revival Century',
 };
 
 // ---------------------------------------------------------------------------
+// O que já está PUBLICADO (vem do banco Acervo, que espelha o D1). Aqui mora só o
+// metadado de CATÁLOGO de cada publicado: era, coleções, tradução, fonte.
+// Números (capítulos, faixas, preço, slug) vêm do D1 pelo sync, não daqui.
+// Chave: título exato como está no D1.
+const PUBLICADOS = {
+  'Bíblia Jornada': [0, [], 'obra própria (PT)', '', 'produto próprio, não é clássico DP'],
+  'Morning and Evening': [9, ['Daily Devotionals'], 'original EN', 'CCEL', 'audiobook 100% (734 faixas)'],
+  "Faith's Checkbook": [9, ['Daily Devotionals'], 'original EN', 'CCEL', 'audiobook 100% (366 faixas)'],
+  'All of Grace': [9, ['Essentials'], 'original EN', 'CCEL', 'audiobook 100%'],
+  'Power Through Prayer': [9, ['Prayer Library'], 'original EN', 'CCEL', 'audiobook 100%'],
+  'The Necessity of Prayer': [9, ['Prayer Library'], 'original EN', 'CCEL', 'audiobook 100%'],
+  'The Essentials of Prayer': [9, ['Prayer Library'], 'original EN', 'CCEL', 'audiobook 100%'],
+  'The Reality of Prayer': [9, ['Prayer Library'], 'original EN', 'CCEL', 'audiobook 100%'],
+  'Purpose in Prayer': [9, ['Prayer Library'], 'original EN', 'CCEL', 'audiobook 100%'],
+  'The Weapon of Prayer': [9, ['Prayer Library'], 'original EN', 'CCEL', 'audiobook 100%'],
+  'A History of the Work of Redemption': [8, [], 'original EN', 'CCEL', ''],
+  'The Life of David Brainerd': [8, ['Missions'], 'original EN', 'CCEL', ''],
+};
+// Volumes de sermão do Spurgeon publicados: mesma ficha pra todos.
+const SPURGEON_VOL = [9, [], 'original EN', 'CCEL', 'volume da Spurgeon Sermon Library'];
+
+// Obra publicada -> linha do MAPA que ela já cumpre (evita linha duplicada).
+// A linha do mapa é absorvida: vira Publicado e recebe o título/slug de produção.
+const DEDUPE = {
+  'The Book of Enoch': 'The Book of Enoch (1 Enoch)',
+  'Religious Affections': 'Religious Affections',
+  'Freedom of the Will': 'Freedom of the Will + Charity and Its Fruits',
+  'The Life of David Brainerd': 'The Life and Diary of David Brainerd',
+  'Selected Sermons': 'Sinners in the Hands of an Angry God + sermões selecionados',
+};
+
+// ---------------------------------------------------------------------------
+// ESTADO é a espinha: uma obra caminha Backlog -> Publicado.
+// ÁUDIO fica FORA dessa fila de propósito: não é etapa, é atributo paralelo.
+// (26 livros estão publicados SEM áudio e 9 têm áudio completo; se áudio fosse
+//  etapa da mesma coluna, um livro publicado com áudio não caberia nos dois.)
+const ESTADOS = [
+  { name: 'Backlog', color: 'default' },      // mapeada, nada feito
+  { name: 'Minerando', color: 'blue' },       // scrape rodando na fonte
+  { name: 'Limpando', color: 'yellow' },      // texto bruto virando texto de leitura
+  { name: 'Texto pronto', color: 'orange' },  // limpo e revisado, pronto pra virar produto
+  { name: 'Publicado', color: 'green' },      // no ar no site
+  { name: 'Cortada', color: 'red' },          // decidimos não fazer
+];
+const AUDIOS = [
+  { name: 'Sem áudio', color: 'default' },
+  { name: 'Na fila', color: 'blue' },
+  { name: 'Parcial', color: 'yellow' },
+  { name: 'Completo', color: 'green' },
+];
+
 const PROPS = {
   Obra: { title: {} },
   Autor: { rich_text: {} },
   Era: { select: {} },
+  Estado: { select: { options: ESTADOS } },
   Prioridade: { select: { options: [{ name: 'P1', color: 'green' }, { name: 'P2', color: 'yellow' }, { name: 'P3', color: 'gray' }] } },
+  'Lançamento': { checkbox: {} },
+  'Áudio': { select: { options: AUDIOS } },
   'Coleções': { multi_select: {} },
+  Categoria: { select: {} },
   'Tradução DP': { rich_text: {} },
   Fonte: { select: {} },
   'Status DP': { select: { options: [{ name: 'verified', color: 'green' }, { name: 'pending', color: 'yellow' }, { name: 'blocked', color: 'red' }] } },
-  'Status produção': { select: { options: [
-    { name: 'Mapeada', color: 'default' }, { name: 'Minerando', color: 'blue' },
-    { name: 'Limpando', color: 'yellow' }, { name: 'Pronta', color: 'orange' },
-    { name: 'Publicada', color: 'green' }, { name: 'Cortada', color: 'red' },
-  ] } },
-  'Lançamento': { checkbox: {} },
   Nota: { rich_text: {} },
+  // ── daqui pra baixo: escrito pela máquina (sync do D1). Não editar na mão. ──
+  Slug: { rich_text: {} },
+  'Capítulos': { number: { format: 'number' } },
+  'Faixas de áudio': { number: { format: 'number' } },
+  'Tamanho (mil chars)': { number: { format: 'number' } },
+  'Capítulos curtos': { number: { format: 'number' } },
+  'Revisar edição': { checkbox: {} },
+  'Edição revisada': { checkbox: {} }, // este é do Gabriel: QA humano
+  'Preço (USD)': { number: { format: 'dollar' } },
+  Destaque: { checkbox: {} },
+  'Página': { url: {} },
+  'Publicado em': { date: {} },
+  Sincronizado: { date: {} },
 };
-
-const found = await notion('/search', 'POST', {
-  query: DB_TITLE,
-  filter: { value: 'database', property: 'object' },
-  page_size: 20,
-});
-let db = found.results.find((r) => r.title?.map((t) => t.plain_text).join('') === DB_TITLE);
-
-if (!db) {
-  db = await notion('/databases', 'POST', {
-    parent: { type: 'page_id', page_id: PARENT_PAGE },
-    title: [{ type: 'text', text: { content: DB_TITLE } }],
-    description: [{ type: 'text', text: { content: 'Plano de controle do catálogo (editável). Prioridade, Lançamento, Status produção e cortes são SEUS: a fábrica lê daqui. Semeado do mapa docs/14 da _factorio.' } }],
-    properties: PROPS,
-  });
-  console.log('banco criado no Notion:', db.id);
-} else {
-  await notion(`/databases/${db.id}`, 'PATCH', { properties: PROPS });
-  console.log('banco existente:', db.id);
-}
 
 const txt = (s) => (s ? [{ type: 'text', text: { content: String(s).slice(0, 1900) } }] : []);
 const sel = (s) => (s ? { name: String(s).slice(0, 90) } : null);
+const pause = () => new Promise((r) => setTimeout(r, 350));
 
+async function allRows(dbId) {
+  let cursor, rows = [];
+  do {
+    const q = await notion(`/databases/${dbId}/query`, 'POST', { page_size: 100, start_cursor: cursor });
+    rows.push(...q.results);
+    cursor = q.has_more ? q.next_cursor : null;
+  } while (cursor);
+  return rows;
+}
+const plain = (p) => {
+  if (!p) return '';
+  if (p.type === 'title' || p.type === 'rich_text') return p[p.type].map((t) => t.plain_text).join('');
+  if (p.type === 'select') return p.select?.name || '';
+  if (p.type === 'number') return p.number ?? 0;
+  if (p.type === 'checkbox') return p.checkbox;
+  if (p.type === 'url') return p.url || '';
+  if (p.type === 'date') return p.date?.start || '';
+  return '';
+};
+
+// ── 1. Banco unificado: reaproveita o "Catálogo Estratégico" (já tem as 179 linhas
+//       e as edições do Gabriel) renomeando pra Biblioteca. Nada é recriado do zero.
+const found = await notion('/search', 'POST', {
+  query: DB_TITLE, filter: { value: 'database', property: 'object' }, page_size: 20,
+});
+let db = found.results.find((r) => r.title?.map((t) => t.plain_text).join('') === DB_TITLE);
+
+const DESC = 'Referência ÚNICA do catálogo: uma linha por obra, do Backlog ao Publicado (coluna Estado). Áudio é atributo paralelo, não etapa. Você manda em Estado, Prioridade, Lançamento, Coleções e cortes; os campos de Slug pra baixo são escritos pela fábrica (D1) e não devem ser editados na mão.';
+
+if (!db) {
+  // primeira fusão: assume o banco do catálogo e renomeia
+  db = await notion(`/databases/${OLD_CATALOGO}`, 'PATCH', {
+    title: [{ type: 'text', text: { content: DB_TITLE } }],
+    description: [{ type: 'text', text: { content: DESC } }],
+    properties: PROPS,
+  });
+  console.log(`banco unificado (renomeado do Catálogo Estratégico): ${db.id}`);
+} else {
+  await notion(`/databases/${db.id}`, 'PATCH', { properties: PROPS });
+  console.log('banco unificado existente:', db.id);
+}
+
+// ── 2. Migra "Status produção" (esquema antigo) para "Estado", se ainda houver
+const meta = await notion(`/databases/${db.id}`);
+if (meta.properties['Status produção']) {
+  const OLD_TO_NEW = { Mapeada: 'Backlog', Minerando: 'Minerando', Limpando: 'Limpando', Pronta: 'Texto pronto', Publicada: 'Publicado', Cortada: 'Cortada' };
+  for (const pg of await allRows(db.id)) {
+    const antigo = plain(pg.properties['Status produção']);
+    if (antigo && !plain(pg.properties.Estado)) {
+      await notion(`/pages/${pg.id}`, 'PATCH', { properties: { Estado: { select: sel(OLD_TO_NEW[antigo] || 'Backlog') } } });
+      await pause();
+    }
+  }
+  await notion(`/databases/${db.id}`, 'PATCH', { properties: { 'Status produção': null } });
+  console.log('coluna "Status produção" migrada para "Estado" e removida');
+}
+
+// ── 3. Semeia o mapa (179 obras). Linha existente: só metadado de catálogo.
 let created = 0, updated = 0;
 for (const [obra, autor, era, pri, cols, trad, fonte, pd, launch, nota] of ROWS) {
   const existing = await notion(`/databases/${db.id}/query`, 'POST', {
-    filter: { property: 'Obra', title: { equals: obra } },
-    page_size: 1,
+    filter: { property: 'Obra', title: { equals: obra } }, page_size: 1,
   });
-
+  const catalogo = {
+    Autor: { rich_text: txt(autor) },
+    Era: { select: sel(ERAS[era]) },
+    'Tradução DP': { rich_text: txt(trad) },
+    Fonte: { select: sel(fonte) },
+    'Status DP': { select: sel(pd) },
+  };
   if (existing.results.length) {
-    // linha já existe: só atualiza campos de catálogo, respeita edições humanas
-    await notion(`/pages/${existing.results[0].id}`, 'PATCH', {
-      properties: {
-        Autor: { rich_text: txt(autor) },
-        Era: { select: sel(ERAS[era]) },
-        'Coleções': { multi_select: cols.map((c) => ({ name: c })) },
-        'Tradução DP': { rich_text: txt(trad) },
-        Fonte: { select: sel(fonte) },
-        'Status DP': { select: sel(pd) },
-        Nota: { rich_text: txt(nota) },
-      },
-    });
+    await notion(`/pages/${existing.results[0].id}`, 'PATCH', { properties: catalogo });
     updated++;
   } else {
     await notion('/pages', 'POST', {
       parent: { database_id: db.id },
       properties: {
+        ...catalogo,
         Obra: { title: txt(obra) },
-        Autor: { rich_text: txt(autor) },
-        Era: { select: sel(ERAS[era]) },
+        Estado: { select: sel('Backlog') },
         Prioridade: { select: sel(pri) },
         'Coleções': { multi_select: cols.map((c) => ({ name: c })) },
-        'Tradução DP': { rich_text: txt(trad) },
-        Fonte: { select: sel(fonte) },
-        'Status DP': { select: sel(pd) },
-        'Status produção': { select: sel('Mapeada') },
         'Lançamento': { checkbox: launch },
+        'Áudio': { select: sel('Sem áudio') },
         Nota: { rich_text: txt(nota) },
       },
     });
     created++;
   }
-  await new Promise((r) => setTimeout(r, 350));
+  await pause();
+}
+console.log(`\nmapa: ${created} obras criadas, ${updated} atualizadas`);
+
+// ── 4. Absorve o publicado (banco Acervo, espelho do D1) na mesma tabela
+const acervo = await allRows(OLD_ACERVO);
+console.log(`\nabsorvendo ${acervo.length} obras publicadas do Acervo...`);
+let pubNovo = 0, pubFundido = 0;
+
+for (const pg of acervo) {
+  const titulo = plain(pg.properties.Livro);
+  const slug = plain(pg.properties.Slug);
+  const caps = plain(pg.properties['Capítulos']);
+  const faixas = plain(pg.properties['Faixas de áudio']);
+  const colecao = plain(pg.properties['Coleção']);
+  const isSpurgeonVol = /^Spurgeon's Sermons, Volume/.test(titulo);
+  const ficha = PUBLICADOS[titulo] || (isSpurgeonVol ? SPURGEON_VOL : null);
+
+  // acha a linha: pelo nome do mapa (dedupe), senão pelo próprio título
+  const alvo = DEDUPE[titulo] || titulo;
+  const hit = await notion(`/databases/${db.id}/query`, 'POST', {
+    filter: { property: 'Obra', title: { equals: alvo } }, page_size: 1,
+  });
+
+  const cols = new Set(ficha ? ficha[1] : []);
+  if (colecao === 'prayer-library') cols.add('Prayer Library');
+  if (colecao === 'edwards-collection') cols.add('Edwards Collection');
+  if (colecao === 'spurgeon-library') cols.add('Spurgeon Sermon Library');
+
+  const producao = {
+    Estado: { select: sel(plain(pg.properties.Status) === 'draft' ? 'Texto pronto' : 'Publicado') },
+    Slug: { rich_text: txt(slug) },
+    'Capítulos': { number: caps || 0 },
+    'Faixas de áudio': { number: faixas || 0 },
+    'Áudio': { select: sel(faixas === 0 ? 'Sem áudio' : faixas >= caps ? 'Completo' : 'Parcial') },
+    'Tamanho (mil chars)': { number: plain(pg.properties['Tamanho (mil chars)']) || 0 },
+    'Capítulos curtos': { number: plain(pg.properties['Capítulos curtos']) || 0 },
+    'Revisar edição': { checkbox: !!plain(pg.properties['Revisar edição']) },
+    'Edição revisada': { checkbox: !!plain(pg.properties['edição revisada']) },
+    'Preço (USD)': { number: plain(pg.properties['Preço (USD)']) || 0 },
+    Destaque: { checkbox: !!plain(pg.properties.Destaque) },
+    Categoria: { select: sel(plain(pg.properties.Categoria)) },
+    'Página': { url: plain(pg.properties['Página']) || null },
+    'Publicado em': plain(pg.properties['publicação']) ? { date: { start: plain(pg.properties['publicação']) } } : { date: null },
+    'Coleções': { multi_select: [...cols].map((c) => ({ name: c })) },
+  };
+
+  if (hit.results.length) {
+    // a obra já estava mapeada no plano: mesma linha, agora publicada
+    await notion(`/pages/${hit.results[0].id}`, 'PATCH', {
+      properties: { ...producao, Obra: { title: txt(titulo) } },
+    });
+    pubFundido++;
+  } else {
+    await notion('/pages', 'POST', {
+      parent: { database_id: db.id },
+      properties: {
+        ...producao,
+        Obra: { title: txt(titulo) },
+        Autor: { rich_text: txt(plain(pg.properties.Autor)) },
+        Era: { select: sel(ERAS[ficha ? ficha[0] : 9]) },
+        Prioridade: { select: sel('P1') },
+        'Tradução DP': { rich_text: txt(ficha ? ficha[2] : 'original EN') },
+        Fonte: { select: sel(ficha && ficha[3] ? ficha[3] : 'CCEL') },
+        'Status DP': { select: sel('verified') },
+        Nota: { rich_text: txt(ficha ? ficha[4] : '') },
+      },
+    });
+    pubNovo++;
+  }
+  await pause();
 }
 
-console.log(`\n${ROWS.length} obras no mapa: ${created} criadas, ${updated} atualizadas`);
-console.log(`Lançamento marcado: ${ROWS.filter((r) => r[8]).length} obras`);
-console.log(`Notion: https://notion.so/${db.id.replace(/-/g, '')}`);
+// a linha do lote de Spurgeon deixa de mentir sobre o tamanho do backlog
+const lote = await notion(`/databases/${db.id}/query`, 'POST', {
+  filter: { property: 'Obra', title: { equals: 'Sermões: 57 volumes do backlog (lote)' } }, page_size: 1,
+});
+if (lote.results.length) {
+  await notion(`/pages/${lote.results[0].id}`, 'PATCH', {
+    properties: { Nota: { rich_text: txt('12 volumes já publicados (linhas próprias); restam 57 no backlog do Teable, rodam em lote na esteira') } },
+  });
+}
+
+const total = await allRows(db.id);
+const conta = (estado) => total.filter((p) => plain(p.properties.Estado) === estado).length;
+console.log(`publicados: ${pubFundido} fundidos em linha do mapa, ${pubNovo} criados`);
+console.log(`\nBIBLIOTECA MANANCIALL: ${total.length} obras numa tabela só`);
+for (const e of ESTADOS) if (conta(e.name)) console.log(`  ${e.name}: ${conta(e.name)}`);
+console.log(`  com áudio completo: ${total.filter((p) => plain(p.properties['Áudio']) === 'Completo').length}`);
+console.log(`  marcadas Lançamento: ${total.filter((p) => plain(p.properties['Lançamento'])).length}`);
+console.log(`\nNotion: https://notion.so/${db.id.replace(/-/g, '')}`);

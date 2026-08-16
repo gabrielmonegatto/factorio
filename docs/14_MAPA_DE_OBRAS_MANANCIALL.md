@@ -265,7 +265,59 @@ Com ~75 P1 e cadência de 1-2 lançamentos/semana, só o P1 alimenta **um ano in
 
 ## Próximos passos deste mapa
 
-1. ✅ **16/08/2026: mapa carregado no Notion** como banco EDITÁVEL "Catálogo Estratégico Mananciall" (179 obras, sob a página Et3rnall - Manancial). Script: `scripts/notion_catalogo_mananciall.mjs` (idempotente; re-rodar NÃO sobrescreve Prioridade/Lançamento/Status editados pelo Gabriel). Divisão de responsabilidade: **Notion = plano de controle humano** (prioridade, lançamento, cortes) · **Teable/Postgres = dados massivos e fábrica** (texto minerado, chunks, pipeline_state).
+1. ✅ **16/08/2026: mapa no Notion, fundido com o acervo publicado.** Banco único **"Biblioteca Mananciall"** (`3bef06f1-0ce3-81d0-8ce6-daa092972b00`, na página Business System): **202 obras numa tabela só**, do backlog ao publicado. Ver a seção "Banco único" abaixo.
 2. Gabriel revisa prioridades NO NOTION (promover/rebaixar P1↔P2, cortar, marcar Lançamento)
 3. Carregar o plano no Teable `content_index` com as colunas novas (`era`, `collection`, `priority`, `translation`, `pd_status`, `source_kind`), lendo do Notion e casando com as 545 linhas que já existem (upsert por título+autor, não duplicar)
 4. Aí sim: automações de mineração por fonte (CCEL ThML primeiro) e o resto da esteira do doc 13
+
+---
+
+## Banco único: Biblioteca Mananciall (Notion)
+
+Fusão de 16/08/2026. Antes eram dois bancos disputando a mesma verdade: "Catálogo Estratégico" (o plano, 179 obras) e "Acervo — Mananciall" (o realizado, espelho do D1). **É a mesma entidade em estados diferentes**, então virou uma tabela só: uma linha por obra, do backlog ao publicado.
+
+Script: `scripts/notion_biblioteca_mananciall.mjs` (idempotente, re-rodar não sobrescreve edição humana).
+O banco Acervo antigo ficou renomeado `[APOSENTADO]` e não recebe mais escrita: o Gabriel apaga quando quiser.
+
+### Estado (a espinha)
+
+`Backlog` → `Minerando` → `Limpando` → `Texto pronto` → `Publicado` (+ `Cortada` fora da fila)
+
+### Áudio NÃO é etapa dessa fila
+
+Decisão de desenho, vale registrar: áudio ficou como coluna paralela (`Sem áudio` · `Na fila` · `Parcial` · `Completo`), não como estado. Motivo concreto: **18 obras estão publicadas SEM áudio e 9 têm áudio completo**. Se áudio fosse etapa da mesma coluna, uma obra publicada com áudio não caberia nos dois lugares e o kanban mentiria. Publicação e narração são trilhos paralelos que se cruzam quando dá.
+
+### Quem escreve o quê (a regra que evita briga)
+
+| Campo | Dono | Observação |
+|---|---|---|
+| Estado, Prioridade, Lançamento, Coleções, Destaque, Nota, Edição revisada | **Gabriel** (Notion) | fábrica lê, nunca sobrescreve |
+| Era, Tradução DP, Fonte, Status DP, Autor | script do mapa | metadado de catálogo |
+| Slug, Capítulos, Faixas de áudio, Tamanho, Capítulos curtos, Revisar edição, Preço, Página, Publicado em, Sincronizado | **máquina** (D1) | escrito por `sync-notion.mjs` do repo do site; não editar na mão |
+
+`Estado` é escrito pelos dois: a máquina promove para `Publicado` quando o livro está live no D1; os estados do meio são do Gabriel e da esteira.
+
+### Estado do catálogo na fusão
+
+| Era | Obras | Publicadas |
+|---|---|---|
+| 0 Mananciall Originals | 1 | 1 |
+| 1 Apostolic Fathers | 10 | 0 |
+| 2 Apocrypha | 30 | 1 |
+| 3 Apologists | 19 | 0 |
+| 4 Golden Age | 23 | 0 |
+| 5 Medieval & Mystics | 17 | 0 |
+| 6 Reformation | 15 | 0 |
+| 7 Puritans | 25 | 0 |
+| 8 Awakening | 13 | 5 |
+| 9 Revival Century | 49 | 20 |
+| **Total** | **202** | **27** (+1 draft) |
+
+Fica escancarado o desequilíbrio: **74% do que já vendemos é do século XIX** e as oito eras anteriores somam 2 obras publicadas. É exatamente o buraco que o catálogo estratégico existe pra tapar.
+
+### Views pra montar no Notion (2 cliques, a API não cria)
+
+- **Board por Estado**: o kanban da produção
+- **Board por Era**: a biblioteca por século, pra ver o buraco acima
+- **Tabela filtrada por Lançamento = ✓**: o catálogo de estreia
+- **Tabela filtrada por Áudio = Completo**: o que já dá pra vender como ebook + audiolivro
