@@ -3,6 +3,7 @@ import {
 	AbsoluteFill,
 	Audio as RemotionAudio,
 	Img,
+	Video,
 	interpolate,
 	useCurrentFrame,
 	useVideoConfig,
@@ -35,6 +36,8 @@ export interface ShortSermonProps {
 	backgroundImageUrl?: string;
 	preacherImageUrl?: string;
 	attribution?: string;
+	/** vídeo de retenção (loop, mudo) na faixa superior; sem ele, layout full-bleed */
+	anchorVideoUrl?: string;
 }
 
 const HOOK_SECONDS = 2.5;
@@ -63,6 +66,7 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 	backgroundImageUrl = "images/cathedral_bg_cf_3.png",
 	preacherImageUrl = "images/spurgeon_bust_cf_1.png",
 	attribution = "CHARLES SPURGEON",
+	anchorVideoUrl,
 }) => {
 	const frame = useCurrentFrame();
 	const { fps, durationInFrames } = useVideoConfig();
@@ -99,14 +103,44 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 				/>
 			</AbsoluteFill>
 
+			{/* ÂNCORA VISUAL (retention footage): faixa superior, loop, mudo */}
+			{anchorVideoUrl && (
+				<div
+					style={{
+						position: "absolute",
+						top: 0,
+						left: 0,
+						right: 0,
+						height: "42%",
+						overflow: "hidden",
+					}}
+				>
+					<Video
+						src={resolveAsset(anchorVideoUrl)}
+						loop
+						muted
+						style={{ width: "100%", height: "100%", objectFit: "cover" }}
+					/>
+					{/* fusão da âncora com o fundo escuro */}
+					<div
+						style={{
+							position: "absolute",
+							inset: 0,
+							background:
+								"linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(5,5,5,1) 100%)",
+						}}
+					/>
+				</div>
+			)}
+
 			{/* busto do Spurgeon, discreto, base da tela (identidade do longo) */}
 			<AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center" }}>
 				<Img
 					src={resolveAsset(preacherImageUrl)}
 					style={{
-						height: "38%",
+						height: anchorVideoUrl ? "30%" : "38%",
 						mixBlendMode: "screen",
-						opacity: 0.5,
+						opacity: anchorVideoUrl ? 0.65 : 0.5,
 						filter: "contrast(1.1) brightness(1.05)",
 					}}
 				/>
@@ -144,9 +178,15 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 				</div>
 			</AbsoluteFill>
 
-			{/* LEGENDA KARAOKÊ — palavra a palavra */}
-			<AbsoluteFill
+			{/* LEGENDA KARAOKÊ — palavra a palavra (faixa do meio quando tem âncora) */}
+			<div
 				style={{
+					position: "absolute",
+					top: anchorVideoUrl ? "42%" : 0,
+					bottom: anchorVideoUrl ? "28%" : 0,
+					left: 0,
+					right: 0,
+					display: "flex",
 					justifyContent: "center",
 					alignItems: "center",
 					opacity: (1 - hookOpacity) * endFade,
@@ -186,7 +226,7 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 						);
 					})}
 				</div>
-			</AbsoluteFill>
+			</div>
 
 			{/* atribuição fixa */}
 			<AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center" }}>

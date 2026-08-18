@@ -72,8 +72,8 @@ def run(cmd):
     return r
 
 
-def process_clip(env, s3, nnnn, idx, clip, master_local, upload=True):
-    tag = f"{nnnn}_c{idx:02d}"
+def process_clip(env, s3, nnnn, idx, clip, master_local, upload=True, anchor=None):
+    tag = f"{nnnn}_c{idx:02d}" + (f"_{anchor}" if anchor else "")
     os.makedirs(PUBLIC_SHORTS, exist_ok=True)
     os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -91,6 +91,8 @@ def process_clip(env, s3, nnnn, idx, clip, master_local, upload=True):
         "words": clip["words"],
         "hookText": clip["hook_text"],
     }
+    if anchor:
+        props["anchorVideoUrl"] = f"anchors/{anchor}.mp4"
     props_path = os.path.join(PUBLIC_SHORTS, f"{tag}_props.json")
     json.dump(props, open(props_path, "w", encoding="utf-8"), ensure_ascii=False)
 
@@ -116,6 +118,7 @@ def main():
     ap.add_argument("--sermon", required=True)
     ap.add_argument("--clip", type=int, help="renderiza só o clipe N (1-based)")
     ap.add_argument("--no-upload", action="store_true")
+    ap.add_argument("--anchor", help="âncora visual (nome em public/anchors/, ex: candle)")
     args = ap.parse_args()
 
     env = load_env()
@@ -141,7 +144,7 @@ def main():
     todo = [(args.clip, clips[args.clip - 1])] if args.clip else list(enumerate(clips, 1))
     outs = []
     for idx, clip in todo:
-        outs.append(process_clip(env, s3, nnnn, idx, clip, master_local, upload=not args.no_upload))
+        outs.append(process_clip(env, s3, nnnn, idx, clip, master_local, upload=not args.no_upload, anchor=args.anchor))
     print(f"\n🏁 {len(outs)} short(s) prontos")
 
 
