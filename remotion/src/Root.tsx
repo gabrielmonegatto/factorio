@@ -27,6 +27,7 @@ import { SpurgeonHook } from "./brands/spurgeon/templates/SpurgeonHook";
 import { SpurgeonBrandAd } from "./brands/spurgeon/templates/SpurgeonBrandAd";
 import { YouTubeEndScreen } from "./brands/spurgeon/templates/YouTubeEndScreen";
 import { SermonBodyBase, ClipIntro, calcClipIntro, ClipOutro, calcClipOutro, Thumbnail } from "./brands/spurgeon/templates/HybridClips";
+import { ShortSermon, calcShortSermon } from "./brands/spurgeon/templates/ShortSermon";
 
 const FPS = 30;
 const TRANSITION_FRAMES = 10; // deve casar com SermonProduction
@@ -296,6 +297,22 @@ export const RemotionRoot: React.FC = () => {
                 width={1920}
                 height={1080}
                 defaultProps={{ sermonNumber: "0001" } as any}
+            />
+
+            {/* ===== FÁBRICA DE SHORTS (9:16) ===== */}
+            <Composition
+                id="Short-Sermon"
+                component={ShortSermon as any}
+                durationInFrames={1350}
+                calculateMetadata={calcShortSermon}
+                fps={30}
+                width={1080}
+                height={1920}
+                defaultProps={{
+                    audioUrl: "",
+                    words: [],
+                    hookText: "THE BEST STUDY FOR YOUR SOUL?",
+                } as any}
             />
 
             {/* ===== SPURGEON MARKETING PREVIEWS (V2) ===== */}

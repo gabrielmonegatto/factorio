@@ -184,8 +184,24 @@ existem). Pipeline de 6 estágios desenhado. ~340 shorts possíveis do acervo at
 | F4.1 | Pesquisa de mecânica viral + APIs | ✅ 07/08 |
 | F4.2 | Gates: canal (novo vs Spurgeon), visual, cadência | ⬜ Gabriel |
 | F4.3 | Credenciais TikTok + Meta (semanas de review, disparar JÁ) | ⬜ Gabriel |
-| F4.4 | `mine_clips.py` + composição Remotion 9:16 + piloto de 5 | ⬜ Claude |
-| F4.5 | Publicação Shorts (API já pronta) + fila | ⬜ Claude |
+| F4.4 | `mine_clips.py` + composição Remotion 9:16 + piloto de 5 | ✅ 17/08 |
+| F4.5 | Publicação Shorts (API já pronta) + fila | ⬜ Claude (bloqueado pelo I1) |
+
+**F4.4 construído e verificado (17/08):**
+- `remotion/mine_clips.py` — minerador LLM (gemini-2.5-flash): frases numeradas
+  com timestamp → clipes por ÍNDICE de frase (timestamp nunca vem do LLM) +
+  reparo determinístico de duração no fim do clipe. Salva `clips_meta.json`
+  na pasta do sermão no R2, com word-level re-baseado por clipe.
+- `remotion/src/.../ShortSermon.tsx` — composição `Short-Sermon` 1080x1920:
+  hook card 2,5s (Georgia + filetes dourados) → karaokê 3-4 palavras/grupo,
+  palavra atual dourada com glow, busto + catedral + atribuição. Duração via
+  `calculateMetadata` medindo o áudio.
+- `remotion/render_short.py` — corta o master (ffmpeg, fade 0,15s), monta props,
+  renderiza local (~1 min/short) e sobe pra `renders/spurgeon_shorts/NNNN_cXX.mp4`.
+- Piloto: 5 shorts (0001 c01-c03, 0002 c01-c02) no R2 aguardando aprovação.
+- 🧨 Mina nova: CSS global do projeto zera margens de `<span>` → espaçamento de
+  legenda karaokê tem que ser flex `columnGap`, nunca margin; e `scale()` em
+  palavra ativa invade o gap (usar glow, não scale).
 
 ---
 
