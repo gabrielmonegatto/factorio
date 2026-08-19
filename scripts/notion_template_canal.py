@@ -187,6 +187,61 @@ ENTREGAVEIS = [
 ]
 
 
+def tese_do_canal():
+    """A secao que faltava: POR QUE este canal vai funcionar.
+
+    Os 9 entregaveis respondem 'como construir'. Nenhum respondia 'por que
+    alguem assistiria'. Preencher isto ANTES de produzir qualquer coisa.
+    """
+    return [
+        h2("Tese do canal (preencher ANTES de produzir)"),
+        divider(),
+        callout("Nenhum entregavel comeca antes destas 5 respostas estarem escritas. "
+                "Canal nao morre por producao ruim, morre por tese que ninguem testou.",
+                "\U0001F3AF", "yellow_background"),
+        h3("1. Quem assiste, e em que momento do dia"),
+        para("Resposta:"),
+        para("Contexto de consumo importa mais que demografia. 'Alguem estudando de "
+             "madrugada e querendo silencio na cabeca' vale mais que 'cristaos 25-45'."),
+        h3("2. O que essa pessoa digita pra chegar aqui, e qual a prova de demanda"),
+        para("Resposta:"),
+        para("Prova exigida: termos reais com volume, mais 3 videos outlier de outros "
+             "canais (5-10x acima da media deles) provando que o tema puxa."),
+        h3("3. Quem ja serve isso, e onde eles falham"),
+        para("Resposta:"),
+        para("Auditar 5 concorrentes. Referencia de nicho pouco disputado: menos de 50 "
+             "videos na primeira pagina com mais de 10 mil views."),
+        h3("4. Qual a nossa aposta de packaging"),
+        para("Resposta:"),
+        para("Formula de titulo e de thumbnail que vamos testar. Packaging e o artefato "
+             "de maior alavanca do YouTube: titulo e capa vendem o CLIQUE, os primeiros "
+             "30 segundos vendem a PERMANENCIA. Sao dois problemas separados."),
+        h3("5. Criterios de vida ou morte (escritos ANTES de comecar)"),
+        para("Checkpoint em quantos videos:"),
+        para("Numeros que definem seguir:"),
+        para("Numeros que definem pivotar ou matar:"),
+        para(""),
+        h3("Referencias de benchmark (pra calibrar os criterios acima)"),
+        callout("CTR de 4 a 6% e o alvo pra canal sem rosto. Retencao: 40-50% de "
+                "percentual assistido num video de 10min indica potencial. Passar dos "
+                "primeiros 60s com mais de 65% da audiencia correlaciona com retencao "
+                "muito maior no resto.", "\U0001F4CA", "gray_background"),
+        callout("TEMPO REAL ATE TRACAO: a maioria dos canais so ve tracao entre o video "
+                "30 e o 50, e leva de 6 a 12 meses com 30 a 60 videos pra chegar a mil "
+                "inscritos. Nos primeiros 3 meses a maioria dos videos fica abaixo de "
+                "100 views. Isso e o NORMAL, nao o fracasso. Julgar canal no video 10 e "
+                "matar antes do algoritmo ter dados pra entender quem gosta.",
+                "\U000023F3", "blue_background"),
+        callout("DECIDIR COM DADO, NAO COM ANSIEDADE: sao 4 saidas possiveis, nao 2. "
+                "ESCALAR (funciona), PERSEVERAR (falta dado), PIVOTAR (mudar direcao) e "
+                "MATAR (parar). O teste barato: 3 a 5 videos com o formato novo, ao longo "
+                "de 4 a 6 semanas, medindo CTR, retencao nos primeiros 30-60s e "
+                "espectadores recorrentes. Custa 5 videos em vez de um canal.",
+                "\U0001F9ED", "gray_background"),
+        para(""),
+    ]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--parent", default=RAIZ_PADRAO)
@@ -217,6 +272,7 @@ def main():
             para("Fonte do conteudo:"),
             para("Data de inicio:"),
             para(""),
+        ] + tese_do_canal() + [
             h2("Os 9 entregaveis"),
             divider(),
         ],
