@@ -205,6 +205,25 @@ existem). Pipeline de 6 estágios desenhado. ~340 shorts possíveis do acervo at
 
 ---
 
+# 🟡 F5 — Canal de música instrumental cristã (pesquisado 16/08)
+
+Pesquisa completa em [`13_CANAL_MUSICA.md`](13_CANAL_MUSICA.md).
+
+Resumo: **o mais fácil de produzir e o mais arriscado de sustentar.** Render é
+ffmpeg puro, e a esteira multi-canal já cobre upload/agendamento. O risco está
+em licença (worship moderno tem dono; a saída é hino em domínio público) e na
+política de conteúdo inautêntico do YouTube, que demonetizou boa parte dos
+canais de música por IA desde o fim de 2025.
+
+| # | Item | Estado |
+|---|---|---|
+| F5.1 | Pesquisa de licença, monetização e caminhos | ✅ 16/08 |
+| F5.2 | Gate: fazer piloto de 3 faixas antes de montar canal | ⬜ Gabriel |
+| F5.3 | Curadoria de hinos PD + prova de licença arquivada | ⬜ |
+| F5.4 | Assinatura Suno Pro (free NÃO dá direito comercial) | ⬜ Gabriel |
+
+---
+
 # ⚫ Backlog (não começar sem confirmação)
 
 - Funil: `mananciall.org/go` ainda é placeholder (domínio na Vercel, não CF)
