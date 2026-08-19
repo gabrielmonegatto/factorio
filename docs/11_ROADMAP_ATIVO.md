@@ -1,11 +1,41 @@
 # 🗺️ ROADMAP ATIVO — frentes em andamento
 
-> Quadro vivo. Atualizado: 04/08/2026.
+> Quadro vivo. **Atualizado: 19/08/2026** (auditoria por API: o que estava escrito aqui
+> não era mais verdade).
 > Regra: item só sai daqui com verificação real (comando rodado, número medido).
+> O quadro gerenciável por área vive no Notion (🏭 Fábrica); este doc é o detalhe técnico.
 
 ---
 
-# 🔴🔴 INCIDENTE 11/08 — publicação no CANAL ERRADO
+# ✅ RESOLVIDO — o canal está publicando (medido em 19/08/2026)
+
+**A lição desta auditoria:** o roadmap escrito em 11/08 dizia "canal parado, gates
+travados". A verificação por API mostrou o contrário. **Documento envelhece; número
+medido não.** Por isso a skill `/frente` obriga a medir antes de planejar.
+
+Estado real do canal `Charles Spurgeon Treasures` (`UCXqp7wuorli1uLZKJM96T6Q`):
+
+| Fato | Valor |
+|---|---|
+| Token OAuth aponta pro canal | ✅ o certo (guardião confere identidade) |
+| Vídeos publicados | 15 (4 inscritos, 91 views) |
+| Cadência | 1 longo/dia às 12:00 desde 13/08 |
+| Shorts | 1º publicado em 18/08 |
+
+- [x] ✅ **I1** re-auth no canal certo — feito
+- [x] ✅ **I4** cron religado — publicando
+- [x] ✅ **P0.4** agendador autorizado — rodando
+- [x] ✅ Piloto de shorts aprovado — 1 no ar
+- [ ] **F4.5** falta a CADÊNCIA diária de shorts no automático (hoje é 1 avulso)
+- [ ] **I2** decidir o destino dos 5 vídeos públicos no canal pessoal (gate do Gabriel)
+
+🔴 **Urgência descoberta na auditoria:** os 15 vídeos publicados carregam QR pra
+`mananciall.org/go`, que **devolve 404 hoje**. Cada vídeo no ar sem essa rota é
+tráfego jogado fora. É a entrega nº 1 da frente Productz.
+
+---
+
+# 📕 HISTÓRICO — incidente 11/08 (resolvido, mantido pela lição)
 
 A re-auth de 07/08 foi feita na **conta pessoal do Gabriel**, não no canal do
 projeto. Nada deu erro: o token renovava, a API respondia 200, o agendador
@@ -101,9 +131,12 @@ Só 6 vídeos entraram no calendário. Os outros 107 estão renderizados, pronto
 **A esteira não tem alarme.** Ela quebrou em 30/07 e só descobrimos em 04/08 porque
 o Gabriel notou o canal parado. Seis dias de silêncio.
 
-- [ ] **P0.5** Health check diário: se `schedule_channel.py` sair com erro, OU se
-      passarem 48h sem vídeo novo agendado, dispara webhook no Discord (#fabrica).
-      É o item 1.3 do `04_ROADMAP.md`, que agora deixou de ser "nice to have".
+- [x] ✅ **P0.5 FEITO em 19/08**: `scripts/org/health_check.mjs` construído e verificado.
+      Checa, numa rodada: canal publicou nas últimas 48h **e é o canal certo** (a lição
+      do I1 virou código), bancos D1 respondendo, fila de mineração andando, site e
+      catálogo vivos. Só grita quando há problema; manda 1 resumo verde por semana pra
+      provar que o próprio alarme está vivo. **Falta só o Gabriel criar o webhook do
+      Discord e colar em `DISCORD_WEBHOOK_FABRICA` no `.env`.**
 
 ---
 

@@ -55,13 +55,16 @@ não mover dado.
 | Plano de catálogo (o que publicar, prioridade) | Notion `Biblioteca Mananciall` (controle humano) | ela mesma |
 | Texto bruto minerado | D1 `mananciall-mining` | coluna Estado na Biblioteca |
 | Produto (livros, capítulos, orders, entitlements) | D1 `mananciall-db` | `sync-notion.mjs` |
-| Fatos de BI (métricas diárias de canais/loja/esteiras) | D1 (tabela `bi_snapshots`, criar na W0 do BI) | banco `Indicadores` no Notion → depois app BI |
-| Intel de mercado estruturada (players, preços, criativos) | Notion `Referências de Editoras` enquanto for curadoria humana; virou volume/scrape recorrente → Teable | síntese em página no Notion |
-| Estado de esteiras (filas, chunks, pipeline) | Teable / D1 (por esteira) | banco `Esteiras` no Notion (status de alto nível) |
+| Fatos de BI (métricas de canais/loja/esteiras) | D1 `mananciall-db`, tabela `bi_snapshots` ✅ 19/08 | banco `Indicadores` no Notion → depois app BI |
+| Intel de mercado (canais, vídeos, players, criativos) | **D1 `eternall-intel`** ✅ 19/08 | curadoria em `Referências de Editoras`; síntese em página |
+| Estado de esteiras (filas, pipeline) | D1 (por esteira; padrão `works`/`runs`) | banco `Esteiras` no Notion (status de alto nível) |
 | Gestão da fábrica (áreas, roadmap, tarefas humanas) | Notion (`Áreas`, `Roadmap`, `Tasks`) | ele mesmo; grão fino de esteira NUNCA vira task |
 | Código, SOPs (skills), docs, templates | git (`_factorio/`, repos dos apps) | catálogo de 1 linha |
-| Binários (áudio, vídeo, capas, snapshots crus) | R2 | páginas apontam URL |
+| Binários (áudio, vídeo, capas, snapshots crus) | R2 (`mananciall`, `channels`, `eternall-archives`) | páginas apontam URL |
 | Credenciais | `_factorio/.env` | NUNCA em lugar nenhum |
+
+> **Atualização de 19/08 (noite):** o Teable foi aposentado e o trigger.dev saiu da stack.
+> Todo o dado de máquina agora mora no D1. Detalhe completo em `17_UNIFICACAO_DE_DADOS.md`.
 
 ---
 
@@ -103,12 +106,19 @@ Detalhe por área no §6. O quadro gerenciável vive no banco `Roadmap` do Notio
 Ações que SÓ ele pode fazer e que bloqueiam entregas. Cada uma existe como task
 (Responsável Monegatto, prefixo GATE) no Notion:
 
+> **Auditado por API em 19/08 (noite):** 5 destes gates já estavam resolvidos, o roadmap
+> é que estava velho. Ficam registrados como ✅ pra ninguém "destravar" de novo.
+
 | Gate | Área que destrava | Origem |
 |---|---|---|
-| I1: re-auth YouTube escolhendo o canal Charles Spurgeon Treasures | Content (longz+shortz) | `11_ROADMAP_ATIVO.md` |
-| I2: decidir destino dos 5 vídeos públicos no canal pessoal | Content | idem |
-| P0.4: autorizar run real do `schedule_channel.py` (1/dia) | Content | idem |
-| Aprovar piloto de 5 shorts (R2 `renders/spurgeon_shorts/`) | Content | `12_FABRICA_SHORTS.md` |
+| ✅ I1: re-auth YouTube no canal Charles Spurgeon Treasures | Content | resolvido (canal publicando) |
+| I2: decidir destino dos 5 vídeos públicos no canal pessoal | Content | `11_ROADMAP_ATIVO.md` |
+| ✅ P0.4: autorizar run real do `schedule_channel.py` (1/dia) | Content | resolvido (1/dia desde 13/08) |
+| ✅ Aprovar piloto de 5 shorts | Content | resolvido (1º Short no ar em 18/08) |
+| ✅ Apagar CNAME `www` da Vercel | Productz | resolvido (www.mananciall.org responde 200) |
+| **Criar webhook do Discord #fabrica** e colar em `DISCORD_WEBHOOK_FABRICA` | Organização | health check pronto, esperando só isso |
+| Corrigir linha malformada no `.env` (`PADDLE_WEBHOOK_SECRET:` com `:`) | Organização | achado em 19/08 |
+| Revogar token do Teable e chave `factorio_secret` ao desligar | Organização | estavam em texto plano no `STACK.md` commitado |
 | F4.2: gates do canal de shorts (canal novo vs Spurgeon, cadência) | Content | idem |
 | F4.3: criar apps/credenciais TikTok + Meta (review demora semanas) | Content (W2) | idem |
 | Paddle: Website Approval (Checkout → Website Approval) | Productz | memória manancial-2-0 |
@@ -157,13 +167,20 @@ Católica, com sistema de capas decodificado), dossiês no repo do site
 (`docs/DOSSIE-FRONTEND-2026.md`, `REFERENCIAS-CONVERSAO.md`, `docs/capas/`),
 docs 13/14 (catálogo estratégico), benchmark GotQuestions (wiki).
 
-**W0 Ligar**: mapear o mercado EN, que é onde vendemos e está descoberto: Standard
-Ebooks, Monergism (dá de graça o que vendemos: entender o pitch contra isso), Banner of
-Truth, Crossway, Ligonier, CCEL/Archive (fontes que também são "concorrentes" de
-consumo), YouVersion/Logos/Olive Tree (apps), 10+ canais YouTube de sermão/audiobook EN
-(concorrentes diretos dos canais). Registrar no `Referências de Editoras` (ganha campo
-Mercado BR/EN) + escrever a síntese "Mapa do Mercado" (1 página por segmento) na página
-da área. **W1**: rotina `/intel-semanal` (novidades, preços, lançamentos, formatos; 3
+**🎁 Acervo resgatado em 19/08 (mude o plano por causa disto):** o Teable guardava, abandonado
+desde abril, um mapeamento que agora vive no D1 `eternall-intel`: **50 canais concorrentes**
+com inscritos/views, **36.739 vídeos** com views, engajamento e categoria (raio-X do que
+performa no nicho), **17 players**, **1.421 anúncios com copy** e **293 páginas de concorrente
+raspadas**. A W0 deixou de ser "mapear do zero".
+
+**W0 Ligar**: (a) **explorar e sintetizar o que já temos** (o que performa nos 36 mil vídeos:
+formato, duração, tema, título) e transformar em regra editorial pros nossos canais;
+(b) **reativar a coleta** (YouTube API → `channels`/`channel_videos`, parada desde abril);
+(c) fechar os dois gaps reais, que são **players EN** (Standard Ebooks, Monergism, Banner of
+Truth, Crossway, Ligonier) e o **segmento de apps** (YouVersion, Logos, Olive Tree);
+(d) síntese "Mapa do Mercado" (1 página por segmento) na página da área.
+Os três segmentos: **livraria** (disputa o mesmo dinheiro do mananciall.org), **app** (disputa
+com o Mananciall Bible), **canais** (disputa a mesma atenção dos nossos canais). **W1**: rotina `/intel-semanal` (novidades, preços, lançamentos, formatos; 3
 edições seguidas úteis); monitor de canais concorrentes por YouTube API (números →
 Teable). **W2**: data lake no Teable (regra: estruturado→Teable, síntese→Notion),
 alertas de movimento (player novo, preço mudou).

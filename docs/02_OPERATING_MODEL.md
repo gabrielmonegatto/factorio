@@ -10,10 +10,11 @@
 | Camada | Ferramenta | O que faz | O que NUNCA faz |
 |---|---|---|---|
 | **QG (julgamento)** | Claude Code (Max) | Construir, desenhar, decidir, revisar, diagnosticar, orquestrar. Escreve e conserta todo o resto. | Produzir volume repetitivo (30 vídeos/dia não é sessão — é esteira) |
-| **Esteiras (volume)** | trigger.dev (tasks TS em `_factorio/trigger/`) | Pipelines determinísticos com retry/cron/fila: minerar, traduzir, narrar, renderizar, publicar | Decidir. Esteira burra é esteira saudável |
+| **Esteiras (volume)** | Script idempotente com fila no D1 + cron na VPS (padrão da mineração: tabelas `works`/`runs`) | Pipelines determinísticos com retry/cron/fila: minerar, traduzir, narrar, renderizar, publicar | Decidir. Esteira burra é esteira saudável |
 | **LLM-função** | Chamada de API dentro de uma task (Haiku / modelo de volume via OpenRouter) | Passo repetitivo que precisa de "um pouco de cérebro": limpar HTML, traduzir chunk, titular vídeo. Prompt fixo + saída estruturada | Loop agêntico, decisão em aberto |
 | **Runtime de produto** | Cloudflare Workers/Pages + D1 | Servir sites, APIs, tracking dos negócios | — |
 | **GPU pesada** | RunPods (acionado pelas esteiras) | Render de vídeo em lote | Ficar ligada sem fila |
+| ~~Orquestrador gerenciado~~ | ~~trigger.dev~~ | **APOSENTADO 19/08/2026**: nada em produção usava (render é systemd, agendador é cron, esteiras são script+fila no D1). Se um dia precisar de orquestração gerenciada de verdade, o caminho é Cloudflare Workflows/Queues (mesma casa do D1) | — |
 | **Agente embutido** (futuro) | Claude Agent SDK | Agente vivendo dentro de um produto (chat de atendimento, respondedor de webhook) | Ser usado onde uma sessão ou uma função resolve |
 
 **Regra de escolha de cérebro:** decisão em aberto → sessão Claude · passo repetitivo com prompt fixo → LLM-função · sem ambiguidade nenhuma → código puro sem LLM.
@@ -52,14 +53,14 @@ O passo 8 é o mais importante da fábrica inteira: **a fábrica aprende em arqu
 
 Gabriel roda várias sessões ao mesmo tempo. Pra não virar bagunça:
 
-1. **1 sessão = 1 frente = 1 escopo de arquivos.** Sessão da fábrica não edita `apps/br4nds/bluue/`; sessão da Bluue não edita `_factorio/`.
-2. **O quadro compartilhado é a TASKS no Teable.** Sessão que assume uma operação marca in-progress; que termina, marca done. Qualquer sessão consegue ver o que as outras frentes estão fazendo com 1 consulta.
-3. **Handoff entre frentes** = doc no Outline + task no Teable. Nunca "combinado verbal" dentro de uma conversa (a outra sessão não vê).
+1. **1 sessão = 1 frente = 1 escopo de arquivos.** Sessão da fábrica não edita `apps/br4nds/bluue/`; sessão da Bluue não edita `_factorio/`. Territórios por área: `16_BLUEPRINT_AREAS.md` §6.
+2. **O quadro compartilhado é o banco Tasks no Notion** (relation `Área`). Sessão que assume uma operação marca em andamento; que termina, marca finalizado. Estado FINO de esteira não vira task: mora na fila do D1.
+3. **Handoff entre frentes** = doc no repo + task no Notion. Nunca "combinado verbal" dentro de uma conversa (a outra sessão não vê).
 4. **Conflito de escopo?** Para, pergunta pro Gabriel, documenta a fronteira nova aqui.
 
 ## 5. Skills = SOPs executáveis (o catálogo da fábrica)
 
-- Skill vive em **git** (`.claude/skills/` do repo). O Outline tem só a página-catálogo (lista + descrição de 1 linha), nunca uma cópia do conteúdo.
+- Skill vive em **git** (`.claude/skills/` do repo). O Notion tem no máximo a página-catálogo (lista + descrição de 1 linha), nunca uma cópia do conteúdo.
 - Toda skill define obrigatoriamente: **(a)** gatilho e inputs, **(b)** passo a passo, **(c)** checklist de pronto (DoD) com verificação real, **(d)** nível de confiança atual.
 - **Níveis de confiança** (promoção exige 3 execuções limpas consecutivas):
 
@@ -77,8 +78,8 @@ Todo template (canal dark, funil D2C, site+membros...) nasce pelo MESMO processo
 
 | Etapa | O que acontece | Output obrigatório |
 |---|---|---|
-| **1. Idealização** | Objetivo, referência de mercado, KPI de sucesso, riscos | Doc no Outline (1 página) |
-| **2. Design** | Desenho da esteira: etapas, dados (3 camadas), ferramentas, custos | Doc no Outline + schema no Teable |
+| **1. Idealização** | Objetivo, referência de mercado, KPI de sucesso, riscos | Doc no repo (1 página) + linha no Roadmap (Notion) |
+| **2. Design** | Desenho da esteira: etapas, dados (3 camadas), ferramentas, custos | Doc no repo + schema no D1 |
 | **3. Implementação** | Código das tasks + LLM-funções + skill draft | Código em git, esteira deployada |
 | **4. Piloto** | Rodar **1 unidade real ponta a ponta** com verificação manual de cada etapa | Unidade publicada + relatório do piloto |
 | **5. Refinamento** | Ajustar até **3 unidades saírem limpas** sem intervenção | Changelog no doc de design |
@@ -90,8 +91,9 @@ Todo template (canal dark, funil D2C, site+membros...) nasce pelo MESMO processo
 
 - **CONTENT** (granular): o dado É o estado. Output existe = etapa feita. Sem campo `status` redundante no JSONB.
 - **INDEX** (agregado): 1 row por projeto; JSONB `pipeline` com contadores. Consultar 1 row = saber tudo do projeto.
-- **TASKS** (dashboard): 1 task = 1 operação de alto nível. NUNCA 1 task por chunk.
-- Fluxo do runner: pega pendente na CONTENT → processa → salva output → incrementa INDEX → reflete na TASKS. Sem fila intermediária.
+- **TASKS** (dashboard humano, hoje no Notion): 1 task = 1 operação de alto nível. NUNCA 1 task por chunk.
+- Fluxo do runner: pega pendente na CONTENT → processa → salva output → incrementa INDEX → reflete no dashboard. Sem fila intermediária.
+- Diário de execução por rodada (tabela `runs`, padrão da mineração): saber o que aconteceu sem adivinhar.
 - Reconciliação periódica reconta CONTENT → corrige INDEX (proteção contra crash).
 - Anti-padrões completos e histórico: `legacy/07_GLOSSARIO.md` (continua válido como referência).
 

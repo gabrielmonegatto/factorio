@@ -34,5 +34,15 @@
     "Growth": true,
     "longz": true,
     "shortz": true
-  }
+  },
+  "metasCandidatas": {
+    "Organização": true,
+    "Inteligência de Mercado": true,
+    "Inteligência do Negócio": true,
+    "Mineração": true,
+    "Content": true,
+    "Productz": true,
+    "i18n": true
+  },
+  "notaEstado": true
 }

@@ -1,71 +1,86 @@
-> ⚠️ **Documento da era 1.0 (pré-redesenho).** Infra, URLs e portas continuam válidas, mas o modelo de agentes descrito aqui (AgentMemory, multi-bot Discord, regras de comportamento de agentes) foi APOSENTADO — ver `01_MASTERPLAN.md` (D4) e `05_LEGACY_TRANSITION.md`. Reescrita completa: roadmap F1.8. Movido da raiz do EternalL em 20/07/2026.
+# 🧭 STACK.md — Infraestrutura da fábrica (EternalL)
 
-# 🧭 STACK.md — Manual de Infraestrutura e Stack (EternalL Holding)
-
-Este documento descreve a infraestrutura da fábrica de negócios automatizada (**Factorio**), explicando a transição do ambiente local para a VPS, o papel de cada serviço, suas conexões e como novos agentes de IA devem se comportar e se conectar.
-
----
-
-## 🚀 A Transição: De Local para VPS
-Antes, a operação rodava de forma fragmentada na máquina Windows local (Teable local, Caddy local, ChromaDB local). 
-Agora, **toda a infraestrutura de produção roda na VPS** com IP público `187.127.44.153` sob o domínio `markeologia.com.br`, gerenciada por containers Docker e protegida por SSL automático via Caddy e Cloudflare.
+> **Reescrito em 19/08/2026** (item 1.8 do roadmap, feito junto com a unificação de dados).
+> A versão anterior descrevia a era 1.0 (AgentMemory, multi-bot Discord, Teable como banco corporativo)
+> e **continha credenciais em texto plano** — removidas nesta reescrita, ver §6.
 
 ---
 
-## 🌐 URLs, Subdomínios e Portas Internas
+## 1. O desenho em uma tela
 
-| Serviço | URL Pública | Porta Interna Docker | Descrição |
-| :--- | :--- | :--- | :--- |
-| **Teable** | `https://db.markeologia.com.br` | `factorio_teable:3000` | Banco de Dados relacional corporativo (estilo planilha). |
-| **AgentMemory API** | `https://memory.markeologia.com.br` | `factorio_agent_memory:3111` | API REST de memórias semânticas persistentes. |
-| **AgentMemory Streams** | — | `factorio_agent_memory:3112` | WebSocket para streams em tempo real. |
-| **Memory Viewer** | `https://memory-viewer.markeologia.com.br` | `factorio_agent_memory:3113` | Painel gráfico de visualização das memórias. |
-| **Postgres (Teable)** | — | `factorio_teable_db:5432` | Banco físico do Teable (porta mapeada no host: `42345`). |
+```
+JULGAMENTO      Claude Code (sessões por frente)            → constrói e supervisiona
+   │
+CADÊNCIA        cron na VPS + health check no #fabrica      → dispara esteira
+   │
+ESTEIRA         script idempotente + fila no D1             → produz volume
+   │
+COMPUTE         VPS Hetzner (render, TTS) · RunPods (lote)  → músculo
+   │
+DADO            D1 (estado) · R2 (binário) · git (código)   → casa canônica
+   │
+VITRINE         Notion (hoje) → BI próprio (fim de 2026)    → onde o Gabriel enxerga
+```
 
----
+## 2. VPS (Hetzner CX53, `167.233.236.209`)
 
-## 🛠️ Detalhamento dos Componentes
+16 vCPU / 32 GB / 320 GB, Falkenstein, ~€35/mês. Acesso por chave `id_ed25519_factorio`.
+Papel: **músculo, não banco.** Depois da unificação de 19/08 ela não hospeda mais dado canônico.
 
-### 1. Caddy (Proxy Reverso)
-O Caddy é o cérebro de rede na VPS. Ele gerencia os certificados SSL automáticos da Let's Encrypt e roteia o tráfego dos subdomínios para os containers corretos.
-> [!IMPORTANT]
-> **Multiplexação de WebSockets:**
-> O Caddy está configurado para inspecionar cabeçalhos de conexão. Conexões normais de API e do Viewer vão para as portas `3111` e `3113`. Quando o navegador tenta abrir um WebSocket (`wss://`), o Caddy redireciona automaticamente para a porta de Streams `3112` do AgentMemory, o que faz o status do painel ficar **`LIVE`** (verde).
-> Ele também gerencia cabeçalhos de **CORS** para permitir que o Viewer carregado de `memory-viewer` faça chamadas AJAX seguras para a API de `memory`.
+| Serviço | O que é | Estado |
+|---|---|---|
+| `factory-producer.service` (systemd) | Render dos vídeos longos, roda 24/7 consumindo fila | ✅ ativo |
+| `/etc/cron.d/factory` | Agendador diário do YouTube (06:00 UTC) | ⏸️ pausado pelo incidente I1 |
+| Kokoro TTS (container) | Narração das vozes EN | ✅ ativo |
+| Caddy | Proxy reverso + TLS | ✅ ativo |
+| Rebuild noturno do BI Br4nds | Gera os dados do `bi.br4nds.com.br` | ✅ ativo |
+| ~~Teable + Postgres~~ | Banco tabular self-hosted | ❌ aposentado 19/08 (§5) |
+| ~~Outline + MinIO~~ | Wiki self-hosted | ❌ removido 23/07 |
+| ~~factorio_agents, agent_memory, mcp_universal~~ | Era Hermes | 🧊 a congelar (roadmap 2.3) |
 
-### 2. Teable (Banco de Dados Corporativo)
-Substituiu o Baserow antigo. Centraliza tabelas de inteligência, finanças, mídias e progresso.
-* **Tabela `tools` (ID `tblsLfGpdU5kynWoUUN`):** Catálogo unificado de comandos de console, APIs de terceiros e scripts executáveis da holding.
-* **Tabela `CONTENT_INDEX` (ID `tblD7Kxoc7gFTgEWoWo`):** Inventário de livros clássicos teológicos da marca Mananciall.
-* **Tabela `TASKS` (ID `tblVzN1Eo8tfk7GX2CJ`):** Filas de tarefas, progresso e status do pipeline técnico.
-* **Token de API Corporativo:** `teable_accLa1wPXZZgOLLcX0t_Q8N1AUB7+EF26V3SJsYvKWaAXOT47+LrKZxLK+QJiQE=` (Full Access de Superusuário).
+VPS antiga da Hostinger (`187.127.44.153`) segue no ar sem papel: derrubar (backlog).
 
-### 3. AgentMemory (Colmeia de Conhecimento)
-Base de dados semântica (SQLite + ChromaDB) que armazena memórias duradouras da holding.
-* **Chave de Acesso (Bearer Token):** `factorio_secret`
-* Os agentes de IA se conectam a ela para registrar fatos importantes, credenciais geradas, decisões de design e tarefas executadas.
-* O painel pode ser acessado em `https://memory-viewer.markeologia.com.br` informando a chave `factorio_secret`.
+## 3. Cloudflare (conta Eternall `dca6b1af…`)
 
-### 4. Wiki empresarial → NOTION (fora da VPS)
-A front door da wiki empresarial da holding é o **Notion** (superfície única para humanos + agentes), montado manualmente por Gabriel. A infra da VPS é o back-end: Teable (dado estruturado, views embedadas no Notion), R2 (binários), git (SOPs/código). Regra de fronteira: pipeline de agente mexe toda hora → Teable; humano cura por semana → database do Notion.
+| Recurso | Nomes | Papel |
+|---|---|---|
+| **D1** | `mananciall-db` · `mananciall-mining` · `eternall-intel` · `mananciallbible` · `br4nds` · `lifesystem` | Todo o estado da máquina (detalhe em `03_DATA_ARCHITECTURE.md` §1) |
+| **R2** | `mananciall` (assets do produto) · `channels` (assets de canal) · `eternall-archives` (backup e arquivo morto) | Binários |
+| **Workers** | `mananciall.org` (site, SSR Astro) · redirect `/go` (funil) | Produto em produção |
+| **Vectorize / KV** | busca semântica · sessões | Apoio do produto |
 
-> **Histórico:** o Outline self-hosted (containers `outline_*` + MinIO local) foi avaliado e **removido da VPS em 23/07/2026** — fricção humana alta (sem database-in-doc, sem embed nativo). Backup do Postgres do Outline: `/root/outline_db_backup_20260721.sql.gz` + cópia em `C:\Users\Monegatto\Desktop\_archives\`. DNS `admin.markeologia.com.br` / `admin.br4nds.com.br` liberados.
+Gotchas de conta: a credencial enxerga 4 contas, então **sempre exportar `CLOUDFLARE_ACCOUNT_ID`** antes de `wrangler`. Anexar domínio a Worker exige DNS limpo (erro 100117 se houver A/CNAME anterior).
 
----
+## 4. Serviços externos
 
-## 🤖 Regras de Conexão e Comportamento para Agentes de IA
+| Serviço | Para quê | Nota |
+|---|---|---|
+| Notion | Vitrine de gestão (Áreas, Roadmap, Tasks, Biblioteca) | Integração "factorio"; só enxerga o que foi compartilhado com ela |
+| YouTube Data API | Publicação e métricas dos canais | App **em produção** (em "Testing" o refresh token morre em 7 dias) |
+| Paddle / Asaas | Checkout USD / Pix | Ambos em produção, travados em aprovação de conta |
+| AssemblyAI | Transcrição word-level | Alternativa avaliada: Groq (backlog) |
+| OpenRouter / Anthropic / Gemini | LLM-função das esteiras | Modelo de volume nas tarefas repetitivas |
+| RunPods | Render em lote (GPU/CPU) | Só com fila; nunca ligado à toa |
+| Resend | E-mail transacional | |
+| Hetzner | VPS | |
 
-Ao operar nesta stack na VPS, todo agente de IA deve seguir estas diretrizes sem exceção:
+## 5. O que saiu da stack (e a lição)
 
-### 1. Arquitetura Multi-Bot no Discord
-* **NUNCA tente compartilhar o mesmo Token de Bot do Discord entre agentes/containers separados.**
-* Conexões simultâneas do gateway do Discord com o mesmo token geram erro de *Session Conflict* (um container derruba a conexão WebSocket do outro em loop).
-* **Cada agente (Diretor, Produto, Growth, etc.) deve possuir seu próprio Bot e seu próprio token exclusivo no Discord.**
+| Peça | Morte | Lição que fica |
+|---|---|---|
+| Outline | 23/07/2026 | Ferramenta de conhecimento sem database-in-doc gera fricção humana; a superfície única venceu |
+| **Teable** | **19/08/2026** | Serviço self-hosted que duplica papel de gerenciado vira dívida: cert vencido, tabela quebrada por schema criado fora da API, paginação travando em 1.001 linhas |
+| **trigger.dev** | **19/08/2026** | Orquestrador que ninguém usa é peso: cron + fila no D1 já dava retry e observabilidade |
+| AgentMemory / Hermes | 07/2026 | O ativo é o arquivo, não o agente |
 
-### 2. Acesso ao Teable via API (Evite Queries SQL brutas)
-* Para ler, inserir ou deletar registros no Teable, utilize as ferramentas de MCP disponíveis (`teable_query`, `teable_insert`, etc.) que batem na API REST oficial em `http://factorio_teable:3000` (porta interna) ou `https://db.markeologia.com.br`.
-* Evite rodar comandos SQL brutos via terminal (`psql` do container `factorio_teable_db`), exceto para manutenções administrativas de emergência. A API do Teable garante o versionamento e a integridade da UI.
+Regra derivada: **antes de subir container novo, perguntar qual casa existente já resolve.**
 
-### 3. Persistência de Memória Semântica
-* Sempre que tomar uma decisão arquitetural, consertar um bug ou obter credenciais novas, salve esse fato no AgentMemory.
-* Isso garante que os outros robôs (e futuras sessões de agentes de IA) consigam resgatar a informação sem quebrar o contexto de produção.
+## 6. Credenciais
+
+Todas vivem em `_factorio/.env` (nunca commitado; arquivo é CRLF, no bash usar `tr -d '\r'`).
+
+- **Nenhum valor de credencial entra em doc, README, commit ou chat.** Doc cita o NOME da variável.
+- Credencial nova tem que **provar identidade**, não só validade (lição do incidente I1: o token do YouTube era válido e publicava no canal errado; hoje `publish_youtube.py` confere `channels?mine=true` contra `EXPECTED_CHANNEL_ID` e aborta se não bater).
+- Gate humano permanente: criar, rotacionar ou revogar credencial é sempre do Gabriel.
+
+⚠️ **Dívida aberta em 19/08/2026:** este arquivo continha, em versões anteriores commitadas, o token corporativo do Teable e a chave do AgentMemory (`factorio_secret`). Ambos os serviços estão sendo aposentados, mas o histórico do git guarda os valores — rotacionar/revogar quando desligar. E há uma linha malformada no `.env` (`PADDLE_WEBHOOK_SECRET:` com dois-pontos em vez de `=`), que faz qualquer leitor de `.env` não achar a variável.

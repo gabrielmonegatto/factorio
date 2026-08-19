@@ -13,20 +13,21 @@ Você está no QG da fábrica de negócios digitais da holding EternalL. Este re
 
 1. **Julgamento ≠ execução.** Decisão aberta → sessão Claude com skill · repetitivo com prompt fixo → LLM-função (OpenRouter/Haiku dentro de task) · sem ambiguidade → código puro.
 2. **O ativo é o arquivo, não o agente.** Aprendizado vira skill/doc/template na hora — o que fica só na conversa morreu.
-3. **Estado no banco** (Teable/D1), nunca na conversa. Coordenação multi-sessão = TASKS no Teable.
+3. **Estado no banco** (D1), nunca na conversa. Coordenação multi-sessão = banco Tasks no Notion (visão humana) + fila no D1 (estado de esteira).
 4. **Organize por artefato.** Organograma/squad é mapa pra descobrir SOPs, nunca arquitetura de runtime.
-5. **Orquestrador magro, executor gordo.** trigger.dev só agenda/retry/observa; compute pesado mora em container (VPS/RunPods). Pasta nova só com demanda (regra de dois).
+5. **Orquestrador magro, executor gordo.** Cadência = cron na VPS com health check; pipeline multi-etapa = script idempotente com fila no D1 (padrão da mineração). Compute pesado mora em container (VPS/RunPods). Pasta nova só com demanda (regra de dois).
 
-## Mapa de casas
+## Mapa de casas (unificação de 19/08/2026)
 
 | Dado | Casa | Acesso |
 |---|---|---|
-| Narrativa de negócio | Notion (front door, manual) | superfície única humanos+agentes; back-end = Teable/R2/git |
-| Estado operacional | Teable | API REST — nunca SQL bruto (conserto da `tasks`: F1.6) |
+| Gestão da fábrica (áreas, roadmap, tasks humanas) | Notion (vitrine; migra pro BI no fim de 2026) | API REST (`tools/notion/`) |
+| Estado de esteira, intel, produto | **D1** (`mananciall-db`, `mananciall-mining`, `eternall-intel`, `br4nds`) | API HTTP do D1 (parâmetro vinculado) ou `wrangler` |
 | Código, SOPs, docs técnicos | este repo (git) | nativo |
-| Produto em produção | D1/Workers | repos dos apps |
-| Assets binários | R2 / MinIO | S3 API (`scripts/`) |
+| Assets binários e arquivo morto | R2 (`mananciall`, `channels`, `eternall-archives`) | `wrangler r2` / S3 API |
 | Credenciais | `.env` | NUNCA commitar; CRLF → `tr -d '\r'` |
+
+> **Teable APOSENTADO em 19/08/2026** (virou peça avulsa: D1 tomou o papel de estado, Notion o de curadoria). Migração e arquivo: `docs/17_UNIFICACAO_DE_DADOS.md`. **trigger.dev** saiu da stack pelo mesmo motivo: nada em produção usava.
 
 ## Skills (SOPs executáveis)
 

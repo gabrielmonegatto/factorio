@@ -20,9 +20,9 @@ O mínimo pra fábrica operar no modelo novo:
 | 1.1 | **CLAUDE.md constituição** ✅ 20/07 | Desenho final (terreno/subsolo/superfície): placa em `EternalL/CLAUDE.md` (herdada por todas as sessões) + constituição em `_factorio/CLAUDE.md`. Sessão de fábrica abre em `_factorio/`. Repo raiz dissolvido (histórico em `Desktop\_archives\eternall-pre-split.git`) |
 | 1.2 | **Skills base** 🔶 parcial 20/07 | ✅ `/fabrica`, `/nova-skill`, `/handoff-frente` (🟡 draft em `.claude/skills/`) · ⬜ `/diretor-diario` (depende de 1.4/1.5). Backlog do catálogo completo: `docs/backlog_skills_seed.md` (workflows/agentes/squads por área, destilado do Obsidian) |
 | 1.3 | **Webhook de notificação** | Canal #fabrica no Discord (webhook simples, sem bot de gateway) |
-| 1.4 | **Acesso ao Outline via API** | API key + scripts/MCP testados (criar doc, ler doc, listar coleção) |
-| 1.5 | **Acesso ao Teable via API** | Revalidar token + operações CRUD nas tabelas-chave |
-| 1.6 | **🩹 Consertar a tabela `tasks` (SSOT) no Teable** | Auditoria 18/07 via API: `GET record` retorna **400 Invalid FieldId** (campos `brand`/`area`/`project_slug`/`task` criados via SQL bruto com IDs manuais tipo `fldTaskBrand` — o anti-padrão documentado). A esteira funciona porque os scripts falam psycopg2 direto, mas UI/API estão quebradas. Reconstruir a tabela via API + migrar rows + atualizar scripts. Consertar também a view corrompida da `tbluUpgRFEmOrN7BQYv` (quebra o listing de tabelas da base inteira) |
+| 1.4 | ~~Acesso ao Outline via API~~ | ❌ Cancelado: Outline morto em 23/07/2026. O equivalente vivo é o kit `tools/notion/` (✅ funcionando) |
+| 1.5 | ~~Acesso ao Teable via API~~ | ❌ Cancelado 19/08/2026 junto com o Teable. O acesso que importa hoje é D1 (API HTTP com parâmetro vinculado) ✅ |
+| 1.6 | ~~🩹 Consertar a tabela `tasks` no Teable~~ | ❌ **CANCELADO 19/08/2026.** Não se conserta o que vai ser aposentado: o Teable inteiro saiu da stack (`03_DATA_ARCHITECTURE.md` §7 e `17_UNIFICACAO_DE_DADOS.md`). O quadro de tarefas humanas virou o banco Tasks do Notion; estado de esteira virou fila no D1. O sintoma (400 Invalid FieldId por campo criado via SQL bruto) fica registrado como lição: **schema criado por fora da API oficial quebra a ferramenta** |
 | 1.7 | **Rodar `/diretor-diario` manualmente 3x** | Lê Teable + Outline → escreve briefing no Outline → notifica webhook |
 | 1.8 | **Atualizar `_factorio/README.md` e `STACK.md`** | Refletir o desenho novo (hoje descrevem a era anterior) |
 
@@ -34,12 +34,13 @@ Executar o `05_LEGACY_TRANSITION.md`:
 
 | # | Entrega |
 |---|---|
-| 2.1 | Exportar memórias do AgentMemory → doc "Memórias herdadas" no Outline |
-| 2.2 | Destilar código útil dos agentes Python → `_factorio/scripts/` (scrapers, ETL) |
+| 2.1 | ✅ Memórias do AgentMemory destiladas → `docs/legacy/hermes-references/` (20/07) |
+| 2.2 | ✅ Código útil dos agentes Python destilado → `scripts/` (20/07) |
 | 2.3 | Congelar containers: `factorio_agents`, `agent_memory`, `mcp_universal`, `factorio_redis` (stop, sem apagar volumes) |
 | 2.4 | Limpar Caddyfile (rotas mortas) + arquivar tokens dos bots Discord |
-| 2.5 | Backups semanais (outline_db, teable_db, D1 → R2) |
-| 2.6 | Iniciar migração `_wiki` → Outline (coleção Holding primeiro, coordenado com a frente Bluue) |
+| 2.5 | ✅ Backups semanais (D1 + Notion → R2) — `scripts/backup/` (19/08) |
+| 2.6 | ✅ Superado: `_wiki` narrativo migrou pro Notion, não pro Outline (que morreu) |
+| 2.7 | **Aposentadoria do Teable** (19/08/2026): export completo → R2, tabelas vivas → D1, containers congelados. Ver `17_UNIFICACAO_DE_DADOS.md` |
 
 **DoD:** VPS enxuta rodando 7 dias sem sentir falta de nada; backups testados (restore de amostra).
 
