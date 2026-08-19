@@ -95,10 +95,11 @@ Todo template (canal dark, funil D2C, site+membros...) nasce pelo MESMO processo
 - Reconciliação periódica reconta CONTENT → corrige INDEX (proteção contra crash).
 - Anti-padrões completos e histórico: `legacy/07_GLOSSARIO.md` (continua válido como referência).
 
-## 8. As 8 áreas (taxonomia de departamentos)
+## 8. As áreas (taxonomia de departamentos)
 
-Inteligência · Mineração · Produto · Channels · Growth · Software · i18n · P&D.
-Cada área terá suas skills e esteiras; a TASKS no Teable dá a visão transversal. Rotinas por área entram na Fase 4 do roadmap.
+**Taxonomia oficial desde 19/08/2026 (batida com o Gabriel): 7 áreas + 1 futura**, detalhadas no `16_BLUEPRINT_AREAS.md`:
+Organização · Inteligência de Mercado · Inteligência do Negócio · Mineração · Content (longz/shortz) · Productz · i18n · (Growth, futura).
+Cada área tem missão, ondas W0/W1/W2, esteiras, indicadores e prompt de frente no doc 16; o quadro gerenciável vive no Notion (página 🏭 Fábrica no Business System).
 
 ## 9. Cadências (alvo quando a fábrica estiver operacional)
 

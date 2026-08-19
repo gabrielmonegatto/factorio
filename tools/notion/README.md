@@ -15,6 +15,7 @@ sem o problema de "relation quebra entre workspaces".
 | `notion-instanciar-playbook.mjs "<Marca>" ["<Playbook>"]` | **A linha de montagem.** Clona um checklist-mestre do banco Playbooks: cria projeto "Playbook — Marca" + N tasks com hierarquia/áreas em Tasks do Business System. Agentes marcam progresso nas tasks via API; o mestre fica intacto. |
 | `notion-map.mjs` | Mapeia a árvore de páginas/bancos (recursa em colunas/toggles/callouts). Editar `ROOTS` no fim. |
 | `notion-dump.mjs` | Dump de conteúdo de bancos pra JSON (leitura, zero escrita). |
+| `notion-fabrica.mjs` | **A fábrica (19/08/2026).** Página 🏭 Fábrica + upgrade do esboço "Mananciall Roadmap" do Gabriel → db `Áreas` (blueprint + prompt de frente na página de cada área) + dbs `Roadmap`/`Esteiras`/`Indicadores` + relation `Área` no Tasks + seeds. Fonte: `docs/16_BLUEPRINT_AREAS.md`. Idempotente via `notion-fabrica-ids.json`. |
 
 ## Dojo (treino pessoal — executado em 11/08/2026)
 
@@ -61,6 +62,7 @@ sob Life System / Business System, nunca sob o cofre.
 - Metas `3a7f06f1-0ce3-8153-a258-ebbff106eab9` · Recursos `3a7f06f1-0ce3-8177-950e-e703ebb71da3`
 - Trevvo: Contas `3a7f06f1-0ce3-81c8-9414-c18cc156554f` · Lançamentos `3a7f06f1-0ce3-8159-9ef2-dfc787cd4cc7` · Categorias `3a7f06f1-0ce3-81a6-831c-f8f43e0fedce`
 - Playbooks `3aaf06f1-0ce3-81f0-b2dd-cf47760bd1b2` · Experimentos `3abf06f1-0ce3-8175-b137-ee2c573837d8`
+- 🏭 Fábrica (19/08/2026, sob Business System): hub `3c1f06f1-0ce3-8117-87df-d894ffd804f9` · Áreas `3c1f06f1-0ce3-8076-908b-fbcb7b67294c` (ex "Mananciall Roadmap") · Roadmap `3c1f06f1-0ce3-81ff-bdba-f04376322409` · Esteiras `3c1f06f1-0ce3-8167-989b-d56a4207f266` · Indicadores `3c1f06f1-0ce3-8196-9da9-e8c5895d2e4d` · Tasks ganhou relation `Área`. Linhas de área em `notion-fabrica-ids.json`.
 
 ## Gotchas da API (aprendidos na marra)
 

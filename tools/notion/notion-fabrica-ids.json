@@ -1,0 +1,38 @@
+{
+  "areasPatched": true,
+  "rows": {
+    "Organização": "3c1f06f1-0ce3-81f3-b1c9-d7675a6c0fd8",
+    "Inteligência de Mercado": "3c1f06f1-0ce3-800c-9d6a-c2afcd7b4b21",
+    "Inteligência do Negócio": "3c1f06f1-0ce3-8195-8fe5-f5ae0374007b",
+    "Mineração": "3c1f06f1-0ce3-802d-967f-e11713d2ef74",
+    "Content": "3c1f06f1-0ce3-80bd-9281-e344d5f1d9df",
+    "Productz": "3c1f06f1-0ce3-8066-b4a6-eb046d3e7a86",
+    "i18n": "3c1f06f1-0ce3-8083-be2a-e52cd6be4ed0",
+    "Growth": "3c1f06f1-0ce3-80ef-aa4a-dd50aee42b42",
+    "longz": "3c1f06f1-0ce3-8001-80f9-df38cd0571ec",
+    "shortz": "3c1f06f1-0ce3-8092-854d-f62edaedb781"
+  },
+  "hubPage": "3c1f06f1-0ce3-8117-87df-d894ffd804f9",
+  "dbRoadmap": "3c1f06f1-0ce3-81ff-bdba-f04376322409",
+  "dbEsteiras": "3c1f06f1-0ce3-8167-989b-d56a4207f266",
+  "dbIndicadores": "3c1f06f1-0ce3-8196-9da9-e8c5895d2e4d",
+  "tasksAreaProp": true,
+  "backRelsRenamed": true,
+  "seedRoadmap": true,
+  "seedEsteiras": true,
+  "seedIndicadores": true,
+  "unidadeManancial": "3a7f06f1-0ce3-81b1-ad55-dc0239ee270b",
+  "seedTasks": true,
+  "blueprints": {
+    "Organização": true,
+    "Inteligência de Mercado": true,
+    "Inteligência do Negócio": true,
+    "Mineração": true,
+    "Content": true,
+    "Productz": true,
+    "i18n": true,
+    "Growth": true,
+    "longz": true,
+    "shortz": true
+  }
+}

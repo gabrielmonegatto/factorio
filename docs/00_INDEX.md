@@ -16,6 +16,8 @@
   ├── 📄 03_DATA_ARCHITECTURE.md  → Onde vive cada dado (Outline/Teable/git/D1/R2)
   ├── 📄 04_ROADMAP.md            → Fases, critérios de pronto, decisões em aberto
   ├── 📄 05_LEGACY_TRANSITION.md  → Aposentadoria da camada antiga, peça por peça
+  ├── 📄 06–15                    → Docs de frente (canais, shorts, catálogo Mananciall, mineração...)
+  ├── 📄 16_BLUEPRINT_AREAS.md    → ⭐ Blueprint das 7 áreas da fábrica (piloto Mananciall) + prompts das frentes
   ├── 📄 STACK.md                 → Infra da VPS (era 1.0 — infra vale, modelo de agentes não)
   ├── 📄 backlog_skills_seed.md   → Backlog bruto de workflows/skills por área (seed do catálogo)
   └── 📁 legacy/                  → Docs da era anterior (histórico, não seguir)
