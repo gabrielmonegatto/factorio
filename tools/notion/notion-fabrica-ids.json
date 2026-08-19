@@ -44,5 +44,6 @@
     "Productz": true,
     "i18n": true
   },
-  "notaEstado": true
+  "notaEstado": true,
+  "notaBi": true
 }

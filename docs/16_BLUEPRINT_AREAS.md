@@ -204,10 +204,19 @@ YouTube Studio, D1 `mananciall-db` (leads/orders/entitlements), Paddle, Asaas, R
 **W0 Ligar**: (a) catálogo de indicadores Mananciall no banco `Indicadores` (núcleo de
 ~20, semeado 19/08: validar/editar); (b) script `snapshot.mjs`: coleta YouTube API + D1
 produção + D1 mineração + Paddle/Asaas → grava em `bi_snapshots` (D1) → espelha valor
-atual no Notion. Rodar 1x/semana manual. **W1**: repo `apps/eternall/mananciall-bi`
-(clonar o padrão Br4nds; abas Canais/Loja/Acervo/Esteiras) + rebuild noturno na VPS.
-**W2**: alarmes (venda zerada, publicação parada, esteira morta → #fabrica, junto com o
-health check da Organização); atribuição do funil `/go` (scan → visita → venda).
+atual no Notion. Rodar 1x/semana manual. **W1 ✅ ENTREGUE 19/08 (noite)**: repo
+`apps/eternall/mananciall-bi` NO AR em **bi.mananciall.org** (Worker + React, tema
+Vercel do padrão Br4nds). Mudou de forma com decisão do Gabriel: em vez de abas de
+gráfico, nasceu como **tabelas estilo Notion dirigidas por registro**
+(`shared/tabelas.js`): views salvas, filtro com contagem, board com arrastar, edição
+inline auditada (`bi_edicoes`) nos campos de curadoria. 7 telas: Biblioteca (202 obras
+semeadas do Notion e EDITÁVEL: é o novo plano de controle), Loja, Fila de mineração,
+Indicadores, Canais, Vídeos do nicho, Anúncios. Senha = a do superadmin do site.
+Transição registrada como tasks: mineração reponta `queue.mjs` pro D1; site escreve
+campos de máquina no D1; gate do Gabriel = validar 2 semanas e aposentar a Biblioteca
+do Notion. **W2**: gráficos de leitura sobre `bi_snapshots`; alarmes de negócio (venda
+zerada, publicação parada → #fabrica, junto com o health check da Organização);
+atribuição do funil `/go` (scan → visita → venda).
 
 **Dados**: fatos em D1 (`bi_snapshots`); Notion `Indicadores` é vitrine; app BI lê do D1.
 **Indicadores**: freshness do snapshot (dias); % métricas com coleta automática.
