@@ -2,17 +2,28 @@
 """
 notion_template_canal.py — cria no Notion o TEMPLATE de lançamento de canal novo.
 
-Segue a gramática visual que o Gabriel já usa no "Exemplo de Checklist":
-seções com heading_2 + divider, e os itens num BANCO EMBUTIDO (is_inline)
-em vez de caixinhas soltas — assim dá pra filtrar, agrupar e acompanhar status.
+## Por que a v2 (16/08/2026)
 
-MINA da API do Notion: propriedade do tipo `status` NÃO pode ser criada via API
-(só na interface). Por isso o campo Status aqui é `select` com as mesmas opções.
-Pra virar status de verdade, converte na mão depois: os dados são preservados.
+A v1 tinha 42 linhas rastreadas. Gabriel reclamou, com razão: virou inventário,
+não painel. A pesquisa (Gawande, "The Checklist Manifesto") dá o número:
+checklist bom tem 5 a 9 itens, só os "killer items" (perigosos de pular E fáceis
+de esquecer), e cabe numa página. Acima de 60-90s pra rodar, vira distração.
+
+Desenho novo:
+  - 9 ENTREGÁVEIS rastreados no banco (cada um com dono, status e critério de pronto)
+  - as microtarefas viram to_do DENTRO da página do entregável (controle nosso,
+    não linha de painel)
+  - as minas ficam coladas no entregável onde mordem, não numa seção distante
+
+Segue a gramática visual do "Exemplo de Checklist" do Gabriel: heading_2 +
+divider por seção, itens em banco EMBUTIDO (is_inline).
+
+MINA da API do Notion: propriedade tipo `status` NÃO pode ser criada via API
+(só na interface). O campo Status aqui é `select` com as mesmas opções.
 
 Uso:
-  python notion_template_canal.py                 # cria sob "Business System"
-  python notion_template_canal.py --parent <id>   # sob outra página
+  python notion_template_canal.py                    # cria
+  python notion_template_canal.py --arquivar <id>    # arquiva a versão velha antes
 """
 import argparse
 import json
@@ -55,134 +66,136 @@ def rt(txt):
     return [{"type": "text", "text": {"content": txt}}]
 
 
-def h2(txt):
-    return {"object": "block", "type": "heading_2", "heading_2": {"rich_text": rt(txt)}}
+def h2(t):
+    return {"object": "block", "type": "heading_2", "heading_2": {"rich_text": rt(t)}}
+
+
+def h3(t):
+    return {"object": "block", "type": "heading_3", "heading_3": {"rich_text": rt(t)}}
 
 
 def divider():
     return {"object": "block", "type": "divider", "divider": {}}
 
 
-def para(txt):
-    return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rt(txt)}}
+def para(t):
+    return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rt(t)}}
 
 
-def callout(txt, emoji, cor):
+def todo(t):
+    return {"object": "block", "type": "to_do", "to_do": {"rich_text": rt(t), "checked": False}}
+
+
+def callout(t, emoji, cor):
     return {"object": "block", "type": "callout",
-            "callout": {"rich_text": rt(txt), "icon": {"emoji": emoji}, "color": cor}}
+            "callout": {"rich_text": rt(t), "icon": {"emoji": emoji}, "color": cor}}
 
 
-# ── conteúdo do checklist ───────────────────────────────────────────────────
-BLOCOS = [
-    ("0 - Licenca", [
-        ("Definir a obra-fonte e PROVAR que e livre pra uso comercial", "Gabriel",
-         "Prova arquivada junto do corpus: edicao, data e link"),
-        ("Checar as camadas separadas de direito", "Claude",
-         "Texto, audio, traducao e arranjo tem dono e data proprios"),
-        ("Registrar a decisao com data", "Claude",
-         "Escrita neste doc, nao combinada verbalmente"),
-    ]),
-    ("1 - Identidade", [
-        ("Nome e handle", "Gabriel", "Disponivel no YouTube"),
-        ("Avatar e banner", "Gabriel", "Arquivos no R2 em {prefix}/_assets/"),
-        ("Visual do video (fundo, tipografia, legenda)", "Claude",
-         "Original, nao banco de imagem generico"),
-        ("Descricao e palavras-chave do canal", "Gabriel", "Publicado"),
-    ]),
-    ("2 - Canal e credencial", [
-        ("Criar o canal (canal de marca na conta Google)", "Gabriel", "Canal existe e tem ID"),
-        ("Projeto no Google Cloud + YouTube Data API v3 ativada", "Gabriel",
-         "Um projeto POR CANAL, pra ter cota separada"),
-        ("Publishing status: Testing para In production", "Gabriel",
-         "Confirmado na tela ANTES de autenticar"),
-        ("Criar credencial OAuth tipo App para computador", "Gabriel",
-         "Client ID e Secret em maos"),
-        ("Rodar auth_youtube.py escolhendo o canal certo", "Gabriel",
-         "Script imprime as 3 linhas"),
-        ("Gravar credenciais nos DOIS .env da VPS", "Claude",
-         "/app/_factorio/.env e /srv/factorio/.env"),
-        ("Confirmar por API qual canal o token autenticou", "Claude",
-         "channels?mine=true bate com o ID esperado"),
-    ]),
-    ("3 - Ligar na esteira", [
-        ("Criar entrada em remotion/canais.py", "Claude",
-         "Prefixo, renders, estado, voz, calendario e tags preenchidos"),
-        ("Preencher youtube_channel_id", "Claude",
-         "Sem isso a publicacao fica bloqueada de proposito"),
-        ("Criar prefixo no R2 e subir os _assets", "Claude", "Listagem mostra os arquivos"),
-        ("Testar --canal <slug> --dry-run", "Claude", "Calendario sai correto"),
-        ("Testar que o guardiao BARRA antes de estar pronto", "Claude",
-         "Mensagem de aborto, nao upload"),
-    ]),
-    ("4 - Corpus e formato", [
-        ("Levantar o acervo e o tamanho real", "Claude", "N de videos e horas totais estimados"),
-        ("Definir o recorte por video", "Gabriel", "Duracao alvo e regra de corte"),
-        ("Ordem de publicacao", "Gabriel", "Canonica ou por demanda"),
-        ("Cadencia", "Gabriel", "Recomendado: 1 por dia"),
-    ]),
-    ("5 - Voz e audio", [
-        ("Escolher a voz no ouvido, com amostra real", "Gabriel", "Aprovado"),
-        ("Voz DIFERENTE dos outros canais da holding", "Claude",
-         "Dois canais com a mesma voz viram o mesmo canal"),
-        ("Travar voz e velocidade na config", "Claude", "Em canais.py, e nunca mais mexer"),
-        ("Aplicar a regra de pausa (cortar em ponto, aparar pontas, emendar)", "Claude",
-         "Medido por transcricao word-level, nao por ouvido"),
-        ("QA em 3 trechos de natureza diferente", "Gabriel", "Ouvido e aprovado"),
-    ]),
-    ("6 - Camada original", [
-        ("Visual original de verdade", "Claude", "Nao e banco de imagem repetido N vezes"),
-        ("Trilha composta, licenciada com prova, ou nenhuma", "Gabriel", "Prova arquivada"),
-        ("Camada editorial propria", "Claude",
-         "Intro de contexto, estrutura e timestamps visiveis"),
-        ("Variacao real entre videos", "Claude", "Fingerprint parecido e o que o radar pega"),
-        ("Ler a politica vigente antes de submeter a monetizacao", "Gabriel", "Lida"),
-    ]),
-    ("7 - Funil", [
-        ("Destino do CTA definido", "Gabriel", "URL viva"),
-        ("QR e link apontando pro /go com v= proprio do canal", "Claude", "Redirect testado"),
-        ("Rastreio de scan chegando", "Claude", "Um scan real aparece no log"),
-    ]),
-    ("8 - Piloto e estabilidade", [
-        ("1 video publicado de verdade", "Gabriel", "No ar, conferido no canal"),
-        ("Conferir que caiu no canal CERTO", "Claude", "channelId do video confere"),
-        ("3 videos limpos seguidos", "Claude", "Sem intervencao manual"),
-    ]),
-    ("9 - Automacao e vigia", [
-        ("Fila com o corpus fatiado", "Claude", "Estado persistido"),
-        ("Cron ou servico ligado", "Claude", "systemctl e cron.d conferidos"),
-        ("Alarme de falha no Discord", "Claude", "Erro OU 48h sem publicar dispara aviso"),
-    ]),
-]
+# ── OS 9 ENTREGÁVEIS ────────────────────────────────────────────────────────
+# (entregavel, dono, criterio_de_pronto, [passos], mina_ou_None)
+ENTREGAVEIS = [
+    ("1. Licenca da fonte provada", "Gabriel",
+     "Documento de prova arquivado junto do corpus: obra, edicao, ano e link",
+     ["Escolher a obra-fonte do canal",
+      "Confirmar que esta em dominio publico ou tem licenca comercial",
+      "Checar as camadas SEPARADAS: texto, traducao, audio, arranjo",
+      "Arquivar a prova (edicao publicada + data) junto do corpus"],
+     "As camadas tem donos e datas DIFERENTES. Obra de 1780 com traducao de 1990 = "
+     "traducao protegida. Musica: composicao e master sao direitos separados, e "
+     "licenca mecanica cobre audio mas nao video (isso e sincronizacao)."),
 
-CORES = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "brown", "gray", "default"]
+    ("2. Identidade visual pronta", "Gabriel",
+     "Avatar, banner e template de video no R2, aprovados no olho",
+     ["Definir nome e handle (conferir disponibilidade)",
+      "Criar avatar e banner",
+      "Definir o visual do video: fundo, tipografia e estilo de legenda",
+      "Subir tudo pro R2 em {prefix}/_assets/",
+      "Escrever descricao e palavras-chave do canal"],
+     "Visual generico de banco de imagem repetido N vezes e o que dispara a politica "
+     "de conteudo inautentico do YouTube. Original nao e capricho, e requisito de "
+     "monetizacao."),
 
-MINAS = [
-    "OAuth em modo Testing expira o refresh token em 7 dias, sempre. O canal Spurgeon "
-    "morreu calado por 6 dias por isso. Publicar o app e o conserto de raiz; "
-    "re-autenticar sem publicar e band-aid de uma semana.",
+    ("3. Canal criado e credencial funcionando", "Gabriel",
+     "channels?mine=true retorna o canal certo, e o ID confere com canais.py",
+     ["Criar o canal (canal de marca na conta Google)",
+      "Criar projeto no Google Cloud e ativar YouTube Data API v3 (um projeto POR canal)",
+      "Mudar publishing status de Testing para In production ANTES de autenticar",
+      "Criar credencial OAuth tipo App para computador",
+      "Rodar auth_youtube.py escolhendo o canal certo na tela",
+      "Gravar credenciais nos DOIS .env da VPS (/app e /srv)",
+      "Confirmar por API qual canal o token autenticou"],
+     "Tres incidentes moram aqui. (1) OAuth em Testing expira o token em 7 dias, "
+     "sempre. (2) Token valido NAO prova canal certo: 18 videos foram parar na conta "
+     "pessoal sem UM erro. (3) A VPS tem DOIS .env e trocar em um so quebra o upload."),
 
-    "Token valido NAO prova canal certo. A re-auth de 07/08 foi feita na conta pessoal: "
-    "o token renovava, a API respondia 200, o log dizia sucesso, e 18 videos foram parar "
-    "no canal errado. O guardiao so protege se o youtube_channel_id estiver preenchido.",
+    ("4. Canal ligado na esteira", "Claude",
+     "--canal <slug> --dry-run sai correto, e o guardiao BARRA quando falta config",
+     ["Criar a entrada em remotion/canais.py",
+      "Preencher youtube_channel_id (sem ele a publicacao fica bloqueada)",
+      "Criar o prefixo no R2 e subir os _assets",
+      "Rodar --dry-run e conferir o calendario",
+      "Testar que o guardiao aborta com canal incompleto"],
+     "Um refresh_token vale pra UM canal. Canal novo usa o SEU env_prefix "
+     "(ex.: YT_BIBLIA_*), nunca reaproveita o do canal anterior."),
 
-    "A VPS tem DOIS arquivos .env: o do repo (/app) e o operacional (/srv, que os "
-    "containers leem via --env-file). Trocar credencial em um so quebra o upload.",
+    ("5. Voz travada", "Gabriel",
+     "Amostra real aprovada no ouvido, e voz + velocidade fixadas em canais.py",
+     ["Gerar amostras candidatas com texto real do canal",
+      "Escolher no ouvido (nao no papel)",
+      "Conferir que e DIFERENTE das vozes dos outros canais da holding",
+      "Aplicar a regra de pausa: cortar em ponto, aparar as pontas, emendar",
+      "QA em 3 trechos de natureza diferente"],
+     "O Kokoro cola ~1,1s de silencio em CADA ponta de cada trecho. Emendar sem aparar "
+     "da pausa de ~2,6s por mais que se reduza o silencio inserido. Medir por "
+     "transcricao word-level, nunca por ouvido."),
 
-    "Um refresh_token vale pra UM canal. Canal novo usa o seu proprio env_prefix "
-    "(ex.: YT_BIBLIA_*), nunca reaproveita o do canal anterior.",
+    ("6. Corpus fatiado e na fila", "Claude",
+     "Fila persistida com o acervo inteiro cortado, e o total de videos conhecido",
+     ["Baixar a fonte e validar a integridade",
+      "Definir o recorte por video (duracao alvo e regra de corte)",
+      "Fatiar respeitando fronteira natural (capitulo, secao, frase)",
+      "Definir a ordem de publicacao",
+      "Gravar a fila no estado"],
+     None),
 
-    "O Kokoro cola ~1,1s de silencio em CADA ponta de cada trecho gerado. Emendar sem "
-    "aparar da pausa de ~2,6s por mais que se reduza o silencio inserido.",
+    ("7. Primeiro video renderizado e aprovado", "Gabriel",
+     "MP4 completo assistido do inicio ao fim e aprovado",
+     ["Renderizar 1 video completo",
+      "Assistir inteiro, nao so o comeco",
+      "Conferir audio, legenda, visual e CTA",
+      "Ajustar o que aparecer e re-renderizar"],
+     "Certificacao de audio se faz TRANSCREVENDO o mp4 renderizado, nunca confiando em "
+     "timestamp de arquivo. Ja aconteceu de CTA velho ficar cacheado e o gate de "
+     "frescor dizer que estava novo."),
 
-    "A esteira nao tem alarme. Os dois incidentes do Spurgeon (6 e 8 dias parado) foram "
-    "descobertos pelo Gabriel olhando o canal. Canal novo nao entra em producao sem vigia.",
+    ("8. Piloto publicado", "Gabriel",
+     "1 video no ar no canal CERTO, com channelId conferido por API",
+     ["Publicar 1 video de verdade (gate humano)",
+      "Conferir por API que caiu no canal certo",
+      "Conferir titulo, descricao, thumb e agendamento no YouTube Studio",
+      "Rodar mais 2 e confirmar 3 limpos seguidos"],
+     None),
+
+    ("9. Automacao com vigia ligada", "Claude",
+     "Cron rodando E alarme testado com uma falha proposital",
+     ["Ligar o cron ou servico",
+      "Configurar alarme no Discord: erro OU 48h sem publicar",
+      "Testar o alarme forcando uma falha",
+      "Documentar como pausar a esteira em emergencia"],
+     "Os dois incidentes do Spurgeon (6 e 8 dias parado) foram descobertos pelo Gabriel "
+     "olhando o canal, nao pelo sistema. Canal nao entra em producao sem vigia."),
 ]
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--parent", default=RAIZ_PADRAO)
+    ap.add_argument("--arquivar", default=None, help="id de pagina antiga pra arquivar")
     args = ap.parse_args()
+
+    if args.arquivar:
+        call("PATCH", "/pages/" + args.arquivar, {"archived": True})
+        print("versao antiga arquivada")
 
     print("criando a pagina ...")
     pagina = call("POST", "/pages", {
@@ -190,10 +203,10 @@ def main():
         "icon": {"emoji": "\U0001F3ED"},
         "properties": {"title": {"title": rt("Template - Lancamento de canal novo")}},
         "children": [
-            callout("Duplique esta pagina para cada canal novo. Nada e pronto sem o "
+            callout("Duplique esta pagina para cada canal novo. Sao 9 entregaveis. "
+                    "Abra cada um para ver os passos e as minas. Nada e pronto sem o "
                     "criterio de pronto cumprido com verificacao real: comando rodado, "
-                    "print, numero medido. Nunca 'deve funcionar'.",
-                    "\U0001F4CB", "blue_background"),
+                    "print, numero medido.", "\U0001F4CB", "blue_background"),
             para(""),
             h2("Cabecalho do canal"),
             divider(),
@@ -204,7 +217,7 @@ def main():
             para("Fonte do conteudo:"),
             para("Data de inicio:"),
             para(""),
-            h2("Checklist"),
+            h2("Os 9 entregaveis"),
             divider(),
         ],
     })
@@ -215,11 +228,9 @@ def main():
     db = call("POST", "/databases", {
         "parent": {"type": "page_id", "page_id": pid},
         "is_inline": True,
-        "title": rt("Checklist do canal"),
+        "title": rt("Entregaveis do canal"),
         "properties": {
-            "Item": {"title": {}},
-            "Bloco": {"select": {"options": [
-                {"name": b[0], "color": CORES[i]} for i, b in enumerate(BLOCOS)]}},
+            "Entregavel": {"title": {}},
             "Dono": {"select": {"options": [
                 {"name": "Gabriel", "color": "orange"},
                 {"name": "Claude", "color": "blue"}]}},
@@ -232,31 +243,39 @@ def main():
     })
     dbid = db["id"]
 
-    total = 0
-    for bloco, itens in BLOCOS:
-        for nome, dono, dod in itens:
-            call("POST", "/pages", {
-                "parent": {"database_id": dbid},
-                "properties": {
-                    "Item": {"title": rt(nome)},
-                    "Bloco": {"select": {"name": bloco}},
-                    "Dono": {"select": {"name": dono}},
-                    "Status": {"select": {"name": "Nao iniciada"}},
-                    "Criterio de pronto": {"rich_text": rt(dod)},
-                },
-            })
-            total += 1
-    print(total, "itens inseridos")
+    for nome, dono, dod, passos, mina in ENTREGAVEIS:
+        filhos = []
+        if mina:
+            filhos.append(callout(mina, "\U0001F9E8", "red_background"))
+        filhos.append(h3("Passos"))
+        filhos += [todo(p) for p in passos]
+        call("POST", "/pages", {
+            "parent": {"database_id": dbid},
+            "properties": {
+                "Entregavel": {"title": rt(nome)},
+                "Dono": {"select": {"name": dono}},
+                "Status": {"select": {"name": "Nao iniciada"}},
+                "Criterio de pronto": {"rich_text": rt(dod)},
+            },
+            "children": filhos,
+        })
+        print("  ok:", nome)
 
-    print("escrevendo as minas ...")
-    filhos = [para(""), h2("Minas conhecidas (custaram dias de canal parado)"), divider()]
-    filhos += [callout(t, "\U0001F9E8", "red_background") for t in MINAS]
-    filhos += [para(""), h2("Retrospectiva (preencher no fim)"), divider(),
-               para("O que quebrou que nao estava previsto?"),
-               para("Que mina nova entrou neste template?"),
-               para("Quanto tempo do primeiro commit ao primeiro video?")]
-    for i in range(0, len(filhos), 90):
-        call("PATCH", "/blocks/" + pid + "/children", {"children": filhos[i:i + 90]})
+    print("escrevendo o rodape ...")
+    call("PATCH", "/blocks/" + pid + "/children", {"children": [
+        para(""),
+        h2("Ordem e dependencias"),
+        divider(),
+        para("O 1 trava tudo: licenca errada e canal perdido depois de meses de trabalho."),
+        para("O 3 trava so a publicacao. O 5 e o 6 podem correr em paralelo com ele."),
+        para("O 2 e o 5 travam o render, porque definem visual e timbre."),
+        para(""),
+        h2("Retrospectiva (preencher no fim)"),
+        divider(),
+        para("O que quebrou que nao estava previsto?"),
+        para("Que mina nova entrou neste template?"),
+        para("Quanto tempo do primeiro commit ao primeiro video?"),
+    ]})
 
     print("\nPRONTO:", pagina["url"])
 
