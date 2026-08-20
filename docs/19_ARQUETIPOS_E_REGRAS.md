@@ -59,7 +59,13 @@ Regra da casa: **mirar em 6+ meses de vida** antes de o acervo secar.
 | 300+ | 1 por dia + considerar 2 |
 
 *Aplicado ao Moody (90-120 itens): 1 a cada 2 dias = 6 a 8 meses de vida.*
-*Aplicado ao Spurgeon (113 itens): a 1/dia seca em ~4 meses. **Rever pra 1 a cada 2 dias.***
+
+**⚠️ CORREÇÃO 20/08 (Gabriel):** o Spurgeon tem **~3.500+ sermões** no acervo
+histórico (63 volumes do Metropolitan Tabernacle Pulpit). Os 113 são só o que
+foi MINERADO até hoje: a extração dos ~51 volumes restantes está parada.
+Logo a cadência 1/dia está CERTA pro Spurgeon; o gargalo é a MINERAÇÃO, não o
+acervo. A conta de vida usa o acervo REAL da fonte, não o já minerado — e a
+fila de mineração precisa correr na frente da fila de publicação.
 
 ### 2.3 Equilíbrio com shorts
 
@@ -127,14 +133,19 @@ mananciall.org/go/<canal>?v=NNNN
         /go/moody?v=0007
 ```
 
-O worker resolve `<canal>` → destino + UTMs padronizadas
-(`utm_source=youtube`, `utm_medium=qr|link`, `utm_campaign=<canal>`,
-`utm_content=<v>`), loga o scan com o canal e redireciona.
+✅ **NO AR desde 20/08/2026.** Rota no próprio site Astro
+(`mananciall-site/src/pages/go/[...canal].ts`), servido 100% pela
+**Cloudflare** (worker `manancial-new`; nada de Vercel — atualizado 20/08).
+Resolve `<canal>` → destino + UTMs (`utm_source=youtube`, `utm_medium`,
+`utm_campaign=<canal>`, `utm_content=<v>`) e loga cada scan na tabela
+`go_scans` do D1 `mananciall-db` (canal, v, legacy, país). Antes disso o
+`/go` respondia **404**: os QRs dos 15 vídeos no ar apontavam pro nada.
 
-**Legado do Spurgeon:** os 15 vídeos no ar apontam pro formato velho. Não dá pra
-re-renderizar. O worker passa a tratar **`/go` sem canal como `spurgeon`**, que é
-historicamente verdade. Nenhum QR impresso quebra, e daqui pra frente todo canal
-nasce com URL própria.
+**Legado do Spurgeon:** os vídeos no ar apontam pro formato velho
+(`/go?s=yt&v=`). Não dá pra re-renderizar. O `/go` sem canal é tratado como
+`spurgeon` (flag `legacy=1` no log), que é historicamente verdade. Nenhum QR
+impresso quebra, e daqui pra frente todo canal nasce com URL própria.
+Destino atual do spurgeon: `/collections/spurgeon-library` (existe e responde).
 
 ### A LP: biolink por pregador (decisão do Gabriel)
 
