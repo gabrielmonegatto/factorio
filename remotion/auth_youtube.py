@@ -29,7 +29,14 @@ import urllib.request
 import webbrowser
 
 # force-ssl é necessário pra POSTAR comentário (o link no 1º comentário). upload = subir vídeo.
-SCOPE = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl"
+# force-ssl posta comentario; yt-analytics.readonly libera METRICA DIARIA
+# (views, minutos assistidos, duracao media, inscritos ganhos por dia).
+# Sem o de analytics a API responde 403 "insufficient authentication scopes".
+SCOPE = " ".join([
+    "https://www.googleapis.com/auth/youtube.upload",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
+    "https://www.googleapis.com/auth/yt-analytics.readonly",
+])
 PORT = 8765
 REDIRECT = f"http://localhost:{PORT}"
 _code = {}

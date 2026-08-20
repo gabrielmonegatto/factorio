@@ -187,57 +187,114 @@ ENTREGAVEIS = [
 ]
 
 
-def tese_do_canal():
-    """A secao que faltava: POR QUE este canal vai funcionar.
+def estrategia():
+    """ETAPA 1 — a estrategia inteira do canal, nao so a tese.
 
-    Os 9 entregaveis respondem 'como construir'. Nenhum respondia 'por que
-    alguem assistiria'. Preencher isto ANTES de produzir qualquer coisa.
+    Ordem que o Gabriel definiu em 19/08: ESTRATEGIA -> IDENTIDADE -> PRODUCAO.
+
+    A bifurcacao do ARQUETIPO e o que faz este template servir pros dois tipos de
+    canal da holding sem inchar: canal de REPLICA herda a estrategia do irmao mais
+    velho e responde 4 perguntas; canal NOVO responde as 9.
     """
     return [
-        h2("Tese do canal (preencher ANTES de produzir)"),
+        h2("ETAPA 1 - Estrategia"),
         divider(),
-        callout("Nenhum entregavel comeca antes destas 5 respostas estarem escritas. "
-                "Canal nao morre por producao ruim, morre por tese que ninguem testou.",
+        callout("Nada de producao comeca antes desta etapa estar escrita. Canal nao "
+                "morre por producao ruim, morre por estrategia que ninguem testou.",
                 "\U0001F3AF", "yellow_background"),
-        h3("1. Quem assiste, e em que momento do dia"),
+
+        h3("1.1 Arquetipo do canal (decide o resto desta etapa)"),
+        callout("REPLICA (ex.: linha Treasures) - a tese ja foi validada por um canal "
+                "irmao. Aposta em VOLUME, PREVISIBILIDADE e materia-prima que ja existe: "
+                "e editar e distribuir acervo. Aqui a estrategia se HERDA: responda so "
+                "1.2, 1.3, 1.4 e 1.9, e aponte pro canal de origem.",
+                "\U0001F501", "green_background"),
+        callout("NOVO / CIRURGICO - tese ainda nao provada, formato ou publico diferente. "
+                "Aqui responda TODAS as perguntas desta etapa, com evidencia. "
+                "Este e o caso caro: erra o alvo e sao meses jogados fora.",
+                "\U0001F3AF", "orange_background"),
+        para("Arquetipo deste canal:"),
+        para("Se REPLICA, canal de origem e o que se herda dele:"),
+
+        h3("1.2 Materia-prima"),
+        para("Fonte do conteudo:"),
+        para("Tamanho do acervo (quantos videos ele da):"),
+        para("Acaba ou e renovavel? Se acaba, o que vem depois:"),
+
+        h3("1.3 Formato e frequencia"),
+        para("Formato do video (duracao, estrutura, o que se ve na tela):"),
+        para("Frequencia de publicacao:"),
+        para("Por quanto tempo o acervo sustenta essa frequencia:"),
+
+        h3("1.4 Ofertas atreladas"),
+        para("O que se vende ou capta atraves deste canal:"),
+        para("Onde entra na jornada (descricao, QR, comentario fixado, fim do video):"),
+        para("Destino do trafego:"),
+
+        h3("1.5 Quem assiste, e em que momento do dia"),
         para("Resposta:"),
         para("Contexto de consumo importa mais que demografia. 'Alguem estudando de "
              "madrugada e querendo silencio na cabeca' vale mais que 'cristaos 25-45'."),
-        h3("2. O que essa pessoa digita pra chegar aqui, e qual a prova de demanda"),
+
+        h3("1.6 O que essa pessoa digita, e qual a prova de demanda"),
         para("Resposta:"),
         para("Prova exigida: termos reais com volume, mais 3 videos outlier de outros "
              "canais (5-10x acima da media deles) provando que o tema puxa."),
-        h3("3. Quem ja serve isso, e onde eles falham"),
+
+        h3("1.7 Quem ja serve isso, e onde eles falham"),
         para("Resposta:"),
         para("Auditar 5 concorrentes. Referencia de nicho pouco disputado: menos de 50 "
              "videos na primeira pagina com mais de 10 mil views."),
-        h3("4. Qual a nossa aposta de packaging"),
-        para("Resposta:"),
-        para("Formula de titulo e de thumbnail que vamos testar. Packaging e o artefato "
-             "de maior alavanca do YouTube: titulo e capa vendem o CLIQUE, os primeiros "
-             "30 segundos vendem a PERMANENCIA. Sao dois problemas separados."),
-        h3("5. Criterios de vida ou morte (escritos ANTES de comecar)"),
+
+        h3("1.8 Aposta de packaging"),
+        para("Formula de titulo:"),
+        para("Formula de thumbnail:"),
+        para("Como sao os primeiros 30 segundos:"),
+        callout("Titulo e capa vendem o CLIQUE. Os primeiros 30 segundos vendem a "
+                "PERMANENCIA. Sao dois problemas separados, com solucoes separadas. "
+                "Packaging e o artefato de maior alavanca que existe no YouTube.",
+                "\U0001F4E6", "purple_background"),
+
+        h3("1.9 Criterios de vida ou morte (escritos ANTES de comecar)"),
         para("Checkpoint em quantos videos:"),
         para("Numeros que definem seguir:"),
         para("Numeros que definem pivotar ou matar:"),
-        para(""),
-        h3("Referencias de benchmark (pra calibrar os criterios acima)"),
+
+        h3("Benchmarks pra calibrar os criterios acima"),
         callout("CTR de 4 a 6% e o alvo pra canal sem rosto. Retencao: 40-50% de "
                 "percentual assistido num video de 10min indica potencial. Passar dos "
                 "primeiros 60s com mais de 65% da audiencia correlaciona com retencao "
-                "muito maior no resto.", "\U0001F4CA", "gray_background"),
+                "muito maior no resto do video.", "\U0001F4CA", "gray_background"),
         callout("TEMPO REAL ATE TRACAO: a maioria dos canais so ve tracao entre o video "
                 "30 e o 50, e leva de 6 a 12 meses com 30 a 60 videos pra chegar a mil "
                 "inscritos. Nos primeiros 3 meses a maioria dos videos fica abaixo de "
                 "100 views. Isso e o NORMAL, nao o fracasso. Julgar canal no video 10 e "
                 "matar antes do algoritmo ter dados pra entender quem gosta.",
                 "\U000023F3", "blue_background"),
-        callout("DECIDIR COM DADO, NAO COM ANSIEDADE: sao 4 saidas possiveis, nao 2. "
-                "ESCALAR (funciona), PERSEVERAR (falta dado), PIVOTAR (mudar direcao) e "
-                "MATAR (parar). O teste barato: 3 a 5 videos com o formato novo, ao longo "
-                "de 4 a 6 semanas, medindo CTR, retencao nos primeiros 30-60s e "
-                "espectadores recorrentes. Custa 5 videos em vez de um canal.",
+        callout("DECIDIR COM DADO, NAO COM ANSIEDADE: sao 4 saidas, nao 2. ESCALAR "
+                "(funciona), PERSEVERAR (falta dado), PIVOTAR (mudar direcao) e MATAR "
+                "(parar). Teste barato: 3 a 5 videos com o formato novo, em 4 a 6 "
+                "semanas, medindo CTR, retencao nos primeiros 30-60s e espectadores "
+                "recorrentes. Custa 5 videos em vez de um canal.",
                 "\U0001F9ED", "gray_background"),
+        para(""),
+    ]
+
+
+def identidade():
+    """ETAPA 2 — como o canal se apresenta. Decisoes, nao execucao."""
+    return [
+        h2("ETAPA 2 - Identidade"),
+        divider(),
+        callout("Aqui e a DECISAO de como o canal se apresenta. A execucao (criar os "
+                "arquivos e subir pro R2) e o entregavel 2 da Etapa 3.",
+                "\U0001F3A8", "gray_background"),
+        para("Nome e handle:"),
+        para("Promessa em uma frase (o que o espectador ganha):"),
+        para("Tom e ritmo (solene, acolhedor, urgente, contemplativo):"),
+        para("Voz do canal (tem que ser DIFERENTE dos outros canais da holding):"),
+        para("Direcao visual (fundo, tipografia, paleta, estilo de thumbnail):"),
+        para("O que este canal NUNCA faz (limites de marca):"),
         para(""),
     ]
 
@@ -271,10 +328,15 @@ def main():
             para("Nicho e promessa ao espectador:"),
             para("Fonte do conteudo:"),
             para("Data de inicio:"),
+            para("Arquetipo (Replica ou Novo):"),
             para(""),
-        ] + tese_do_canal() + [
-            h2("Os 9 entregaveis"),
+        ] + estrategia() + identidade() + [
+            h2("ETAPA 3 - Producao"),
             divider(),
+            callout("Os 9 entregaveis. Abra cada um pra ver os passos e as minas. "
+                    "Nada e pronto sem o criterio de pronto cumprido com verificacao "
+                    "real: comando rodado, print, numero medido.",
+                    "\U0001F3ED", "gray_background"),
         ],
     })
     pid = pagina["id"]
@@ -320,7 +382,7 @@ def main():
     print("escrevendo o rodape ...")
     call("PATCH", "/blocks/" + pid + "/children", {"children": [
         para(""),
-        h2("Ordem e dependencias"),
+        h2("Ordem e dependencias (dentro da Etapa 3)"),
         divider(),
         para("O 1 trava tudo: licenca errada e canal perdido depois de meses de trabalho."),
         para("O 3 trava so a publicacao. O 5 e o 6 podem correr em paralelo com ele."),
