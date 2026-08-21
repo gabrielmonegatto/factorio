@@ -74,7 +74,10 @@ CANAIS = {
         "youtube_channel_id": "",          # ⬜ vazio = publicação BLOQUEADA
         "env_prefix": "YT_BIBLIA",
         "idioma": "en",
-        "voz": "am_michael",
+        # 20/08: Gabriel trocou am_michael por am_onyx ouvindo o A/B do Moody
+        # ("onyx é f#da pra narrar a Bíblia inteira"). Michael voltou pro pool.
+        # Velocidade a REVALIDAR no ouvido com o onyx (0.80 era calibrado no michael).
+        "voz": "am_onyx",
         "voz_speed": "0.80",
         "pausa_frase_s": 0.75,             # específico deste canal (ver doc 10)
         "um_por_dia": True,
@@ -90,6 +93,36 @@ CANAIS = {
         "cta_livro": "",
         "cta_texto": "",
         "redirect_base": "https://mananciall.org/go?s=yt&v=",
+    },
+    # ─────────────────────────────────────────────────────────────────────
+    # Canal 3 — D.L. Moody Treasures (arquétipo TREASURES, 2º da família).
+    # Voz escolhida no A/B de 20/08: am_adam. Velocidade provisória até o
+    # teste de lapidação (0.80/0.84/0.88/0.92) ser ouvido pelo Gabriel.
+    # ⬜ PENDENTE: canal no YouTube + YT_MOODY_* + youtube_channel_id.
+    "moody": {
+        "nome": "D.L. Moody Treasures",
+        "bucket": "mananciall",
+        "prefix": "channels/channels_youtube/treasures_dlmoody",
+        "renders_prefix": "renders/moody",
+        "state_key": "schedule/moody_schedule.json",
+        "youtube_channel_id": "",          # ⬜ vazio = publicação BLOQUEADA
+        "env_prefix": "YT_MOODY",
+        "idioma": "en",
+        "voz": "am_adam",
+        "voz_speed": "0.88",               # provisória; lapidação em andamento
+        "um_por_dia": False,               # acervo 90-120: 1 a cada 2 dias (doc 19)
+        "morning_utc": 12,
+        "evening_utc": 23,
+        "warmup_days": 14,
+        "buffer_days": 14,
+        "max_uploads_per_run": 5,
+        "cta_assets": [],
+        "titulo_sufixo": " (D.L. Moody)",
+        "tags": "D.L. Moody,DL Moody,sermon,christian,gospel,evangelist,moody sermons",
+        "hashtags": "#DLMoody #Christian #Gospel #Faith #Hope",
+        "cta_livro": "",
+        "cta_texto": "",
+        "redirect_base": "https://mananciall.org/go/moody?v=",
     },
 }
 

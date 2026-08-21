@@ -99,10 +99,10 @@ timbre distinto sem gastar um centavo.
 | Canal | Voz | Estado |
 |---|---|---|
 | Charles Spurgeon Treasures | `bm_george` | 🔒 travada |
-| Bíblia KJV | `am_michael` | 🔒 travada (0.80 + pausa 0,75s) |
-| D.L. Moody | a decidir entre `am_onyx` / `am_fenrir` / `am_eric` | ⬜ A/B |
+| Bíblia KJV | `am_onyx` | 🔒 20/08 (trocou o michael no A/B; velocidade a revalidar) |
+| D.L. Moody | `am_adam` | 🔒 20/08 (A/B; velocidade em lapidação 0.80-0.92) |
 | J.C. Ryle (britânico) | `bm_lewis` ou `bm_daniel` | ⬜ reservar |
-| próximos Treasures | am_adam, am_echo, am_liam, am_puck, bm_fable | livre |
+| próximos Treasures | am_michael, am_echo, am_eric, am_fenrir, am_liam, am_puck, bm_fable | livre |
 
 ### 🚫 Sobre "laboratório no ElevenLabs e clona no motor livre"
 
