@@ -76,7 +76,12 @@ CANAIS = {
         "idioma": "en",
         # 20/08: Gabriel trocou am_michael por am_onyx ouvindo o A/B do Moody
         # ("onyx é f#da pra narrar a Bíblia inteira"). Michael voltou pro pool.
-        # Velocidade a REVALIDAR no ouvido com o onyx (0.80 era calibrado no michael).
+        # ✅ VELOCIDADE TRAVADA 20/08 em 0.80, depois de 12 amostras: primeiro
+        # 0.76/0.80/0.84 no Salmo 23, depois 0.68/0.72/0.76 em três naturezas
+        # de texto do corpus real (narrativa/poesia/ensino). Gabriel decidiu 0.80.
+        # ⚠️ Ele havia achado 0.80 "corrido" na 1ª rodada e preferido 0.76;
+        # mudou de ideia ouvindo as passagens reais. Se soar rápido em produção,
+        # 0.76 é o candidato imediato.
         "voz": "am_onyx",
         "voz_speed": "0.80",
         "pausa_frase_s": 0.75,             # específico deste canal (ver doc 10)
@@ -109,7 +114,9 @@ CANAIS = {
         "env_prefix": "YT_MOODY",
         "idioma": "en",
         "voz": "am_adam",
-        "voz_speed": "0.88",               # provisória; lapidação em andamento
+        # ✅ TRAVADA 20/08 em 0.84, depois de ouvir 0.80/0.84/0.88/0.92.
+        # Fica um clique abaixo do Spurgeon (0.9): o Moody é mais conversado.
+        "voz_speed": "0.84",
         "um_por_dia": False,               # acervo 90-120: 1 a cada 2 dias (doc 19)
         "morning_utc": 12,
         "evening_utc": 23,

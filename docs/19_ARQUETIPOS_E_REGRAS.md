@@ -99,10 +99,24 @@ timbre distinto sem gastar um centavo.
 | Canal | Voz | Estado |
 |---|---|---|
 | Charles Spurgeon Treasures | `bm_george` | 🔒 travada |
-| Bíblia KJV | `am_onyx` | 🔒 20/08 (trocou o michael no A/B; velocidade a revalidar) |
-| D.L. Moody | `am_adam` | 🔒 20/08 (A/B; velocidade em lapidação 0.80-0.92) |
+| Bíblia KJV | `am_onyx` **0.80** | 🔒 20/08 (12 amostras; pausa 0,75s entre frases) |
+| D.L. Moody | `am_adam` **0.84** | 🔒 20/08 (4 velocidades; leitura corrida) |
 | J.C. Ryle (britânico) | `bm_lewis` ou `bm_daniel` | ⬜ reservar |
 | próximos Treasures | am_michael, am_echo, am_eric, am_fenrir, am_liam, am_puck, bm_fable | livre |
+
+### Config base por ARQUÉTIPO (não por voz)
+
+Cada voz do Kokoro tem ritmo de fábrica próprio: o mesmo número soa apressado
+numa e arrastado noutra. Então a base é ponto de partida, e o A/B de ouvido
+confirma ou ajusta um clique. São 5 minutos por canal novo, uma vez só.
+
+| Arquétipo | Base | Tratamento |
+|---|---|---|
+| **TREASURES** | ~0.84 a 0.90 | leitura corrida, sem pausa inserida |
+| **BÍBLIA** | ~0.76 a 0.80 | corta em ponto final, **apara as pontas**, emenda com 0,75s |
+
+Por que a Bíblia é mais lenta de propósito: o produto é contemplativo
+(estudar/dormir), não sermão. Não é desvio da base, é base própria.
 
 ### 🚫 Sobre "laboratório no ElevenLabs e clona no motor livre"
 
