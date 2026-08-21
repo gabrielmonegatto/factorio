@@ -357,8 +357,10 @@ Content (canais) e do Productz (SEO /today, amostras públicas).
    Precisou mexer fora: `/handoff-frente`, nunca "eu aproveito e mexo".
 2. **Productz e i18n dividem o repo do site**: commits pequenos, `git pull` no início
    da sessão, i18n restrita a `scripts/i18n/` + conteúdo PT.
-3. **Toda sessão termina com**: commit no repo da frente + tasks atualizadas no Notion
-   (kit `tools/notion/`, `NOTION_TOKEN` no `.env`) + report de 10 linhas.
+3. **Toda sessão termina com**: commit no repo da frente + tarefas/projetos atualizados
+   no D1 (`scripts/org/tarefas.mjs`, o mesmo dado de bi.mananciall.org) + report de 10
+   linhas. *(Desde 20/08 a gestão do Mananciall mora no BI; os bancos Tasks/Roadmap do
+   Notion viraram espelho parado até o Gabriel aposentar.)*
 4. **Gate é do Gabriel**: frente bloqueada por gate não contorna; cobra o gate no
    report e segue pra próxima entrega da fila.
 5. **Aprendizado vira arquivo na hora** (skill/doc do território da frente), senão morreu.
