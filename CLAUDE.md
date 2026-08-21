@@ -13,7 +13,7 @@ Você está no QG da fábrica de negócios digitais da holding EternalL. Este re
 
 1. **Julgamento ≠ execução.** Decisão aberta → sessão Claude com skill · repetitivo com prompt fixo → LLM-função (OpenRouter/Haiku dentro de task) · sem ambiguidade → código puro.
 2. **O ativo é o arquivo, não o agente.** Aprendizado vira skill/doc/template na hora — o que fica só na conversa morreu.
-3. **Estado no banco** (D1), nunca na conversa. Coordenação multi-sessão = tabela `tarefas` no D1 (`scripts/org/tarefas.mjs`, vitrine em bi.mananciall.org) + fila no D1 (estado de esteira).
+3. **Estado no banco** (D1), nunca na conversa. Coordenação multi-sessão = banco Tasks no Notion (gestão humana, tarefa MACRO) + fila no D1 (estado de esteira).
 4. **Organize por artefato.** Organograma/squad é mapa pra descobrir SOPs, nunca arquitetura de runtime.
 5. **Orquestrador magro, executor gordo.** Cadência = cron na VPS com health check; pipeline multi-etapa = script idempotente com fila no D1 (padrão da mineração). Compute pesado mora em container (VPS/RunPods). Pasta nova só com demanda (regra de dois).
 
@@ -21,7 +21,8 @@ Você está no QG da fábrica de negócios digitais da holding EternalL. Este re
 
 | Dado | Casa | Acesso |
 |---|---|---|
-| Gestão do Mananciall (tarefas, projetos, catálogo) | **D1 + bi.mananciall.org** (desde 20/08) | `scripts/org/tarefas.mjs` · Notion = só documentos/blueprint |
+| Gestão humana (tarefas MACRO, roadmap, documentos) | **Notion** (decisão 20/08: cockpit do Gabriel) | kit `tools/notion/` |
+| Curadoria de catálogo e dados (Biblioteca, intel, indicadores) | **D1 + bi.mananciall.org** | edição auditada no painel |
 | Estado de esteira, intel, produto | **D1** (`mananciall-db`, `mananciall-mining`, `eternall-intel`, `br4nds`) | API HTTP do D1 (parâmetro vinculado) ou `wrangler` |
 | Código, SOPs, docs técnicos | este repo (git) | nativo |
 | Assets binários e arquivo morto | R2 (`mananciall`, `channels`, `eternall-archives`) | `wrangler r2` / S3 API |

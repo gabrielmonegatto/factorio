@@ -15,12 +15,13 @@ description: Abre uma sessão de área da fábrica (Organização, Inteligência
    - Se o território for um repo de app (`apps/...`), a sessão abre LÁ, não em `_factorio/`.
    - Productz e i18n dividem o repo do site: `git pull` antes de começar, commits pequenos.
 3. **Leia o estado do repo:** `git status --short` e `git log --oneline -5`.
-4. **Puxe as tarefas e projetos da área** (moram no D1, os mesmos que o Gabriel vê em bi.mananciall.org):
+4. **Puxe as tarefas e o roadmap da área no NOTION** (decisão do Gabriel 20/08: a gestão
+   humana vive lá; o BI/D1 é dado e curadoria de catálogo):
    ```
-   node scripts/org/tarefas.mjs "<Área>"
+   node tools/notion/notion-tarefas.mjs "<Área>"
    ```
-   Ao concluir/assumir tarefa: `node scripts/org/tarefas.mjs --status <id> Feita|Fazendo`.
-   Tarefa nova descoberta no caminho: `--nova "titulo" --area "<Área>"` (com `--gate` se for do Gabriel).
+   Concluiu/assumiu tarefa: atualize a task no Notion pelo kit (`tools/notion/`).
+   Tarefa é MACRO (1 task = 1 operação de alto nível; o micro é checklist DENTRO da página da task).
 5. **Meça antes de planejar.** Rode `node scripts/org/health_check.mjs --seco --verboso`: número medido vale mais que roadmap escrito (em 19/08/2026 o roadmap dizia "canal parado" e o canal estava publicando 1/dia havia uma semana).
 6. **Reporte em ≤10 linhas:** área · o que está no ar de verdade · próxima entrega da onda atual · gates travando · 1 sugestão de próximo passo.
 7. **Só então execute**, seguindo o ciclo padrão (`docs/02_OPERATING_MODEL.md` §2).
@@ -28,7 +29,7 @@ description: Abre uma sessão de área da fábrica (Organização, Inteligência
 ## Ao encerrar a sessão
 
 - Commit no repo da frente (nunca deixar trabalho fora do git).
-- Tarefas e projetos atualizados no D1 (`scripts/org/tarefas.mjs`), que é o que aparece em bi.mananciall.org.
+- Tasks e Roadmap atualizados no Notion (kit `tools/notion/`).
 - Aprendizado virou arquivo: skill ou doc do território.
 - Gate que travou você aparece no report, como cobrança ao Gabriel.
 
@@ -36,7 +37,7 @@ description: Abre uma sessão de área da fábrica (Organização, Inteligência
 
 - [ ] O blueprint da área foi lido e o território respeitado (nenhum arquivo fora dele foi editado sem handoff).
 - [ ] O estado reportado foi MEDIDO (comando rodado), não copiado do roadmap.
-- [ ] A gestão (tarefas/projetos no D1) reflete o que aconteceu na sessão.
+- [ ] O Notion (Tasks/Roadmap) reflete o que aconteceu na sessão.
 - [ ] `git status` limpo no fim.
 
 **Nível de confiança:** 🟡 Draft — execuções limpas: 0/3
