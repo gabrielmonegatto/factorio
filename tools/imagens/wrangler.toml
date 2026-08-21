@@ -1,0 +1,13 @@
+name = "factorio-imagens"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+workers_dev = true
+
+# Binding de AI: o Worker chama o modelo direto, sem precisar que o token de
+# API tenha permissão de Workers AI (o token do .env só tem D1 + Workers).
+[ai]
+binding = "AI"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "mananciall"
