@@ -65,6 +65,11 @@ CANAIS = {
         # nome do pregador como o espectador o conhece; entra no prompt de
         # marketing e no sufixo do titulo. Canal sem pregador (Biblia) fica vazio.
         "pregador": "Charles Spurgeon",
+        # LIKE usado no `works.author` do D1 de mineracao. Fica separado do
+        # `pregador` porque o banco guarda o nome como a FONTE escreveu
+        # ("Charles Haddon Spurgeon"), nao como o canal assina.
+        "autor_mineracao": "%purgeon%",
+        "pausa_frase_s": 0.75,
         "titulo_sufixo": " (Charles Spurgeon)",
         "tags": "Charles Spurgeon,sermon,christian,gospel,faith,spurgeon sermons",
         "hashtags": "#CharlesSpurgeon #Christian #Gospel #Faith #Hope",
@@ -120,6 +125,7 @@ CANAIS = {
         "max_uploads_per_run": 5,
         "cta_assets": [],
         "pregador": "",
+        "autor_mineracao": "",   # corpus vem do preparar_corpus, nao da mineracao
         "titulo_sufixo": " (KJV)",
         "tags": "bible,kjv,king james,scripture,bible reading,audio bible",
         "hashtags": "#Bible #KJV #Scripture #AudioBible",
@@ -156,6 +162,8 @@ CANAIS = {
         "max_uploads_per_run": 5,
         "cta_assets": [],
         "pregador": "D.L. Moody",
+        "autor_mineracao": "%Moody%",
+        "pausa_frase_s": 0.75,
         "titulo_sufixo": " (D.L. Moody)",
         "tags": "D.L. Moody,DL Moody,sermon,christian,gospel,evangelist,moody sermons",
         "hashtags": "#DLMoody #Christian #Gospel #Faith #Hope",
