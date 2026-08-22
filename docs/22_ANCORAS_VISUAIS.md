@@ -325,6 +325,61 @@ rede Treasures inteira.
 
 ---
 
+## 8d. ✅ MEDIDO NO METAL (22/08/2026) — o pipeline fecha ponta a ponta
+
+Primeiros micro-clipes nossos gerados. Não é mais estimativa.
+
+| Métrica | Valor medido |
+|---|---|
+| Modelo | `Wan2.2-TI2V-5B-Diffusers` via `WanImageToVideoPipeline` |
+| GPU | RTX 4090 (US$ 0,34/h) |
+| Config | 61 frames @ 24fps (2,5s), 25 steps, 704x704 |
+| Carga do modelo | 45s |
+| **Tempo por clipe** | **83,9s** (min 82,0 / máx 86,6 — variação desprezível) |
+| **Vazão** | **~43 clipes/hora** |
+| **Custo por clipe** | **US$ 0,008** |
+| Movimento real | 39 a 58 quadros com mudança, de 61 (conferido por `scene` no ffmpeg) |
+| Custo total do aprendizado | US$ 0,64 em 9 rodadas |
+
+**Projeção com número medido:** biblioteca de 300 clipes = **US$ 2,40 e ~7h de
+máquina**. Bate com a estimativa da §5. O gargalo é curadoria humana, não custo.
+
+### 🧨 As 7 minas do RunPod (todas custaram rodada; todas viraram trava no script)
+
+| # | Mina | Sintoma enganoso | Conserto no `animar.py` |
+|---|---|---|---|
+| 1 | **Cloudflare bloqueia User-Agent do urllib** (mesma do doc 21) | 403 em toda mutation; parece chave sem permissão ou falta de GPU | `User-Agent` próprio no `gql()` |
+| 2 | API do RunPod é instável | 403 transitório, timeout de leitura, reset de conexão | reprova com espera no `gql()`, ponto único |
+| 3 | Ubuntu 24.04 aplica PEP 668 | `pip install` "passa" no pipe e o import quebra depois, já com GPU paga | `--break-system-packages` + **verificação de import antes de gerar** |
+| 4 | Pod COMMUNITY às vezes nunca entrega IP público | trava esperando SSH | `subir_pod()` descarta o pod ruim (matando-o) e pede outro |
+| 5 | Porta 22 aparece ANTES da chave ser instalada | `Permission denied`, e o script seguia calado | exige `echo PRONTO` autenticado antes de usar o pod |
+| 6 | **Sessão SSH cai em trabalho longo** | 33min de geração perdidos, US$ 0,22 no lixo | roda `setsid` solto com log; acompanha por conexões curtas |
+| 7 | 5B bf16 a 704px estoura os 24GB no decode do VAE | OOM pedindo 230MB com 22,9GB alocados | `enable_model_cpu_offload()` + `vae.enable_tiling()` + slicing. ⚠️ offload NÃO convive com `.to("cuda")` |
+
+### 🧨 A mina do modelo (custou 1 rodada)
+
+O card do `Wan2.2-TI2V-5B` no HuggingFace mostra `WanPipeline(image=...)`.
+**Está errado:** `WanPipeline` é texto-para-vídeo e recusa `image`. O caminho
+i2v do Wan 2.2 é o **`WanImageToVideoPipeline` SEM `image_encoder`** (é
+`_optional_component`, e o repo do 5B não traz a subpasta; o modo é
+`expand_timesteps: true`, declarado no `model_index.json`).
+Lição: em modelo novo, conferir `model_index.json` + assinatura da classe no
+código-fonte, nunca o card.
+
+Detalhe operacional: neste ambiente o kwarg ainda é `torch_dtype` (não `dtype`).
+O script detecta por `inspect.signature` em vez de chutar — chutar errado carrega
+tudo em fp32 e estoura a placa.
+
+### Pendências desta frente
+
+- [ ] Gabriel: julgar o ritmo do movimento (sóbrio o bastante pra não competir com a voz?)
+- [ ] Subir pra 5s (121 frames): dobra o custo, segue irrisório
+- [ ] Ligar `--loop` (primeiro frame = último): já implementado, custo zero, fecha sem emenda
+- [ ] Gerar na proporção da faixa da âncora em vez de quadrado
+- [ ] LUT única em lote pra igualar as famílias (mar e natureza saem mais claros)
+
+---
+
 ## 9. Fontes
 
 **Consistência:** [Lights, Camera, Consistency (arXiv 2512.16954)](https://arxiv.org/html/2512.16954v1) ·

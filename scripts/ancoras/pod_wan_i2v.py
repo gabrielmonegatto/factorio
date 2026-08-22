@@ -19,7 +19,7 @@ import os
 import time
 
 import torch
-from diffusers import WanPipeline, AutoencoderKLWan
+from diffusers import WanImageToVideoPipeline, AutoencoderKLWan
 from diffusers.utils import export_to_video
 from PIL import Image
 
@@ -57,6 +57,8 @@ def main():
     ap.add_argument("--lado", type=int, default=704)
     ap.add_argument("--fps", type=int, default=24)
     ap.add_argument("--guidance", type=float, default=5.0)
+    ap.add_argument("--loop", action="store_true",
+                    help="primeiro frame = ultimo frame: o clipe fecha sem emenda")
     args = ap.parse_args()
 
     os.makedirs(args.saida, exist_ok=True)
@@ -65,10 +67,31 @@ def main():
         raise SystemExit(f"nenhum still em {args.entrada}")
     print(f"[wan] {len(stills)} stills, {args.frames}f @ {args.steps} steps, {args.lado}x{args.lado}", flush=True)
 
+    # 🧨 MINA (22/08): o card do modelo mostra `WanPipeline(image=...)`, mas o
+    # WanPipeline é TEXTO-para-vídeo e recusa `image`. O caminho i2v do Wan 2.2
+    # é o WanImageToVideoPipeline SEM image_encoder (ele é _optional_component,
+    # e o repo 5B não traz essa subpasta — o modo é `expand_timesteps: true`).
+    # `torch_dtype` virou `dtype` no diffusers novo. Detecta em vez de chutar:
+    # chutar errado carrega tudo em fp32 e estoura os 24GB.
+    import inspect
+    campo = ("dtype" if "dtype" in
+             inspect.signature(WanImageToVideoPipeline.from_pretrained).parameters
+             else "torch_dtype")
+    print(f"[wan] dtype kwarg = {campo}", flush=True)
+
     t0 = time.time()
-    vae = AutoencoderKLWan.from_pretrained(REPO, subfolder="vae", torch_dtype=torch.float32)
-    pipe = WanPipeline.from_pretrained(REPO, vae=vae, torch_dtype=torch.bfloat16)
-    pipe.to("cuda")
+    vae = AutoencoderKLWan.from_pretrained(REPO, subfolder="vae", **{campo: torch.float32})
+    pipe = WanImageToVideoPipeline.from_pretrained(REPO, vae=vae, **{campo: torch.bfloat16})
+
+    # 🧨 MINA (22/08): 5B em bf16 com 61 frames a 704px ESTOURA os 24GB do 4090
+    # no decode do VAE (22,9GB alocados, morre pedindo 230MB). Os três consertos:
+    #   1. cpu_offload: só o componente em uso fica na GPU. NÃO combinar com
+    #      .to("cuda") — o offload já cuida do device, e chamar os dois quebra.
+    #   2. tiling no VAE: decodifica o quadro em pedaços (é aqui que estoura).
+    #   3. slicing: uma imagem por vez no decode.
+    pipe.enable_model_cpu_offload()
+    pipe.vae.enable_tiling()
+    pipe.vae.enable_slicing()
     print(f"[wan] modelo carregado em {time.time()-t0:.0f}s", flush=True)
 
     medidas = []
@@ -80,6 +103,7 @@ def main():
         prompt = MOVIMENTO.get(fam, PADRAO)
 
         t = time.time()
+        extra = {"last_image": img} if args.loop else {}
         frames = pipe(
             prompt=prompt,
             negative_prompt=NEGATIVO,
@@ -89,6 +113,7 @@ def main():
             num_frames=args.frames,
             guidance_scale=args.guidance,
             num_inference_steps=args.steps,
+            **extra,
         ).frames[0]
         dur = time.time() - t
 
