@@ -262,6 +262,69 @@ do que dez reais em modelo de vídeo mais caro.
 
 ---
 
+## 8b. 🧨 A economia de neurônios da Workers AI (medido em 22/08)
+
+"Grátis" tem teto diário: **10.000 neurônios/dia**, no plano Free E no Paid.
+Estourou, todo modelo devolve `4006` e o Worker responde 500. Foi o que
+aconteceu depois dos 42 stills + testes.
+
+| Modelo | Neurônios/imagem 1024² | Grátis por dia | Imagens por US$ 1 |
+|---|---|---|---|
+| `flux-1-schnell` (4 steps) | ~58 | **~173** | **~1.580** |
+| `leonardo/phoenix-1.0` | ~2.370 | ~4 | ~38 |
+| `leonardo/lucid-origin` | ~2.844 | **~3** | ~32 |
+
+Custo acima da cota: **US$ 0,011 / 1.000 neurônios**, e exige o
+**Workers Paid (US$ 5/mês)** na conta `eternall`.
+
+**Leitura:** FLUX schnell é praticamente ilimitado pro nosso volume (173/dia
+de graça). Os modelos da Leonardo são ~50x mais caros em neurônio, mas
+entregam pintura de verdade — e a US$ 0,03 por imagem, um ensaio de 40 cenas
+custa **US$ 1,25**. O gate não é o consumo, é a assinatura de US$ 5/mês.
+
+⚠️ `flux-2-dev` e `flux-2-klein` continuam **inacessíveis pelo Worker**: exigem
+`multipart` e o FormData pelo binding é rejeitado (mina do doc 21, confirmada
+de novo hoje). Os da Leonardo aceitam JSON normal.
+
+---
+
+## 8c. ↩️ REVERSÃO: os ensaios dos pregadores (decidido 22/08)
+
+O §6 diz "sem personagem". **Isso mudou.** O Gabriel propôs ensaios completos
+dos pregadores em estilo ILUSTRADO — Spurgeon e Moody em situações cotidianas
+(andando, pensando, pregando, comendo, lendo, orando, chorando).
+
+**Por que o risco do §6 NÃO se aplica aqui.** A rejeição documentada tem dois
+alvos, e nenhum é este:
+1. **Rosto de Cristo** — não é o caso. Spurgeon e Moody são homens, não a divindade.
+2. **Fraude com pregador** — os casos (MacArthur, Baucham) eram voz clonada
+   dizendo o que a pessoa nunca disse. Aqui é texto real, de domínio público,
+   de homens mortos há 130+ anos.
+
+E a própria pesquisa registrou que **estilo pictórico sinaliza "isto é arte,
+não registro"**, o que derruba de uma vez a obrigação de disclosure (não pode
+ser confundido com filmagem real) e a acusação de irreverência. Ou seja:
+desenho não é concessão defensiva, é a escolha tecnicamente superior.
+
+**Guarda-corpo que permanece:** nunca fotorrealista a ponto de parecer registro
+histórico, e nunca Cristo. A ilustração resolve os dois sozinha.
+
+**Consequência técnica:** agora existe personagem recorrente, então character
+sheet e consistência de referência **voltam a valer** (o §8 tinha descartado).
+Vantagem nossa: pregador de canal Treasures morreu antes de 1930 por definição
+(doc 18), então **sempre existe foto real em domínio público** pra servir de
+referência. Não se inventa a cara: parte-se dela.
+
+**Validado hoje:** `leonardo/lucid-origin` com bloco de estilo pictórico
+(pincelada texturizada, paleta carvão + âmbar, luz única) entregou exatamente
+o registro pretendido na primeira tentativa.
+
+**Valor estratégico:** este acervo é maior que o das âncoras. Serve short,
+vídeo longo, thumbnail, capa de livro e a livraria. É a identidade visual da
+rede Treasures inteira.
+
+---
+
 ## 9. Fontes
 
 **Consistência:** [Lights, Camera, Consistency (arXiv 2512.16954)](https://arxiv.org/html/2512.16954v1) ·
