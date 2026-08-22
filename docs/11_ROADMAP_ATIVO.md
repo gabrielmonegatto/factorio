@@ -1,6 +1,7 @@
 # 🗺️ ROADMAP ATIVO — frentes em andamento
 
-> Quadro vivo. **Atualizado: 19/08/2026** (auditoria por API: o que estava escrito aqui
+> Quadro vivo. **Atualizado: 21/08/2026** (F6 Moody aberta)
+> Antes: **19/08/2026** (auditoria por API: o que estava escrito aqui
 > não era mais verdade).
 > Regra: item só sai daqui com verificação real (comando rodado, número medido).
 > O quadro gerenciável por área vive no Notion (🏭 Fábrica); este doc é o detalhe técnico.
@@ -137,6 +138,65 @@ o Gabriel notou o canal parado. Seis dias de silêncio.
       catálogo vivos. Só grita quando há problema; manda 1 resumo verde por semana pra
       provar que o próprio alarme está vivo. **Falta só o Gabriel criar o webhook do
       Discord e colar em `DISCORD_WEBHOOK_FABRICA` no `.env`.**
+
+---
+
+# 🟡 F6 — D.L. Moody Treasures (2º canal da família, aberto 21/08/2026)
+
+Canal: `Dwight Lyman Moody Treasures` (`UCX1HH8v0nQ03VLVq_DujdqA`), 0 vídeos.
+
+| # | Item | Estado |
+|---|---|---|
+| F6.1 | Canal criado no YouTube + OAuth (`YT_MOODY_*`) | ✅ 21/08, token conferido pela API |
+| F6.2 | Assets visuais: 5 bustos + 20 fundos + avatar + banner | ✅ bustos do Gemini, recortados |
+| F6.3 | Acervo: 14 obras, 77 capítulos, 53h, mediana de 45min | ✅ minerado do Gutenberg |
+| F6.4 | Funil `/go/moody` + biolink `/preacher/moody` | ✅ no ar, logando em `go_scans` |
+| F6.5 | Watermark de inscrição | ✅ aplicado (HTTP 204) |
+| F6.6 | Voz `am_adam` speed 0.84 | ✅ travada no A/B de 20/08 |
+| F6.7 | **Narração dos 77 capítulos** | 🔴 **bloqueio real, ver abaixo** |
+| F6.8 | 2 CTAs narrados (intro/outro) + 3 vídeos pré-renderizados | ⬜ |
+| F6.9 | QR code do canal | ⬜ (gerado pelo build_job, falta rodar) |
+| F6.10 | Coleção "The Best of D.L. Moody" na livraria (gate do Gabriel) | ⬜ |
+
+## 🔴 F6.7 — o passo que ninguém tinha mapeado
+
+Minerar coloca o TEXTO no D1. Entre o texto e o vídeo falta a etapa que
+produz a pasta do sermão no R2 (`sermon_NN.wav` + `transcript.json` com
+timing por palavra). Sem ela o `build_job` não tem o que baixar.
+
+Quem fazia isso no Spurgeon é `scratch/workflows/spurgeon_generator/sermon_narrator.py`,
+e ele está **órfão**: mora em `scratch/` (ignorado pelo git), lê de um
+**Postgres local** que a fábrica aposentou quando migrou pro D1, e escreve num
+caminho (`_factorio/toolbox/remotion/...`) que não existe mais. Ou seja: o
+Spurgeon publica com um acervo já narrado no passado, e a etapa que o gerou
+não roda mais.
+
+**Custo real da decisão:** 53h de áudio. Na CPU da VPS o RTF medido é 10,6
+(≈560h de processamento, inviável). Na RTX 3090 do RunPod o RTF é 0,34,
+≈18h de GPU. **Gastar dinheiro é gate humano.**
+
+## O que essa frente ensinou (vale pros outros 8 Treasures)
+
+1. **Lote na fila de mineração é bug garantido.** Segunda vez que uma linha
+   "obra A + obra B + obra C" fica `queued` pra sempre. Nenhum resolvedor acha
+   URL pra três títulos grudados. Ver `expandir_moody.mjs`.
+2. **Adotar a linha do lote, não pular.** A linha do lote carregava a URL da
+   primeira obra; tratá-la como duplicata e depois bloqueá-la sumia com essa obra.
+3. **"Resposta > 2000 chars" não prova download completo.** O Gutenberg derruba
+   conexão sob carga e o pedaço passava por livro inteiro, virando capítulo
+   picado no banco sem erro nenhum. Agora exige o marcador de fim do arquivo.
+   *Isso também sabotou os testes: sem cache local, cada rodada dava um número
+   diferente e eu estava calibrando extrator em cima de ruído.*
+4. **Detector de capítulo precisa exigir SEQUÊNCIA.** "I., II., III." em ordem.
+   Sem isso dispara em lista numerada dentro do sermão. E sequência que só
+   começa depois de 40% do texto é a lista de anúncios da editora.
+5. **Minerador nunca descarta texto.** Bloco curto gruda no vizinho.
+6. **Nome de arquivo local é contrato com o `.tsx`.** O fundo do Moody vem de
+   `hall/` e aterrissa como `cathedral_bg_cf_1.png` porque 8 templates chamam
+   esse nome cravado.
+7. **Um projeto do GCP pra fábrica inteira.** Projeto por canal é o que os
+   Termos da API chamam de burlar cota, e a punição é suspender todos.
+   Teto real: ~5 vídeos/dia somando os canais (hoje usamos 42% da cota).
 
 ---
 
