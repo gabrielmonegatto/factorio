@@ -47,3 +47,38 @@ function blocos(marcado) {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
+
+// ── fatiamento por tamanho ───────────────────────────────────────────────────
+// Existe porque coletânea não tem capítulo. "Moody's Anecdotes" são centenas
+// de historietas em sequência: o extrator não achava divisão (correto, não há)
+// e devolvia um bloco de 388k caracteres, quase 8 horas de narração num vídeo.
+//
+// Regra: nunca corta parágrafo no meio. Melhor um bloco de 55 minutos que
+// termina onde o autor terminou um parágrafo do que um de 60 cortado na vírgula.
+//
+// ~5,6 caracteres por palavra e ~150 palavras por minuto: a conta que a esteira
+// já usa pra estimar duração de narração.
+export const CHARS_POR_MINUTO = 150 * 5.6;
+
+export function fatiarPorTamanho(corpo, minutosAlvo = 55, minutosMinimo = 8) {
+  const alvo = minutosAlvo * CHARS_POR_MINUTO;
+  const minimo = minutosMinimo * CHARS_POR_MINUTO;
+  if (corpo.length <= alvo * 1.35) return [corpo];
+
+  const paras = corpo.split('\n\n');
+  const fatias = [];
+  let atual = [];
+  let n = 0;
+  for (const p of paras) {
+    atual.push(p);
+    n += p.length + 2;
+    if (n >= alvo) { fatias.push(atual.join('\n\n')); atual = []; n = 0; }
+  }
+  if (atual.length) {
+    const resto = atual.join('\n\n');
+    // sobra curta demais pra virar vídeo: cola na fatia anterior
+    if (resto.length < minimo && fatias.length) fatias[fatias.length - 1] += '\n\n' + resto;
+    else fatias.push(resto);
+  }
+  return fatias;
+}
