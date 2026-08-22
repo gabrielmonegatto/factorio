@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-build_job.py — Prepara UM sermão do canal Treasures of Spurgeon para render no Remotion.
+build_job.py — Monta o KIT de UM vídeo (de qualquer canal) para o Remotion renderizar.
 
 Dado o número do sermão, este script:
   1. Localiza a pasta do sermão no R2 (bucket mananciall)
   2. Baixa os assets por-sermão (áudio, transcript, hook, outro) para <public>/storage/sermons/<N>/
   3. Seleciona e baixa bg/busto/trilha ROTATIVOS (fórmula determinística por N) para <public>/images e <public>/audio
   4. Baixa a BGM fixa do hook (432hz)
-  5. Gera o QR real apontando pro redirect (https://mananciall.org/go?s=yt&v=<N>) -> <public>/storage/sermons/<N>/qr.png
+  5. Gera o QR real apontando pro redirect do canal (`redirect_base` + N) -> <public>/storage/sermons/<N>/qr.png
   6. Escreve props.json (caminhos LOCAIS relativos ao public/, resolvidos por staticFile no Remotion)
 
 A duração do vídeo NÃO é definida aqui — o calculateMetadata do Remotion mede os áudios e calcula sozinho
 (isso é o que mata o bug do vídeo de 3h). Aqui só entregamos os caminhos certos.
 
 Uso:
-  python build_job.py --sermon 1 [--public-dir ./public] [--out ./props_0001.json]
+  python build_job.py --canal moody --sermon 1 [--public-dir ./public] [--out ./props_0001.json]
 
 Roda tanto local quanto dentro do container do RunPods (o rp_handler.py chama este script).
 """
@@ -32,7 +32,6 @@ import canais
 C = None
 BUCKET = CHANNEL_PREFIX = None
 GLOBAL_WORSHIP_PREFIX = "channels/channels_youtube/_globalassets/worship"
-REDIRECT_BASE = "https://mananciall.org/go"  # QR -> Worker de redirect (loga + UTM). Ver 04_ROADMAP.md.
 
 
 def load_env(path):
@@ -205,8 +204,12 @@ def main():
     sermon_title = json.load(open(os.path.join(sd, "transcript.json"), encoding="utf-8")).get("title", f"Sermon {nnnn}")
 
     # --- assets rotativos (determinísticos por N) ---
-    bg_key = pick_rotating(s3, "cathedral", r"cathedral_bg_cf_\d+\.png$", args.sermon)
-    bust_key = pick_rotating(s3, "avatars", r"spurgeon_bust_cf_\d+\.png$", args.sermon)
+    A = C.get("assets")
+    if not A:
+        raise SystemExit(f"❌ canal {C['slug']!r} não tem bloco `assets` em canais.py.\n"
+                         f"   Gere os assets visuais antes: scripts/gerar_assets_canal.py")
+    bg_key = pick_rotating(s3, *A["fundo"], args.sermon)
+    bust_key = pick_rotating(s3, *A["busto"], args.sermon)
     bgm_key = pick_bgm(s3, args.sermon)
 
     bg_name = bg_key.rsplit("/", 1)[-1]
@@ -217,21 +220,27 @@ def main():
     download(s3, bust_key, os.path.join(public, "images", bust_name))
     download(s3, bgm_key,  os.path.join(public, "audio", bgm_name))
 
-    # --- assets FIXOS que os componentes referenciam por staticFile hardcoded ---
-    for fixed in ["cathedral/cathedral_bg_cf_1.png", "cathedral/cathedral_bg_cf_3.png", "avatars/spurgeon_base.png"]:
-        name = fixed.rsplit("/", 1)[-1]
-        download(s3, f"{CHANNEL_PREFIX}/_assets/{fixed}", os.path.join(public, "images", name))
-    # avatar do canal (SubscribeUpperThird referencia como spurgeon_avatar.png)
-    download(s3, f"{CHANNEL_PREFIX}/_assets/channelavatar.png", os.path.join(public, "images", "spurgeon_avatar.png"))
+    # --- assets FIXOS: chave no R2 -> NOME LOCAL que o staticFile() dos
+    # templates espera cravado. Ver a nota "nome local é contrato" em canais.py.
+    for origem, local in A["fixos"].items():
+        download(s3, f"{CHANNEL_PREFIX}/_assets/{origem}", os.path.join(public, "images", local))
     # BGM fixa do hook (432hz)
     download(s3, f"{GLOBAL_WORSHIP_PREFIX}/frequencial_432hz_01.mp3", os.path.join(public, "audio", "frequencial_432hz_01.mp3"))
-    # narração de marketing FIXA das telas de CTA (inscrição + QR) — intro e outro.
-    # force=True: são mutáveis (regravadas ao trocar a copy). Sempre pegar a do R2, nunca cache.
-    download(s3, f"{CHANNEL_PREFIX}/_assets/introfixed.mp3", os.path.join(public, "audio", "introfixed.mp3"), force=True)
-    download(s3, f"{CHANNEL_PREFIX}/_assets/finalfixed.mp3", os.path.join(public, "audio", "finalfixed.mp3"), force=True)
+    # narração FIXA das telas de CTA. Canal sem CTA gravado (`cta_assets: []`)
+    # simplesmente não recebe o prop: o schema marca opcional e o template roda
+    # a animação por duração-fallback, mudo. Baixar aqui quebraria o canal novo.
+    tem_cta = bool(C.get("cta_assets"))
+    if tem_cta:
+        # force=True: são mutáveis (regravadas ao trocar a copy). Nunca cache.
+        download(s3, f"{CHANNEL_PREFIX}/_assets/introfixed.mp3", os.path.join(public, "audio", "introfixed.mp3"), force=True)
+        download(s3, f"{CHANNEL_PREFIX}/_assets/finalfixed.mp3", os.path.join(public, "audio", "finalfixed.mp3"), force=True)
+    else:
+        print("  · canal sem CTA narrado: telas de CTA ficam mudas (fallback do template)")
 
     # --- QR real ---
-    redirect_url = f"{REDIRECT_BASE}?s=yt&v={nnnn}"
+    # `redirect_base` já termina em "v=" e carrega o formato de CADA canal
+    # (o do Spurgeon é o legado sem canal, que os QRs publicados usam).
+    redirect_url = f"{C['redirect_base']}{nnnn}"
     generate_qr(os.path.join(sd, "qr.png"), redirect_url)
 
     # --- props.json (caminhos relativos ao public/, resolvidos por staticFile) ---
@@ -259,8 +268,8 @@ def main():
         "outroHookAudioUrl": f"{rel}/cta_narration.wav",
         "outroHookTranscriptSlug": f"{rel}/cta_narration.json",
         # narração de marketing FIXA das telas de CTA (inscrição + QR) — voz do canal
-        "introCtaAudioUrl": "audio/introfixed.mp3",
-        "outroCtaAudioUrl": "audio/finalfixed.mp3",
+        **({"introCtaAudioUrl": "audio/introfixed.mp3",
+            "outroCtaAudioUrl": "audio/finalfixed.mp3"} if tem_cta else {}),
         # placeholder exigido pelo tipo; a duração real vem do calculateMetadata
         "totalSermonFrames": 63084,
     }

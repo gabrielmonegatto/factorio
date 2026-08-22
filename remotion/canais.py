@@ -26,6 +26,16 @@ O Spurgeon usa `YT` (mantém o `.env` atual funcionando sem migração).
 É o guardião nascido do incidente de 11/08, quando a re-auth foi feita na conta
 pessoal do Gabriel e 18 vídeos foram parar no canal errado sem UM erro sequer.
 Token válido não prova canal certo. Canal sem esse ID preenchido NÃO publica.
+
+## MINA: nome de arquivo LOCAL é contrato, não descrição
+
+Os templates chamam `staticFile("images/cathedral_bg_cf_1.png")` e
+`staticFile("images/spurgeon_avatar.png")` com o nome cravado. Então o bloco
+`assets.fixos` mapeia CHAVE NO R2 -> NOME LOCAL: o fundo do Moody vem de
+`hall/hall_bg_cf_1.png` e aterrissa como `cathedral_bg_cf_1.png`. É feio e é
+de propósito: enquanto os dois canais compartilharem os mesmos templates,
+renomear o contrato é mexer em 8 arquivos .tsx pra não ganhar nada. O nome
+certo entra quando o Moody ganhar pasta de marca própria.
 """
 import os
 
@@ -57,7 +67,21 @@ CANAIS = {
         "hashtags": "#CharlesSpurgeon #Christian #Gospel #Faith #Hope",
         "cta_livro": "The Best of Charles Spurgeon",
         "cta_texto": "📖 Charles Spurgeon's books & devotionals: {link}",
+        # QR impresso no vídeo: curto de propósito (menos módulos = lê melhor).
+        # Formato LEGADO sem canal — os QRs já publicados apontam pra cá.
         "redirect_base": "https://mananciall.org/go?s=yt&v=",
+        # link limpo pra descrição/sobre do canal (o Worker loga como medium=canal)
+        "link_canal": "https://mananciall.org/go/charlesspurgeontreasures",
+        "assets": {
+            "fundo": ("cathedral", r"cathedral_bg_cf_\d+\.png$"),
+            "busto": ("avatars", r"spurgeon_bust_cf_\d+\.png$"),
+            "fixos": {
+                "cathedral/cathedral_bg_cf_1.png": "cathedral_bg_cf_1.png",
+                "cathedral/cathedral_bg_cf_3.png": "cathedral_bg_cf_3.png",
+                "avatars/spurgeon_base.png": "spurgeon_base.png",
+                "channelavatar.png": "spurgeon_avatar.png",
+            },
+        },
     },
     # ─────────────────────────────────────────────────────────────────────
     # Canal 2 — narração bíblica em inglês (KJV).
@@ -97,7 +121,9 @@ CANAIS = {
         "hashtags": "#Bible #KJV #Scripture #AudioBible",
         "cta_livro": "",
         "cta_texto": "",
-        "redirect_base": "https://mananciall.org/go?s=yt&v=",
+        "redirect_base": "https://mananciall.org/go/biblia?v=",
+        "link_canal": "",
+        "assets": None,                    # ⬜ nenhum asset visual gerado ainda
     },
     # ─────────────────────────────────────────────────────────────────────
     # Canal 3 — D.L. Moody Treasures (arquétipo TREASURES, 2º da família).
@@ -105,12 +131,13 @@ CANAIS = {
     # teste de lapidação (0.80/0.84/0.88/0.92) ser ouvido pelo Gabriel.
     # ⬜ PENDENTE: canal no YouTube + YT_MOODY_* + youtube_channel_id.
     "moody": {
-        "nome": "D.L. Moody Treasures",
+        # nome EXATO do canal no YouTube (conferido pela API em 21/08)
+        "nome": "Dwight Lyman Moody Treasures",
         "bucket": "mananciall",
         "prefix": "channels/channels_youtube/treasures_dlmoody",
         "renders_prefix": "renders/moody",
         "state_key": "schedule/moody_schedule.json",
-        "youtube_channel_id": "",          # ⬜ vazio = publicação BLOQUEADA
+        "youtube_channel_id": "UCX1HH8v0nQ03VLVq_DujdqA",
         "env_prefix": "YT_MOODY",
         "idioma": "en",
         "voz": "am_adam",
@@ -130,6 +157,18 @@ CANAIS = {
         "cta_livro": "",
         "cta_texto": "",
         "redirect_base": "https://mananciall.org/go/moody?v=",
+        "link_canal": "https://mananciall.org/go/dlmoodytreasures",
+        "assets": {
+            "fundo": ("hall", r"hall_bg_cf_\d+\.png$"),
+            "busto": ("avatars", r"moody_bust_cf_\d+\.png$"),
+            "fixos": {
+                "hall/hall_bg_cf_1.png": "cathedral_bg_cf_1.png",
+                "hall/hall_bg_cf_3.png": "cathedral_bg_cf_3.png",
+                # o Moody não tem retrato "base" próprio; a pose 1 faz o papel
+                "avatars/moody_bust_cf_1.png": "spurgeon_base.png",
+                "channelavatar.png": "spurgeon_avatar.png",
+            },
+        },
     },
 }
 
