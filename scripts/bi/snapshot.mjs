@@ -131,7 +131,8 @@ const ESPELHO = {
   'Canais concorrentes monitorados': f => `${f.canais_monitorados} canais / ${f.videos_concorrentes} vídeos`,
 };
 const mapa = Object.fromEntries(fatos.map(f => [f.metrica, f.valor]));
-const idsFile = 'C:/Users/Monegatto/Desktop/EternalL/_factorio/tools/notion/notion-fabrica-ids.json';
+// na VPS o arquivo de ids vive ao lado do script (FABRICA_IDS aponta pra ele)
+const idsFile = process.env.FABRICA_IDS || 'C:/Users/Monegatto/Desktop/EternalL/_factorio/tools/notion/notion-fabrica-ids.json';
 const ids = JSON.parse(fs.readFileSync(idsFile, 'utf8'));
 
 const notion = async (p, m = 'GET', b) => {
