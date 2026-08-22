@@ -14,7 +14,7 @@ sai de graça. Num sermão de 1h isso vale mais que qualquer card.
   - mínimo 150x150, PNG ou JPEG, abaixo de 1MB pelo Studio
   - a API `watermarks.set` aceita até 10MB e custa 50 unidades de quota
   - sucesso = HTTP 204 sem corpo
-  - sem bloco `timing`, aparece no vídeo INTEIRO (é o que queremos)
+  - `timing` é obrigatório, com os três campos e como número (ver DURACAO_MS)
 
 ## Por que o quadrado sai daqui e não do Canva
 
@@ -23,11 +23,11 @@ elemento visual competindo. Então ele é derivado de `_assets/channelavatar.png
 e gravado de volta no R2 como `_assets/watermark_150.png`: canal novo repete
 o comando, não repete a decisão.
 
-## ⚠️ Colisão que vale saber
+## Onde ele aparece
 
-O YouTube desenha o watermark no canto INFERIOR DIREITO, que é exatamente onde
-o `SermonMaster` coloca o busto do pregador. Sobrepõe o ombro, não o rosto, mas
-é bom olhar o primeiro vídeo publicado antes de rodar isso nos 90 seguintes.
+Canto SUPERIOR direito, sempre: a doc diz que `cornerPosition` só aceita
+`topRight`. Cheguei a supor que brigaria com o busto do pregador, mas o busto
+mora no canto inferior direito. Não se encostam.
 
 Uso:
   python canal_branding.py --canal moody --dry-run     # só gera e mostra
@@ -116,9 +116,24 @@ def assert_canal_certo(c, token):
     print(f"  ✓ canal confirmado: {nome} ({cid})")
 
 
+# O bloco `timing` é OBRIGATÓRIO e os três campos também. Descoberto por
+# tentativa em 21/08 contra o canal do Moody (0 vídeos, e a operação é
+# reversível por watermarks.unset), porque a doc não diz qual campo falta:
+#   - sem `timing`              -> 400 "Required", sem dizer o quê
+#   - só `type`                 -> 400 "Required"
+#   - offsetMs/durationMs texto -> 400 "Invalid Value"
+#   - os três, como NÚMERO      -> 204
+#
+# Não existe valor pra "vídeo inteiro": ou se declara uma duração, ou nada.
+# 24h cobre qualquer coisa que a fábrica publique (o maior sermão dá 1h20),
+# então na prática é o vídeo inteiro. Testado e aceito.
+DURACAO_MS = 24 * 60 * 60 * 1000
+
+
 def aplicar(c, token, png):
     """POST multipart: parte JSON com o InvideoBranding + parte com o PNG."""
-    corpo = {"targetChannelId": c["youtube_channel_id"]}   # sem `timing` = vídeo inteiro
+    corpo = {"timing": {"type": "offsetFromStart", "offsetMs": 0,
+                        "durationMs": DURACAO_MS}}
     limite = "===" + uuid.uuid4().hex + "==="
     b = limite.encode()
     dados = (b"--" + b + b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"
@@ -170,7 +185,8 @@ def main():
     token = access_token(c, env)
     assert_canal_certo(c, token)
     status = aplicar(c, token, png)
-    print(f"   ✅ watermark aplicado (HTTP {status}), vídeo inteiro, todos os vídeos do canal")
+    print(f"   ✅ watermark aplicado (HTTP {status}) no canto superior direito,")
+    print(f"      por {DURACAO_MS // 3600000}h a partir do início = todos os vídeos, inteiros")
 
 
 if __name__ == "__main__":

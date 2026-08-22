@@ -13,8 +13,8 @@ O título é lido com calma (SEO, contexto). A thumbnail é vista MINÚSCULA, em
 no meio de um feed — precisa de tensão, não de descrição.
 
 Uso:
-  python generate_marketing.py --sermon 3            # gera e sobe pro R2
-  python generate_marketing.py --sermon 3 --dry-run  # só mostra, não grava
+  python generate_marketing.py --canal moody --sermon 3
+  python generate_marketing.py --canal moody --all --dry-run
 """
 import os
 import re
@@ -26,16 +26,23 @@ import urllib.request
 import boto3
 from botocore.config import Config
 
-BUCKET = "mananciall"
-CHANNEL_PREFIX = "channels/channels_youtube/treasures_charlesspurgeon"
+import canais
+
+BUCKET = CHANNEL_PREFIX = None      # preenchidos em main() a partir de canais.get()
 MODEL = "google/gemini-2.5-flash"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # ─── O PROMPT ───────────────────────────────────────────────────────────────
 # Lição aprendida (22/07): pedir "um título atraente" gera DESCRIÇÃO, não ISCA.
 # O modelo precisa dos gatilhos explícitos + exemplos (ele aprende pelo exemplo).
-SYSTEM = """You write for "Charles Spurgeon Treasures", a YouTube channel of narrated
-Spurgeon sermons. Your job is to reach into the viewer's PAIN and make them stop —
+#
+# Generalizado em 21/08: o prompt era do Spurgeon do começo ao fim. Rodar ele
+# no Moody produziria vídeo do Moody com título assinado "(Charles Spurgeon)",
+# que é atribuição falsa, não erro de estilo. Agora canal, pregador e sufixo
+# vêm de canais.py; a GRAMÁTICA de copy (visceral, 2ª pessoa, tensão) é a mesma
+# porque é ela que define a família Treasures.
+SYSTEM_MOLDE = """You write for "{canal}", a YouTube channel of narrated
+{pregador} sermons. Your job is to reach into the viewer's PAIN and make them stop —
 without ever lying. Be visceral. Speak to the ache, the fear, the longing underneath.
 
 Return STRICT JSON with exactly these FIVE fields:
@@ -43,10 +50,10 @@ Return STRICT JSON with exactly these FIVE fields:
 1. "marketingTitle" — the VIDEO title. Rules, all mandatory:
    • VISCERAL — hit a real human pain or longing (fear, guilt, exhaustion, doubt, loss).
    • Prefer second person ("You", "Your"). Make it feel personal.
-   • ALWAYS end with " (Charles Spurgeon)" — the name pulls those who know him.
+   • ALWAYS end with "{sufixo}" — the name pulls those who know him.
    • Under ~70 chars including the suffix.
-   GOOD: "The One Truth That Will Never Fail You (Charles Spurgeon)"
-         "Why You Keep Losing Your Peace (Charles Spurgeon)"
+   GOOD: "The One Truth That Will Never Fail You{sufixo}"
+         "Why You Keep Losing Your Peace{sufixo}"
    BAD (dry, descriptive): "Understanding the Immutability of God"
 
 2. "thumbnailText" — the THUMBNAIL text. Hardest field.
@@ -67,7 +74,7 @@ Return STRICT JSON with exactly these FIVE fields:
    loop the message closes. Only spoken words, no labels.
 
 5. "outroText" — closing narration, 60-85 words (~25s). Land the core hope, then ask
-   for subscribe/like and to scan the QR code (or tap the link) for Spurgeon's books.
+   for subscribe/like and to scan the QR code (or tap the link) for {pregador}'s books.
    Only spoken words."""
 
 
@@ -101,12 +108,23 @@ def find_folder(s3, nnnn):
     return keys[0].rsplit("/", 1)[0]
 
 
-def llm(env, sermon_title, transcript_text):
+def montar_system(c):
+    """Molde -> prompt do canal. Erra alto se o canal não tem pregador."""
+    if not c.get("pregador"):
+        raise SystemExit(
+            f"❌ canal {c['slug']!r} não tem `pregador` em canais.py.\n"
+            f"   Este gerador escreve copy de SERMÃO. Canal de narração bíblica\n"
+            f"   precisa do prompt dele, não deste.")
+    return SYSTEM_MOLDE.format(canal=c["nome"], pregador=c["pregador"],
+                               sufixo=c["titulo_sufixo"])
+
+
+def llm(env, system, sermon_title, transcript_text):
     body = json.dumps({
         "model": MODEL,
         "response_format": {"type": "json_object"},
         "messages": [
-            {"role": "system", "content": SYSTEM},
+            {"role": "system", "content": system},
             {"role": "user", "content": f"Sermon Title: {sermon_title}\n\nTranscript:\n{transcript_text[:14000]}"},
         ],
     }).encode()
@@ -146,7 +164,7 @@ def list_pending(s3):
     return pending
 
 
-def process(env, s3, nnnn, dry, force):
+def process(env, s3, system, nnnn, dry, force):
     folder = find_folder(s3, nnnn)
     if not force and not dry:
         try:
@@ -162,7 +180,7 @@ def process(env, s3, nnnn, dry, force):
         print(f"⚠️  {nnnn} sem transcript.json — pulando")
         return "skip"
 
-    meta = llm(env, transcript.get("title", nnnn), transcript.get("text", ""))
+    meta = llm(env, system, transcript.get("title", nnnn), transcript.get("text", ""))
     tt = (meta.get("thumbnailText") or "").strip()
     flag = " ⚠️>6 palavras" if len(tt.split()) > 6 else ""
     print(f"✅ {nnnn}: \"{tt}\"{flag}")
@@ -176,12 +194,19 @@ def process(env, s3, nnnn, dry, force):
 
 def main():
     ap = argparse.ArgumentParser()
+    canais.add_arg_canal(ap)
     ap.add_argument("--sermon", help="número do sermão (ou use --all)")
     ap.add_argument("--all", action="store_true", help="processa todos que faltam")
     ap.add_argument("--limit", type=int, default=0, help="máximo de sermões no modo --all")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--force", action="store_true", help="regera mesmo se já existir")
     args = ap.parse_args()
+
+    global BUCKET, CHANNEL_PREFIX
+    C = canais.get(args.canal)
+    BUCKET, CHANNEL_PREFIX = C["bucket"], C["prefix"]
+    system = montar_system(C)
+    print(f"✍️  copy de {C['nome']} (assina como {C['titulo_sufixo'].strip()})")
 
     env = load_env()
     if not env.get("OPENROUTER_API_KEY"):
@@ -196,7 +221,7 @@ def main():
         stats = {"ok": 0, "skip": 0, "erro": 0}
         for i, n in enumerate(pend, 1):
             try:
-                stats[process(env, s3, n, args.dry_run, args.force)] += 1
+                stats[process(env, s3, system, n, args.dry_run, args.force)] += 1
             except Exception as e:
                 stats["erro"] += 1
                 print(f"❌ {n}: {str(e)[:120]}")
@@ -227,7 +252,7 @@ def main():
     title = transcript.get("title", nnnn)
     print(f"🧠 gerando copy do {nnnn} — {title}")
 
-    meta = llm(env, title, transcript.get("text", ""))
+    meta = llm(env, system, title, transcript.get("text", ""))
 
     # guarda-corpo: a regra das 6 palavras é a que mais importa
     tt = (meta.get("thumbnailText") or "").strip()
