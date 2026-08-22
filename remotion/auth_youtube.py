@@ -1,23 +1,40 @@
 #!/usr/bin/env python3
 """
-auth_youtube.py — Gera o REFRESH TOKEN do canal (roda UMA vez, na máquina do Gabriel).
+auth_youtube.py — Gera o REFRESH TOKEN de UM canal (roda na máquina do Gabriel).
 
-Por que existe: o upload precisa de um token que não expira. Este script faz o login
-uma única vez e cospe um `refresh_token` que a fábrica usa pra sempre.
+Por que existe: o upload precisa de um token que não expira. Este script faz o
+login uma única vez e cospe um `refresh_token` que a fábrica usa pra sempre.
 
 ⚠️ RODE VOCÊ MESMO — envolve login na sua conta Google. Eu não faço isso por você.
 
-Antes de rodar, no Google Cloud Console:
-  1. Crie (ou escolha) um projeto  ← um projeto POR CANAL, pra ter cota separada
+## UM projeto do GCP pra fábrica inteira, não um por canal
+
+Corrigido em 21/08/2026. A versão anterior deste arquivo mandava criar "um
+projeto POR CANAL, pra ter cota separada". Isso é exatamente o que os Termos
+da API do YouTube tratam como burlar cota, e a punição documentada é suspensão
+de TODOS os projetos, não só dos extras: perderíamos os 10 canais de uma vez.
+
+O Client ID identifica o APLICATIVO. Quem identifica o canal é o refresh_token.
+Então canal novo NÃO precisa de projeto novo nem de credencial nova: roda este
+script com o MESMO client-id/secret, logando na conta do canal novo.
+
+O limite de verdade é a cota: 10.000 unidades/dia por projeto, e um upload
+custa 1.600. Dá ~5 vídeos por dia somando TODOS os canais. Ao encostar nisso,
+o caminho legítimo é pedir aumento pelo formulário de auditoria do YouTube.
+
+Antes de rodar, no Google Cloud Console (UMA vez, não por canal):
+  1. Crie ou escolha o projeto da fábrica
   2. Ative a "YouTube Data API v3"
-  3. Tela de consentimento OAuth → publique (senão o token expira em 7 dias!)
-  4. Credenciais → Criar → ID do cliente OAuth → tipo "App para computador"
-  5. Copie o Client ID e o Client Secret
+  3. Tela de consentimento OAuth -> PUBLIQUE
+     (em "Testing" o refresh_token morre em 7 dias; já nos mordeu)
+  4. Credenciais -> Criar -> ID do cliente OAuth -> tipo "App para computador"
+  5. Guarde o Client ID e o Client Secret; servem pra todos os canais
 
 Uso:
-  python auth_youtube.py --client-id XXX --client-secret YYY
+  python auth_youtube.py --canal moody --client-id XXX --client-secret YYY
 
-No fim ele imprime as 3 linhas pra você colar no .env.
+No fim ele CONFERE em qual canal você acabou de logar e só então imprime as
+3 linhas, já com o prefixo de env do canal certo.
 """
 import argparse
 import http.server
@@ -28,10 +45,12 @@ import urllib.parse
 import urllib.request
 import webbrowser
 
-# force-ssl é necessário pra POSTAR comentário (o link no 1º comentário). upload = subir vídeo.
-# force-ssl posta comentario; yt-analytics.readonly libera METRICA DIARIA
-# (views, minutos assistidos, duracao media, inscritos ganhos por dia).
-# Sem o de analytics a API responde 403 "insufficient authentication scopes".
+import canais
+
+# force-ssl posta comentario (o link no 1º comentário); upload sobe vídeo;
+# yt-analytics.readonly libera METRICA DIARIA (views, minutos assistidos,
+# duração média, inscritos ganhos por dia). Sem ele a API responde 403
+# "insufficient authentication scopes".
 SCOPE = " ".join([
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.force-ssl",
@@ -40,12 +59,14 @@ SCOPE = " ".join([
 PORT = 8765
 REDIRECT = f"http://localhost:{PORT}"
 _code = {}
+_pronto = threading.Event()
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         q = urllib.parse.urlparse(self.path).query
         _code.update(urllib.parse.parse_qs(q))
+        _pronto.set()
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
@@ -58,11 +79,27 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass
 
 
+def canal_do_token(token):
+    """Em qual canal esse token acabou de logar? Pergunta pra API, não adivinha."""
+    req = urllib.request.Request(
+        "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true",
+        headers={"Authorization": "Bearer " + token})
+    with urllib.request.urlopen(req, timeout=40) as r:
+        itens = json.loads(r.read()).get("items", [])
+    if not itens:
+        return None, None
+    return itens[0]["id"], itens[0]["snippet"]["title"]
+
+
 def main():
     ap = argparse.ArgumentParser()
+    canais.add_arg_canal(ap)
     ap.add_argument("--client-id", required=True)
     ap.add_argument("--client-secret", required=True)
     args = ap.parse_args()
+
+    C = canais.get(args.canal)
+    print(f"\n🎯 Autorizando: {C['nome']}   (as linhas sairão com prefixo {C['env_prefix']}_)")
 
     auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode({
         "client_id": args.client_id,
@@ -73,7 +110,8 @@ def main():
         "prompt": "consent",           # <- força vir o refresh_token mesmo se já autorizou antes
     })
 
-    print("\n🔗 Abrindo o navegador. Faça login com a conta DONA DO CANAL:\n")
+    print("\n🔗 Abrindo o navegador. Faça login com a conta DONA DO CANAL e,")
+    print(f"   na tela de escolha, selecione {C['nome']!r}:\n")
     print(auth_url, "\n")
 
     httpd = socketserver.TCPServer(("", PORT), Handler)
@@ -84,8 +122,10 @@ def main():
         pass
 
     print("⏳ Aguardando autorização no navegador...")
-    while "code" not in _code:
-        pass
+    # Event em vez de `while "code" not in _code: pass` — o busy-wait fritava
+    # um núcleo inteiro enquanto a tela de escolha de conta ficava aberta.
+    if not _pronto.wait(timeout=300):
+        raise SystemExit("❌ Ninguém autorizou em 5 minutos. Rode de novo.")
     code = _code["code"][0]
 
     data = urllib.parse.urlencode({
@@ -105,11 +145,28 @@ def main():
               "https://myaccount.google.com/permissions e rode de novo.")
         return
 
+    # ⚠️ INCIDENTE 11/08/2026: a re-auth foi feita na conta pessoal do Gabriel e
+    # 18 vídeos foram publicados no canal errado sem UM erro sequer. O guardião
+    # do publish pega isso, mas só na hora do upload. Aqui é o lugar barato:
+    # perguntar à API em qual canal acabamos de entrar, antes de salvar nada.
+    cid, nome = canal_do_token(tok["access_token"])
+    print(f"\n🔎 Este token é do canal: {nome} ({cid})")
+
+    esperado = C.get("youtube_channel_id")
+    if esperado and cid != esperado:
+        raise SystemExit(
+            f"❌ CANAL ERRADO. Esperado {esperado} ({C['nome']}).\n"
+            f"   Nada foi impresso. Rode de novo e escolha o canal certo na tela do Google.")
+    if not esperado:
+        print(f"   ⬜ canais.py ainda está sem `youtube_channel_id` pra {C['slug']!r}."
+              f" Preencha com: {cid}")
+
+    p = C["env_prefix"]
     print("\n" + "=" * 60)
     print("✅ PRONTO. Cole estas 3 linhas no seu .env:\n")
-    print(f"YT_CLIENT_ID={args.client_id}")
-    print(f"YT_CLIENT_SECRET={args.client_secret}")
-    print(f"YT_REFRESH_TOKEN={rt}")
+    print(f"{p}_CLIENT_ID={args.client_id}")
+    print(f"{p}_CLIENT_SECRET={args.client_secret}")
+    print(f"{p}_REFRESH_TOKEN={rt}")
     print("=" * 60)
     print("\n⚠️ Trate como senha. Nunca commitar.")
 
