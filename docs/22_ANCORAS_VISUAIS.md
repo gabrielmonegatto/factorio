@@ -201,11 +201,34 @@ Acumulamos DOIS vetores ao mesmo tempo: *inauthentic* (visual IA em template) e
 | **ffmpeg com `lut3d`** | Confirmado local. É o igualador de estilo em lote |
 | **RunPod** | Conta ativa, template e endpoint serverless já criados (`remotion/create_runpod.py`) |
 
-### Gates do Gabriel (custam dinheiro ou credencial)
+### Gates do Gabriel
 
-- **Billing no Google AI Studio** — a chave já alcança `nano-banana-pro` e
-  `veo-3.1`, mas está **sem cota**. Destrava character sheet de primeira linha.
-- **~US$ 5 de RunPod** para o primeiro lote real de vídeo.
+**Nenhum.** RunPod já tem crédito e a Cloudflare gera os stills de graça.
+
+❌ **Google AI Studio foi DESCARTADO** (decisão de 22/08). A chave alcança
+`nano-banana-pro` e `veo-3.1` mas está sem cota, e **não faz falta**: o
+character sheet que justificaria o nano-banana serve pra manter um
+**personagem** consistente, e a nossa direção visual não tem personagem
+nenhum (sem rosto é regra do nicho, §6). Fica como opção futura se a
+qualidade do FLUX limitar, não como pré-requisito.
+
+### ✅ Validado em 22/08/2026 (teste real, não estimativa)
+
+8 stills gerados pelo Worker `factorio-imagens` (FLUX schnell) cobrindo as 7
+famílias, com o style block fixo:
+
+| Métrica | Resultado |
+|---|---|
+| Tempo | **2 a 8,5s por still** (7 stills em ~30s) |
+| Custo | **zero** (Workers AI, sem billing) |
+| Aproveitamento | **6 de 8** direto |
+| Corrigir | `mist` saiu claro demais, destoa da família (conserto: prompt ou LUT) |
+| Descarte | `ink` saiu fraco, quase invisível |
+
+**A tese se confirmou:** ~75% de aproveitamento na etapa de imagem, contra os
+4-8% documentados na etapa de vídeo (§3). É exatamente por isso que o descarte
+tem que morrer aqui. Resolução de saída: 1024x1024, que cobre com folga a faixa
+da âncora (1080x806 no layout 9:16).
 
 ### Ordem de construção
 
