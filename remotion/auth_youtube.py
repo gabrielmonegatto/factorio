@@ -39,6 +39,7 @@ No fim ele CONFERE em qual canal você acabou de logar e só então imprime as
 import argparse
 import http.server
 import json
+import os
 import socketserver
 import threading
 import urllib.parse
@@ -91,11 +92,40 @@ def canal_do_token(token):
     return itens[0]["id"], itens[0]["snippet"]["title"]
 
 
+def gravar_env(caminho, valores):
+    """Escreve as chaves no .env sem passar por tela nenhuma.
+
+    Existe porque o refresh_token é senha: imprimir no terminal é imprimir na
+    janela de quem estiver olhando (inclusive numa sessão de agente). Aqui ele
+    vai do Google direto pro arquivo.
+
+    Atualiza a linha se a chave já existe, senão acrescenta no fim. O arquivo é
+    CRLF (regra da fábrica) e a terminação existente é preservada.
+    """
+    bruto = open(caminho, "rb").read() if os.path.exists(caminho) else b""
+    fim = b"\r\n" if b"\r\n" in bruto else b"\n"
+    linhas = bruto.split(fim)
+    for chave, valor in valores.items():
+        nova = f"{chave}={valor}".encode()
+        for i, ln in enumerate(linhas):
+            if ln.startswith(chave.encode() + b"="):
+                linhas[i] = nova
+                break
+        else:
+            if linhas and linhas[-1] == b"":
+                linhas.insert(len(linhas) - 1, nova)
+            else:
+                linhas.append(nova)
+    open(caminho, "wb").write(fim.join(linhas))
+
+
 def main():
     ap = argparse.ArgumentParser()
     canais.add_arg_canal(ap)
     ap.add_argument("--client-id", required=True)
     ap.add_argument("--client-secret", required=True)
+    ap.add_argument("--gravar-env", action="store_true",
+                    help="grava direto no ../.env em vez de imprimir o token")
     args = ap.parse_args()
 
     C = canais.get(args.canal)
@@ -162,11 +192,22 @@ def main():
               f" Preencha com: {cid}")
 
     p = C["env_prefix"]
+    valores = {
+        f"{p}_CLIENT_ID": args.client_id,
+        f"{p}_CLIENT_SECRET": args.client_secret,
+        f"{p}_REFRESH_TOKEN": rt,
+    }
     print("\n" + "=" * 60)
-    print("✅ PRONTO. Cole estas 3 linhas no seu .env:\n")
-    print(f"{p}_CLIENT_ID={args.client_id}")
-    print(f"{p}_CLIENT_SECRET={args.client_secret}")
-    print(f"{p}_REFRESH_TOKEN={rt}")
+    if args.gravar_env:
+        destino = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+        gravar_env(os.path.abspath(destino), valores)
+        print(f"✅ PRONTO. 3 chaves gravadas em {os.path.abspath(destino)}:\n")
+        for k, v in valores.items():
+            print(f"   {k} = {v[:6]}...{v[-4:]}  ({len(v)} caracteres)")
+    else:
+        print("✅ PRONTO. Cole estas 3 linhas no seu .env:\n")
+        for k, v in valores.items():
+            print(f"{k}={v}")
     print("=" * 60)
     print("\n⚠️ Trate como senha. Nunca commitar.")
 
