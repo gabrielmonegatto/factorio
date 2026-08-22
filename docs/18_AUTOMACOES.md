@@ -19,6 +19,8 @@
 3. Leve → Worker com cron/webhook. Pesado → VPS (`/srv/factorio/<área>/` + `/etc/cron.d/factory-*` com `flock`).
 4. Log: `/var/log/<nome>.log` (VPS) ou `wrangler tail` (Worker).
 5. Registre o bloco aqui + linha no Notion. Sem registro = não existe.
+6. Espelho visual: aba **Automações** do bi.mananciall.org (vista de fluxo, só leitura).
+   Mudou este doc → atualiza e roda `node scripts/seed-automacoes.mjs` no repo do BI.
 
 ---
 
