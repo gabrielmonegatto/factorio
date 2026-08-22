@@ -171,9 +171,22 @@ caminho (`_factorio/toolbox/remotion/...`) que não existe mais. Ou seja: o
 Spurgeon publica com um acervo já narrado no passado, e a etapa que o gerou
 não roda mais.
 
-**Custo real da decisão:** 53h de áudio. Na CPU da VPS o RTF medido é 10,6
-(≈560h de processamento, inviável). Na RTX 3090 do RunPod o RTF é 0,34,
-≈18h de GPU. **Gastar dinheiro é gate humano.**
+**Custo real: ZERO.** Medido no Kokoro da VPS em 21/08, e o número derruba a
+suposição anterior (que aplicava a esta frente o RTF do OmniVoice, modelo muito
+mais pesado):
+
+| CPUs no container | RTF | 53h do Moody levariam |
+|---|---|---|
+| 1,5 (o que `narrate_marketing.py` usa hoje) | 3,51 | 186h |
+| 8 | 0,62 | 33h |
+| **16 (todos os vCPU)** | **0,42** | **22h** |
+
+A RTX 3090 do RunPod dá RTF 0,34, ou seja 18h **pagando**. Empate técnico com
+uma VPS que já está paga. **Kokoro em lote não precisa de GPU.**
+
+🔧 **Achado colateral que vale pra esteira inteira:** o `--cpus=1.5` cravado no
+`narrate_marketing.py` custa **8x** o tempo de parede. Para o hook de 25s não
+importava; para lote de 53h importa muito.
 
 ## O que essa frente ensinou (vale pros outros 8 Treasures)
 
@@ -250,7 +263,7 @@ Divisão decidida com número medido, não palpite:
 
 | Máquina | RTF | Papel |
 |---|---|---|
-| VPS Hetzner (CPU, 16 vCPU) | 10,6 | Kokoro e lotes leves. Grátis, já paga |
+| VPS Hetzner (CPU, 16 vCPU) | **OmniVoice 10,6** · **Kokoro 0,42** | Kokoro roda LOTE aqui, de graça. O 10,6 é do OmniVoice e não vale pro Kokoro (medido 21/08) |
 | **Lightning T4** (79h grátis) | **1,33** | 🔬 **laboratório**: gerar, ouvir, ajustar |
 | **RunPod RTX 3090** ($0,22/h) | **0,34** | 🏭 **linha de montagem**: lotes grandes |
 
