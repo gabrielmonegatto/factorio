@@ -68,6 +68,8 @@ CREATE TABLE IF NOT EXISTS sermons (
   titulo     TEXT NOT NULL,
   slug       TEXT NOT NULL,
   chars      INTEGER NOT NULL DEFAULT 0,
+  obra       TEXT,
+  cap_n      INTEGER,
   status     TEXT NOT NULL DEFAULT 'fila',   -- fila | narrado | falhou
   dur_s      REAL,
   audio_key  TEXT,
@@ -120,6 +122,93 @@ def slugificar(s):
     return re.sub(r"_+", "_", s)[:60] or "sermon"
 
 
+# Marcas de PÁGINA DE ROSTO e de COLOFÃO. Não cortam sozinhas: decidem SE vale
+# cortar. O corte em si é por "já virou prosa?", que não depende de enumerar
+# toda frase de copyright que existe no mundo.
+GRAFICA = re.compile(
+    r"copyright|act of congress|all rights reserved|librarian of congress|"
+    r"publishers?\s+of|\bpublishers\b|printed (and bound )?by|press of|colportage|"
+    r"revell|scribner|harper\s*&|entered according|paper covers|postpaid|"
+    # crédito de quem digitalizou pro Gutenberg: "Produced by Keith G. Richardson"
+    r"produced by|transcriber|proofreading team|"
+    # catálogo da editora: encadernação, formato, preço, "Ask for descriptive folder"
+    r"\bcloth\b|12mo|16mo|\bcents\b|descriptive folder|\bBy Rev\.", re.I)
+PROSA_MIN = 25       # palavras. Linha de folha de rosto não chega perto disso.
+# Janela proporcional, não fixa: em alguns livros o miolo de rosto + sumário
+# passa de 22 parágrafos, e a janela curta desistia e deixava tudo passar.
+# 40% é seguro porque folha de rosto nunca é 40% de um capítulo de verdade.
+def _janela(paras):
+    return max(22, min(60, int(len(paras) * 0.4)))
+
+
+def _prosa(p):
+    return len(p.split()) >= PROSA_MIN
+
+
+def cortar_bordas(paras):
+    """Tira folha de rosto e catálogo da editora, que não são sermão.
+
+    Na primeira rodada o sermão 0001 do Moody abria narrando "Fleming H. Revell
+    Company, Chicago New York Toronto, Publishers of Evangelical Literature" e
+    seguia pelo registro de copyright. Um outro virou 30 minutos de ANÚNCIO de
+    livros da editora.
+
+    Só engata quando há marca de gráfica na ponta, então o versículo curto que
+    abre um sermão de verdade ("Except a man be born again...") fica em paz.
+    """
+    # `_limpo`, e não só `_prosa`: o registro de copyright antigo é uma frase
+    # LONGA ("Entered according to act of Congress, in the year 1877, by...")
+    # e passava no teste de prosa, travando o corte no primeiro parágrafo.
+    def _limpo(p):
+        return _prosa(p) and not GRAFICA.search(p)
+
+    j = _janela(paras)
+    if any(GRAFICA.search(p) for p in paras[:j]):
+        corte = next((i for i, p in enumerate(paras[:j]) if _limpo(p)), j)
+        paras = paras[corte:]
+    j = _janela(paras)
+    if any(GRAFICA.search(p) for p in paras[-j:]):
+        fim = next((i for i in range(len(paras) - 1, max(-1, len(paras) - j - 1), -1)
+                    if _limpo(paras[i])), None)
+        if fim is not None:
+            paras = paras[:fim + 1]
+    return paras
+
+
+CAP = re.compile(r"^\s*(chapter|sermon|part|book|section)\s+([ivxlcdm]+|\d+)\b[.:]?\s*", re.I)
+PARTE = re.compile(r"\s*\((\d+/\d+)\)\s*$")
+LIXO = " .,;:\"'`-–—"
+
+
+def limpar_titulo(bruto, paras, obra=None, numero=None):
+    """'CHAPTER I.. "_LOVE THAT PASSETH KNOWLEDGE_."' → 'Love That Passeth Knowledge'.
+
+    Esse texto vai pro título do vídeo e pro nome da pasta no R2, então marcação
+    de itálico e número de página do sumário não podem sobreviver. Quando sobra
+    só "CHAPTER II", o nome real está na primeira linha curta do corpo: foi
+    assim que o livro foi diagramado.
+    """
+    t = (bruto or "").strip()
+    parte = PARTE.search(t)
+    if parte:
+        t = PARTE.sub("", t)
+    t = CAP.sub("", t).replace("_", "").replace("*", "")
+    t = re.sub(r"\s{2,}\d{1,4}\s*$", "", t).strip(LIXO)
+    if len(t) < 4 and paras:
+        cand = paras[0].replace("_", "").replace("*", "")
+        cand = re.sub(r"\s{2,}\d{1,4}\s*$", "", cand).strip(LIXO)
+        if 3 < len(cand) < 80:
+            t = cand
+    if len(t) < 5 and obra:
+        # "CHAPTER IX" sem subtítulo e com corpo em prosa: melhor "The Way to
+        # God, Chapter 9" do que o genérico "Sermon" repetido em 4 vídeos.
+        t = f"{obra}, Chapter {numero}" if numero else obra
+    if t and (t.isupper() or t.islower()):
+        t = t.title()
+    t = t or "Sermon"
+    return f"{t} ({parte.group(1)})" if parte else t
+
+
 def preparar_texto(bruto):
     """Tira do texto o que é marca de página, não fala.
 
@@ -127,18 +216,15 @@ def preparar_texto(bruto):
     transcritor entre colchetes, marcação de itálico com asterisco e número de
     nota de rodapé grudado na palavra. Nada disso deve virar som.
     """
-    t = bruto
-    t = re.sub(r"\[[^\]]{0,120}\]", " ", t)          # [Illustration: ...], [1], [Transcriber's Note]
+    t = re.sub(r"\[[^\]]{0,120}\]", " ", bruto)      # [Illustration: ...], [1], [Transcriber's Note]
     t = re.sub(r"\{[^}]{0,120}\}", " ", t)
-    t = t.replace("*", "").replace("_", " ")
+    t = t.replace("*", "").replace("_", " ").replace("=", " ")
     t = re.sub(r"[“”]", '"', t).replace("’", "'").replace("‘", "'")
     t = re.sub(r"-{2,}", ", ", t)                     # travessão datilografado vira respiro
     t = re.sub(r"[ \t]+", " ", t)
-    t = re.sub(r"\n{3,}", "\n\n", t)
     # parágrafo de 1 ou 2 palavras é resíduo de cabeçalho de página
-    linhas = [p.strip() for p in t.split("\n\n")]
-    linhas = [p for p in linhas if len(p.split()) > 2]
-    return "\n\n".join(linhas).strip()
+    paras = [p.strip() for p in t.split("\n\n")]
+    return [p for p in paras if len(p.split()) > 2]
 
 
 def enfileirar(env, c):
@@ -160,10 +246,10 @@ def enfileirar(env, c):
         if ch["chapter_id"] in ja:
             continue
         titulo = (ch["title"] or ch["obra"] or "Sermon").strip()
-        d1(env, """INSERT INTO sermons (canal, numero, work_id, chapter_id, titulo, slug, chars)
-                   VALUES (?,?,?,?,?,?,?)""",
+        d1(env, """INSERT INTO sermons (canal, numero, work_id, chapter_id, titulo,
+                       slug, chars, obra, cap_n) VALUES (?,?,?,?,?,?,?,?,?)""",
            [c["slug"], prox, ch["work_id"], ch["chapter_id"], titulo,
-            slugificar(titulo), ch["chars"]])
+            slugificar(titulo), ch["chars"], ch["obra"], ch["number"]])
         prox += 1
         novos += 1
     return novos, len(caps)
@@ -254,13 +340,31 @@ def processar(env, s3, c, s, forcar=False):
     cap = d1(env, "SELECT body FROM chapters WHERE id = ?", [s["chapter_id"]])
     if not cap:
         raise RuntimeError(f"capítulo {s['chapter_id']} sumiu do D1")
-    texto = preparar_texto(cap[0]["body"])
+    paras = preparar_texto(cap[0]["body"])
+    titulo = limpar_titulo(s["titulo"], paras, s.get("obra"), s.get("cap_n"))
+    paras = cortar_bordas(paras)
+    texto = "\n\n".join(paras)
+    # Capítulo que era SÓ folha de rosto e sumário sobra vazio depois da
+    # limpeza. Isso não é falha de execução, é material que nunca deveria
+    # virar vídeo: sai da fila como `descartado` e não volta a ser tentado.
     if len(texto) < 2000:
-        raise RuntimeError(f"texto curto demais depois da limpeza ({len(texto)} chars)")
+        d1(env, """UPDATE sermons SET status='descartado',
+                   erro=?, updated_at=datetime('now') WHERE canal=? AND numero=?""",
+           [f"só {len(texto)} chars após limpar rosto/catálogo", c["slug"], s["numero"]])
+        print(f"  🗑️  {nnnn} descartado: sobrou {len(texto)} chars (era folha de rosto)")
+        return "descartado"
+    # Título e slug podem mudar depois da limpeza; a pasta segue o slug limpo.
+    slug_limpo = slugificar(titulo)
+    if slug_limpo != s["slug"] or titulo != s["titulo"]:
+        d1(env, """UPDATE sermons SET titulo=?, slug=?, updated_at=datetime('now')
+                   WHERE canal=? AND numero=?""", [titulo, slug_limpo, c["slug"], s["numero"]])
+        s = dict(s, titulo=titulo, slug=slug_limpo)
+        pasta = f"{c['prefix']}/{nnnn}_-_{slug_limpo}"
+        mp3_key = f"{pasta}/sermon_{nnnn}.mp3"
 
     base = os.path.join(WORK, nnnn)
     wav, mp3 = os.path.join(base, "s.wav"), os.path.join(base, "s.mp3")
-    print(f"  🎙️  {nnnn} {s['titulo'][:52]} · {len(texto)//1000}k chars", flush=True)
+    print(f"  🎙️  {nnnn} {titulo[:52]} · {len(texto)//1000}k chars", flush=True)
 
     t0 = time.time()
     narrar(c, texto, wav)
@@ -270,7 +374,7 @@ def processar(env, s3, c, s, forcar=False):
     print(f"  📝 transcrevendo ({tam//1024//1024}MB)...", flush=True)
     tr = transcrever(mp3, env["ASSEMBLYAI_API_KEY"])
     # `title` é o que o generate_marketing e o build_job leem pra nomear o vídeo
-    tr["title"] = s["titulo"]
+    tr["title"] = titulo
     dur = (tr.get("audio_duration") or 0)
 
     s3.upload_file(mp3, c["bucket"], mp3_key, ExtraArgs={"ContentType": "audio/mpeg"})
@@ -314,9 +418,9 @@ def main():
         return
 
     s3 = s3c(env)
-    onde = "AND numero = ?" if args.so else "AND status != 'narrado'"
+    onde = "AND numero = ?" if args.so else "AND status NOT IN ('narrado','descartado')"
     par = [c["slug"]] + ([args.so] if args.so else [])
-    fila = d1(env, f"""SELECT numero, chapter_id, titulo, slug FROM sermons
+    fila = d1(env, f"""SELECT numero, chapter_id, titulo, slug, obra, cap_n FROM sermons
                        WHERE canal = ? {onde} ORDER BY numero LIMIT ?""",
               par + [args.limite])
     if not fila:
@@ -329,7 +433,7 @@ def main():
         try:
             r = processar(env, s3, c, s, args.forcar)
             ok += r == "ok"
-            pulado += r == "pulado"
+            pulado += r in ("pulado", "descartado")
         except Exception as e:
             falha += 1
             msg = str(e)[:400]

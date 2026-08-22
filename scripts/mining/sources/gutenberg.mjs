@@ -38,8 +38,13 @@ export function extrair(txt) {
   let corpo = txt;
   const ini = corpo.match(/\*\*\*\s*START OF (?:THE|THIS) PROJECT GUTENBERG EBOOK[\s\S]*?\*\*\*/i);
   if (ini) corpo = corpo.slice(ini.index + ini[0].length);
-  const fim = corpo.match(/\*\*\*\s*END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK/i);
+  // Duas formas de fim, e a de texto puro vem ANTES da de asterisco: cortar só
+  // na de asterisco deixava "End of Project Gutenberg's The Way to God..." como
+  // última frase do último sermão, e ela ia parar na narração.
+  const fim = corpo.match(
+    /\*\*\*\s*END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK|^End of (?:the )?Project Gutenberg/im);
   if (fim) corpo = corpo.slice(0, fim.index);
+  corpo = cortarCatalogo(corpo);
 
   const titulo = texto(txt.match(/^\s*Title:\s*(.+)$/im)?.[1]);
   const autor = texto(txt.match(/^\s*Author:\s*(.+)$/im)?.[1]);
@@ -149,4 +154,30 @@ function deRomano(s) {
     n += a < b ? -a : a;
   }
   return n;
+}
+
+// O CATÁLOGO DA EDITORA impresso no fim do livro. Não é obra, é anúncio:
+// "=Revivals=; Their Place and Power. By Rev. HERRICK JOHNSON, D. D. Cloth,
+// flexible, 75 cents". Sem cortar, ele virava um vídeo inteiro de propaganda
+// vitoriana (era o sermão 14 do Moody na primeira rodada).
+//
+// A regra não tenta reconhecer catálogo parágrafo a parágrafo, o que erraria
+// em texto legítimo: ela só ENGATA se a cauda estiver visivelmente infestada,
+// e aí corta de volta até o último parágrafo que ainda é prosa limpa.
+const CATALOGO = /=[^=\n]{2,60}=|cloth,|12mo|16mo|paper covers|postpaid|\bnet\b,|\bcents\b|\bBy Rev\./i;
+
+function cortarCatalogo(corpo) {
+  const paras = corpo.split(/\n\s*\n/);
+  const CAUDA = Math.min(45, Math.floor(paras.length * 0.3));
+  if (CAUDA < 5) return corpo;
+  const suspeitos = paras.slice(-CAUDA).filter((p) => CATALOGO.test(p)).length;
+  if (suspeitos < 4) return corpo;
+
+  for (let i = paras.length - 1; i >= paras.length - CAUDA; i--) {
+    const p = paras[i];
+    if (p.split(/\s+/).length >= 25 && !CATALOGO.test(p)) {
+      return paras.slice(0, i + 1).join('\n\n');
+    }
+  }
+  return paras.slice(0, paras.length - CAUDA).join('\n\n');
 }
