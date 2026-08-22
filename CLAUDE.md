@@ -7,7 +7,7 @@ Você está no QG da fábrica de negócios digitais da holding EternalL. Este re
 1. `docs/00_INDEX.md` — mapa da documentação
 2. `docs/02_OPERATING_MODEL.md` — COMO todo trabalho acontece (ciclo padrão, tipos de sessão, gates)
 3. `docs/04_ROADMAP.md` — fase atual e pendências
-4. Aprofundamento: visão/decisões em `docs/01_MASTERPLAN.md` · dados em `docs/03_DATA_ARCHITECTURE.md`
+4. Aprofundamento: visão/decisões em `docs/01_MASTERPLAN.md` · dados em `docs/03_DATA_ARCHITECTURE.md` · automações em `docs/18_AUTOMACOES.md` (toda automação nova se registra lá)
 
 ## Os 5 fundamentos
 

@@ -13,7 +13,7 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 import { execFileSync } from 'node:child_process';
 
-const ENV_PATH = 'C:/Users/Monegatto/Desktop/EternalL/_factorio/.env';
+const ENV_PATH = process.env.FABRICA_ENV || 'C:/Users/Monegatto/Desktop/EternalL/_factorio/.env';
 const env = fs.readFileSync(ENV_PATH, 'utf8').split(/\r?\n/);
 const get = k => (env.find(l => l.startsWith(k + '=')) || '').slice(k.length + 1).trim();
 const ACCOUNT = get('CLOUDFLARE_ACCOUNT_ID');

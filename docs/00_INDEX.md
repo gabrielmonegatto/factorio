@@ -18,6 +18,8 @@
   ├── 📄 05_LEGACY_TRANSITION.md  → Aposentadoria da camada antiga, peça por peça
   ├── 📄 06–15                    → Docs de frente (canais, shorts, catálogo Mananciall, mineração...)
   ├── 📄 16_BLUEPRINT_AREAS.md    → ⭐ Blueprint das 7 áreas da fábrica (piloto Mananciall) + prompts das frentes
+  ├── 📄 17_UNIFICACAO_DE_DADOS.md → Aposentadoria do Teable/trigger.dev + migração pro D1 (19/08)
+  ├── 📄 18_AUTOMACOES.md         → ⭐ Catálogo vivo de automações (vivas/manuais/aposentadas) + doutrina do motor
   ├── 📄 STACK.md                 → Infra da VPS (era 1.0 — infra vale, modelo de agentes não)
   ├── 📄 backlog_skills_seed.md   → Backlog bruto de workflows/skills por área (seed do catálogo)
   └── 📁 legacy/                  → Docs da era anterior (histórico, não seguir)
@@ -39,21 +41,22 @@
 
 | Recurso | Link |
 |---|---|
-| Teable (dados operacionais) | https://db.markeologia.com.br |
-| Outline Holding (wiki EternalL) | https://admin.markeologia.com.br |
-| Outline Br4nds (wiki Br4nds) | https://admin.br4nds.com.br |
-| Trigger.dev Dashboard | https://cloud.trigger.dev/projects/v3/proj_dsuhcyzyqgruytusyipj |
-| MinIO Console | https://minio.markeologia.com.br |
+| Notion — hub 🏭 Fábrica (gestão humana) | via kit `tools/notion/` |
+| BI Mananciall (dados e curadoria) | https://bi.mananciall.org |
+| BI Br4nds | https://bi.br4nds.com.br |
+| VPS factorio-render | `ssh -i ~/.ssh/id_ed25519_factorio root@167.233.236.209` |
 
-## 🧠 Onde vive cada coisa (resumo — detalhe no 03)
+> Teable, Outline, trigger.dev e MinIO estão APOSENTADOS (docs 05 e 17). Nada vivo aponta pra eles.
+
+## 🧠 Onde vive cada coisa (resumo — detalhe no 03 e na constituição)
 
 | Conteúdo | Casa |
 |---|---|
-| Narrativa de negócio (wiki, briefings, análises, decisões) | **Outline** |
-| Dados operacionais tabulares (tasks, índices, chunks, pipeline state) | **Teable** |
+| Gestão humana (tarefas MACRO, roadmap, documentos) | **Notion** (cockpit do Gabriel) |
+| Curadoria de catálogo e dados (Biblioteca, intel, indicadores) | **D1 + bi.mananciall.org** |
+| Estado de esteira, intel, produto | **D1** |
 | Código da fábrica (skills, scripts, templates, esteiras, estes docs) | **Git** (`_factorio/` e `apps/`) |
-| Dados de produto em produção (tracking, leads, vendas) | **D1** (Cloudflare) |
-| Assets binários (áudio, vídeo, imagens) | **R2 / MinIO** |
+| Assets binários e arquivo morto | **R2** |
 | Credenciais | `_factorio/.env` (NUNCA commitar) |
 
 ## ⚠️ Regras de ouro (herdadas e vivas)
