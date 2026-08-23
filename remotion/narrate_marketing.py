@@ -9,14 +9,14 @@ Fluxo por sermão:
   1. baixa marketing_meta.json do R2
   2. narra hookText  → hook.wav          (Kokoro, voz do canal)
   3. narra outroText → cta_narration.wav (Kokoro)
-  4. transcreve os dois → hook.json / cta_narration.json (AssemblyAI, word-level)
+  4. transcreve os dois → hook.json / cta_narration.json (mesmo motor do sermão)
   5. sobe tudo pro R2
 
 Depois disso o sermão fica PRONTO PRA RENDER.
 
 Uso (na VPS, onde o Kokoro roda):
-  python3 narrate_marketing.py --sermon 3
-  python3 narrate_marketing.py --all --limit 5
+  python3 narrate_marketing.py --canal moody --sermon 3
+  python3 narrate_marketing.py --canal moody --all --limit 5
 """
 import os
 import re
@@ -30,10 +30,16 @@ import urllib.request
 import boto3
 from botocore.config import Config
 
-BUCKET = "mananciall"
-CHANNEL_PREFIX = "channels/channels_youtube/treasures_charlesspurgeon"
-VOICE = "bm_george"   # voz do canal — NÃO mudar (consistência entre vídeos)
-SPEED = "0.9"
+import canais
+# Transcricao vem de narrar_sermao: um so lugar decide motor, ordem de reserva
+# e conserto de timing. Duplicar isso aqui era garantir que o hook e o sermao
+# divergissem no primeiro ajuste.
+from narrar_sermao import transcrever
+
+# Preenchidos em main() a partir de canais.get(--canal). Voz e velocidade são
+# DO CANAL e não podem divergir da narração do sermão: hook numa voz e corpo em
+# outra, dentro do mesmo vídeo, soa como erro de montagem.
+BUCKET = CHANNEL_PREFIX = VOICE = SPEED = None
 HERE = os.path.dirname(os.path.abspath(__file__))
 WORK = "/srv/factorio/data/narrate" if os.path.isdir("/srv/factorio/data") else os.path.join(HERE, "_narrate")
 TTS_IMAGE = os.environ.get("TTS_IMAGE", "factorio-tts")
@@ -69,49 +75,31 @@ def find_folder(s3, nnnn):
     return keys[0].rsplit("/", 1)[0]
 
 
-def kokoro(text, out_wav):
-    """Narra via container do Kokoro (o mesmo que a fábrica usa)."""
+def kokoro(text, out_wav, pausa=0.75):
+    """Narra via container do Kokoro, com a MESMA receita do sermao.
+
+    Antes daqui saia narracao sem `--trim` e com `--cpus=1.5`. Os dois doiam:
+    sem trim o hook tinha pausa de 2,1s entre frases enquanto o corpo do mesmo
+    video tinha 0,83s (muda de ritmo na emenda, e o ouvido pega), e o teto de
+    1,5 CPU custava 8x o tempo de parede a troco de nada.
+    """
     os.makedirs(os.path.dirname(out_wav), exist_ok=True)
     txt = out_wav.replace(".wav", ".txt")
     open(txt, "w", encoding="utf-8").write(text)
     host_dir = os.path.dirname(os.path.abspath(out_wav))
     subprocess.run([
-        "docker", "run", "--rm", "--cpus=1.5", "--memory=4g",
+        "docker", "run", "--rm", "--memory=8g",
         "-v", f"{host_dir}:/data", "-v", "/srv/factorio/hfcache:/cache",
         TTS_IMAGE,
         "--input", f"/data/{os.path.basename(txt)}",
         "--output", f"/data/{os.path.basename(out_wav)}",
         "--voice", VOICE, "--speed", SPEED,
+        "--split", "sentence", "--silence", str(pausa), "--trim",
     ], check=True, capture_output=True, text=True)
     os.remove(txt)
 
 
-def transcribe(wav_path, api_key):
-    """AssemblyAI: sobe o wav e devolve a transcrição com timing por palavra."""
-    with open(wav_path, "rb") as f:
-        req = urllib.request.Request("https://api.assemblyai.com/v2/upload", data=f.read(),
-                                     headers={"authorization": api_key}, method="POST")
-        upload_url = json.loads(urllib.request.urlopen(req, timeout=300).read())["upload_url"]
-
-    body = json.dumps({"audio_url": upload_url, "language_code": "en"}).encode()
-    req = urllib.request.Request("https://api.assemblyai.com/v2/transcript", data=body,
-                                 headers={"authorization": api_key, "content-type": "application/json"},
-                                 method="POST")
-    tid = json.loads(urllib.request.urlopen(req, timeout=60).read())["id"]
-
-    while True:
-        time.sleep(3)
-        req = urllib.request.Request(f"https://api.assemblyai.com/v2/transcript/{tid}",
-                                     headers={"authorization": api_key})
-        d = json.loads(urllib.request.urlopen(req, timeout=60).read())
-        if d["status"] == "completed":
-            return {"title": os.path.basename(wav_path), "text": d.get("text", ""),
-                    "words": d.get("words", [])}
-        if d["status"] == "error":
-            raise RuntimeError(f"AssemblyAI: {d.get('error')}")
-
-
-def process(env, s3, nnnn, force=False):
+def process(env, s3, C, nnnn, force=False):
     folder = find_folder(s3, nnnn)
     files = {o["Key"].rsplit("/", 1)[-1]
              for o in s3.list_objects_v2(Bucket=BUCKET, Prefix=folder + "/").get("Contents", [])}
@@ -139,10 +127,10 @@ def process(env, s3, nnnn, force=False):
         wav = os.path.join(work, wav_name)
 
         print(f"   🎙️  narrando {wav_name}...")
-        kokoro(text, wav)
+        kokoro(text, wav, C.get("pausa_frase_s", 0.75))
 
         print(f"   📝 transcrevendo {json_name}...")
-        tr = transcribe(wav, env["ASSEMBLYAI_API_KEY"])
+        tr = transcrever(wav, env, C)
 
         s3.upload_file(wav, BUCKET, f"{folder}/{wav_name}", ExtraArgs={"ContentType": "audio/wav"})
         s3.put_object(Bucket=BUCKET, Key=f"{folder}/{json_name}",
@@ -180,16 +168,22 @@ def list_pending(s3):
 
 def main():
     ap = argparse.ArgumentParser()
+    canais.add_arg_canal(ap)
     ap.add_argument("--sermon")
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
+    global BUCKET, CHANNEL_PREFIX, VOICE, SPEED
+    C = canais.get(args.canal)
+    BUCKET, CHANNEL_PREFIX = C["bucket"], C["prefix"]
+    VOICE, SPEED = C["voz"], str(C["voz_speed"])
+    print(f"🎙️  {C['nome']} · voz {VOICE} @ {SPEED}")
+
     env = load_env()
-    for k in ("R2_ENDPOINT", "ASSEMBLYAI_API_KEY"):
-        if not env.get(k):
-            sys.exit(f"❌ falta {k}")
+    if not env.get("R2_ENDPOINT"):
+        sys.exit("❌ falta R2_ENDPOINT")
     s3 = s3c(env)
 
     if args.all:
@@ -201,7 +195,7 @@ def main():
         for i, n in enumerate(pend, 1):
             print(f"[{i}/{len(pend)}] sermão {n}")
             try:
-                st[process(env, s3, n, args.force)] += 1
+                st[process(env, s3, C, n, args.force)] += 1
             except Exception as e:
                 st["erro"] += 1
                 print(f"❌ {n}: {str(e)[:150]}")
@@ -210,7 +204,7 @@ def main():
 
     if not args.sermon:
         sys.exit("informe --sermon N ou --all")
-    process(env, s3, f"{int(args.sermon):04d}", args.force)
+    process(env, s3, C, f"{int(args.sermon):04d}", args.force)
 
 
 if __name__ == "__main__":

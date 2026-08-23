@@ -9,15 +9,17 @@ Fluxo:
      + 1 still da base do corpo (Sermon-Body-Base)
   4. ffmpeg monta o CORPO: base (loop) + legenda queimada + narração + trilha  [o pesado, barato]
   5. ffmpeg concatena: intro + corpo + outro  (com fade-pra-preto nas junções)
-  6. upload pro R2 -> renders/spurgeon/NNNN.mp4
+  6. upload pro R2 -> <renders_prefix do canal>/NNNN.mp4
 
-Uso: python hybrid_render.py --sermon 2 [--public-dir ./public] [--no-upload]
+Uso: python hybrid_render.py --canal moody --sermon 2 [--public-dir ./public] [--no-upload]
 """
 import os
 import sys
 import json
 import argparse
 import subprocess
+
+import canais
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUCKET = "mananciall"
@@ -43,6 +45,7 @@ def pubpath(public, rel):
 
 def main():
     ap = argparse.ArgumentParser()
+    canais.add_arg_canal(ap)
     ap.add_argument("--sermon", required=True)
     ap.add_argument("--public-dir", default=os.path.join(HERE, "public"))
     ap.add_argument("--no-upload", action="store_true")
@@ -51,14 +54,16 @@ def main():
 
     py = args.python
     public = os.path.abspath(args.public_dir)
+    C = canais.get(args.canal)
     nnnn = f"{int(args.sermon):04d}"
+    print(f"🎬 {C['nome']} · sermão {nnnn}")
     work = os.path.join(HERE, "_hybrid", nnnn)
     os.makedirs(work, exist_ok=True)
     props = os.path.join(HERE, f"props_{nnnn}.json")
 
     # 1. build_job (assets + QR + props)
     print(f"\n=== [1/6] build_job {nnnn} ===")
-    sh([py, os.path.join(HERE, "build_job.py"), "--sermon", str(int(args.sermon)),
+    sh([py, os.path.join(HERE, "build_job.py"), "--canal", C["slug"], "--sermon", str(int(args.sermon)),
         "--out", props, "--public-dir", public], cwd=HERE)
     P = json.load(open(props, encoding="utf-8"))
 
@@ -142,7 +147,7 @@ def main():
         s3 = boto3.client("s3", endpoint_url=env["R2_ENDPOINT"], aws_access_key_id=env["R2_ACCESS_KEY_ID"],
                           aws_secret_access_key=env["R2_SECRET_ACCESS_KEY"],
                           config=Config(signature_version="s3v4"), region_name="auto")
-        key = f"renders/spurgeon/{nnnn}.mp4"
+        key = f"{C['renders_prefix']}/{nnnn}.mp4"
         s3.upload_file(final, BUCKET, key, ExtraArgs={"ContentType": "video/mp4"})
         print(f"✅ upload -> {key}")
 

@@ -4,7 +4,7 @@ render_short.py — Estágios 2+3 da fábrica de shorts: cortar + renderizar + s
 
 Lê o clips_meta.json do sermão (gerado por mine_clips.py), corta o trecho do
 áudio master com ffmpeg, monta os props e renderiza a composição Short-Sermon
-(1080x1920). Sobe o mp4 pro R2 em renders/spurgeon_shorts/NNNN_cXX.mp4.
+(1080x1920). Sobe o mp4 pro R2 em <renders_prefix>_shorts/NNNN_cXX.mp4.
 
 Uso:
   python render_short.py --sermon 1                # todos os clipes do sermão
@@ -21,9 +21,10 @@ import subprocess
 import boto3
 from botocore.config import Config
 
-BUCKET = "mananciall"
-CHANNEL_PREFIX = "channels/channels_youtube/treasures_charlesspurgeon"
-SHORTS_RENDER_PREFIX = "renders/spurgeon_shorts"
+import canais
+
+# Preenchidos em main() a partir de canais.get(--canal).
+BUCKET = CHANNEL_PREFIX = SHORTS_RENDER_PREFIX = None
 HERE = os.path.dirname(os.path.abspath(__file__))
 PUBLIC_SHORTS = os.path.join(HERE, "public", "shorts")
 OUT_DIR = os.path.join(HERE, "out", "shorts")
@@ -115,11 +116,19 @@ def process_clip(env, s3, nnnn, idx, clip, master_local, upload=True, anchor=Non
 
 def main():
     ap = argparse.ArgumentParser()
+    canais.add_arg_canal(ap)
     ap.add_argument("--sermon", required=True)
     ap.add_argument("--clip", type=int, help="renderiza só o clipe N (1-based)")
     ap.add_argument("--no-upload", action="store_true")
     ap.add_argument("--anchor", help="âncora visual (nome em public/anchors/, ex: candle)")
     args = ap.parse_args()
+
+    global BUCKET, CHANNEL_PREFIX, SHORTS_RENDER_PREFIX
+    C = canais.get(args.canal)
+    BUCKET, CHANNEL_PREFIX = C["bucket"], C["prefix"]
+    # shorts saem ao lado dos longos, com sufixo: renders/moody -> renders/moody_shorts
+    SHORTS_RENDER_PREFIX = C["renders_prefix"] + "_shorts"
+    print(f"✂️  {C['nome']} · shorts de {int(args.sermon):04d}")
 
     env = load_env()
     s3 = s3c(env)

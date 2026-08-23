@@ -61,6 +61,19 @@ CANAIS = {
         "max_uploads_per_run": 5,
         # CTAs fixos (mutáveis: trocar dispara re-render — ver gate de frescor)
         "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        # CTAs FIXOS narrados (telas 2 e 5 do vídeo). Copy recuperada em 22/08
+        # transcrevendo os proprios mp3 que ja estavam no ar: nao existia texto
+        # fonte em lugar nenhum, so o audio. Agora existe, e canal novo herda a
+        # estrutura em vez de reinventar.
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our collection with the best books and devotionals by Charles Spurgeon "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our collection with the best books and devotionals by "
+            "Charles Spurgeon to enrich your soul. God bless you."),
+
         # marketing / publicação
         # nome do pregador como o espectador o conhece; entra no prompt de
         # marketing e no sufixo do titulo. Canal sem pregador (Biblia) fica vazio.
@@ -164,7 +177,18 @@ CANAIS = {
         "warmup_days": 14,
         "buffer_days": 14,
         "max_uploads_per_run": 5,
-        "cta_assets": [],
+        "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        # Mesma estrutura do Spurgeon, mas SEM prometer "livros do Moody": a
+        # coleção dele ainda não existe na livraria, e o biolink cai na
+        # biblioteca geral. Trocar quando a coleção sair (exige regravar).
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our library of Christian classics to enrich your soul. "
+            "Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our library of Christian classics to enrich your soul. "
+            "God bless you."),
         "pregador": "D.L. Moody",
         "autor_mineracao": "%Moody%",
         "asr_modelo": "small.en",
