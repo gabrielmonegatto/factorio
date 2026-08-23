@@ -90,6 +90,11 @@ CANAIS = {
         "tags": "Charles Spurgeon,sermon,christian,gospel,faith,spurgeon sermons",
         "hashtags": "#CharlesSpurgeon #Christian #Gospel #Faith #Hope",
         "cta_livro": "The Best of Charles Spurgeon",
+        # MARCA QUE APARECE NA TELA. Estava cravada dentro dos .tsx, e por isso
+        # o 1º vídeo do Moody exibiu "The Best of Charles Spurgeon" no CTA.
+        # Descoberto assistindo o render, não lendo código (23/08).
+        "colecao_titulo": "The Best of Charles Spurgeon",
+        "link_label": "mananciall.org/en/treasures-spurgeon",
         "cta_texto": "📖 Charles Spurgeon's books & devotionals: {link}",
         # QR impresso no vídeo: curto de propósito (menos módulos = lê melhor).
         # Formato LEGADO sem canal — os QRs já publicados apontam pra cá.
@@ -148,6 +153,8 @@ CANAIS = {
         "hashtags": "#Bible #KJV #Scripture #AudioBible",
         "cta_livro": "",
         "cta_texto": "",
+        "colecao_titulo": "",
+        "link_label": "",
         "redirect_base": "https://mananciall.org/go/biblia?v=",
         "link_canal": "",
         "assets": None,                    # ⬜ nenhum asset visual gerado ainda
@@ -200,8 +207,10 @@ CANAIS = {
         "titulo_sufixo": " (D.L. Moody)",
         "tags": "D.L. Moody,DL Moody,sermon,christian,gospel,evangelist,moody sermons",
         "hashtags": "#DLMoody #Christian #Gospel #Faith #Hope",
-        "cta_livro": "",
-        "cta_texto": "",
+        "cta_livro": "The Best of D.L. Moody",
+        "cta_texto": "📖 D.L. Moody's books & devotionals: {link}",
+        "colecao_titulo": "The Best of D.L. Moody",
+        "link_label": "mananciall.org/go/moody",
         "redirect_base": "https://mananciall.org/go/moody?v=",
         "link_canal": "https://mananciall.org/go/dlmoodytreasures",
         "assets": {

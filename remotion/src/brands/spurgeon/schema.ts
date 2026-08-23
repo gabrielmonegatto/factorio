@@ -20,6 +20,15 @@ export const sermonMasterSchema = z.object({
   ctaBookUrl: z.string().optional(),
   ctaBookTitle: z.string().optional(),
 
+  // MARCA — tudo que o espectador LÊ na tela. Estava cravado dentro dos
+  // componentes, e por isso o 1º vídeo do Moody exibiu "The Best of Charles
+  // Spurgeon" no CTA. Vem do canais.py via build_job. Opcional pra não
+  // quebrar props antigos; o componente cai num texto neutro se faltar.
+  channelName: z.string().optional(),
+  preacherName: z.string().optional(),
+  collectionTitle: z.string().optional(),
+  linkLabel: z.string().optional(),
+
   // Meta
   sermonTitle: z.string(),
   sermonNumber: z.string(),

@@ -20,7 +20,9 @@ interface SubscribeUpperThirdProps {
 }
 
 export const SubscribeUpperThird: React.FC<SubscribeUpperThirdProps> = ({
-	channelName = "Charles Spurgeon Treasures",
+	// Sem nome de canal no default: quem nomeia é o props, vindo do canais.py.
+	// Um default com nome vira marca errada em canal novo, silenciosamente.
+	channelName = "Treasures",
 	showAtFrame,
 	visibleDuration,
 	repeatInterval,

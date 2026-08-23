@@ -61,7 +61,7 @@ export const SermonProduction: React.FC<SermonMasterProps & { totalSermonFrames:
 
 				{/* 2. INTRO CTA (Fixed) */}
 				<TransitionSeries.Sequence durationInFrames={INTRO_CTA_DURATION}>
-					<SpurgeonCTA ctaAudioUrl={props.introCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} />
+					<SpurgeonCTA ctaAudioUrl={props.introCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} linkLabel={props.linkLabel} channelName={props.channelName} collectionTitle={props.collectionTitle} />
 				</TransitionSeries.Sequence>
 
 				<TransitionSeries.Transition 
@@ -96,7 +96,7 @@ export const SermonProduction: React.FC<SermonMasterProps & { totalSermonFrames:
 
 				{/* 5. OUTRO CTA (Fixed Subscribe Call over Background) */}
 				<TransitionSeries.Sequence durationInFrames={OUTRO_CTA_DURATION}>
-					<SpurgeonCTA ctaAudioUrl={props.outroCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} />
+					<SpurgeonCTA ctaAudioUrl={props.outroCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} linkLabel={props.linkLabel} channelName={props.channelName} collectionTitle={props.collectionTitle} />
 				</TransitionSeries.Sequence>
 
 				<TransitionSeries.Transition 

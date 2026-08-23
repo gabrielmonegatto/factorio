@@ -77,7 +77,7 @@ export const ClipIntro: React.FC<SermonMasterProps> = (props) => {
 				</TransitionSeries.Sequence>
 				<TransitionSeries.Transition timing={linearTiming({ durationInFrames: TRANSITION })} presentation={fade()} />
 				<TransitionSeries.Sequence durationInFrames={INTRO_CTA}>
-					<SpurgeonCTA ctaAudioUrl={props.introCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} />
+					<SpurgeonCTA ctaAudioUrl={props.introCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} linkLabel={props.linkLabel} channelName={props.channelName} collectionTitle={props.collectionTitle} />
 				</TransitionSeries.Sequence>
 			</TransitionSeries>
 		</AbsoluteFill>
@@ -112,7 +112,7 @@ export const ClipOutro: React.FC<SermonMasterProps> = (props) => {
 				</TransitionSeries.Sequence>
 				<TransitionSeries.Transition timing={linearTiming({ durationInFrames: TRANSITION })} presentation={fade()} />
 				<TransitionSeries.Sequence durationInFrames={OUTRO_CTA}>
-					<SpurgeonCTA ctaAudioUrl={props.outroCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} />
+					<SpurgeonCTA ctaAudioUrl={props.outroCtaAudioUrl} qrCodeUrl={props.qrCodeUrl} linkLabel={props.linkLabel} channelName={props.channelName} collectionTitle={props.collectionTitle} />
 				</TransitionSeries.Sequence>
 				<TransitionSeries.Transition timing={linearTiming({ durationInFrames: TRANSITION })} presentation={fade()} />
 				<TransitionSeries.Sequence durationInFrames={ENDSCREEN}>

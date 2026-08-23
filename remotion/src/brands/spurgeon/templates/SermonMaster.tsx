@@ -24,7 +24,8 @@ export const SermonMaster: React.FC<SermonMasterProps> = (props) => {
 		preacherImageUrl, 
 		transcriptSlug,
 		qrCodeUrl,
-		ctaBookTitle
+		ctaBookTitle,
+		channelName
 	} = props;
 
 	const [words, setWords] = useState<Word[]>([]);
@@ -114,7 +115,7 @@ export const SermonMaster: React.FC<SermonMasterProps> = (props) => {
 
 			{/* 7. SUBSCRIBE UPPER THIRD - Repete a cada 5 minutos */}
 			<SubscribeUpperThird 
-				channelName="Charles Spurgeon Treasures" 
+				channelName={channelName || "Treasures"} 
 				repeatInterval={300 * 30} 
 			/>
 

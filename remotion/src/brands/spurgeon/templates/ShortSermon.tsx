@@ -79,8 +79,11 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 	audioUrl,
 	words,
 	hookText,
-	backgroundImageUrl = "images/cathedral_bg_cf_3.png",
-	preacherImageUrl = "images/spurgeon_bust_cf_1.png",
+	backgroundImageUrl = "",
+	// Sem default apontando pro busto de um canal: o build_job sempre manda o
+	// caminho certo, e um default nomeado vira o pregador errado em silêncio
+	// se algum dia o prop faltar.
+	preacherImageUrl = "",
 	attribution = "CHARLES SPURGEON",
 	anchorVideoUrl,
 	anchorShots,

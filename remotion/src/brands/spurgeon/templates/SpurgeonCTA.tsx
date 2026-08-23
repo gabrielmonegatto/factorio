@@ -13,19 +13,32 @@ import { resolveAsset } from "../../../core/library/resolveAsset";
 
 // Label humano-legível (limpo) exibido sob o QR. O QR em si codifica a URL de
 // redirect com UTM (mananciall.org/go?s=yt&v=NNNN) — ver props qrCodeUrl.
-const CLEAN_LINK_LABEL = "mananciall.org/en/treasures-spurgeon";
+// Sem nome de canal aqui. O que aparece na tela chega por prop, vindo do
+// canais.py. Estes são só o último recurso pra preview sem props.
+/** "Dwight Lyman Moody Treasures" -> duas linhas, quebrando antes da última
+ *  palavra. O título ocupa 68px numa tela de 1920: nome longo numa linha só
+ *  estoura a caixa, e nome de canal Treasures é sempre longo. */
+const quebrarNome = (nome: string) => {
+	const i = nome.lastIndexOf(" ");
+	if (i < 0) return nome;
+	return (<>{nome.slice(0, i)}<br />{nome.slice(i + 1)}</>);
+};
+
+const FALLBACK_CANAL = "Treasures";
+const FALLBACK_COLECAO = "The Collection";
+const FALLBACK_LINK = "mananciall.org";
 
 /**
  * SPURGEON CTA SCREEN — 2 Cenas
  * ─────────────────────────────
- * Cena 1 (0–7s):   Tela de Inscrição "Charles Spurgeon Treasures"
+ * Cena 1 (0–7s):   Tela de Inscrição com o nome do canal (prop `channelName`)
  * Cena 2 (7–14s):  Tela de QR Code "Devocionais & Citações"
  *
  * Total: 420 frames @ 30fps = 14 segundos
  */
 
 // ─── CENA 1: Inscrição ──────────────────────────────────────────────────────
-const SceneSubscribe: React.FC<{ frame: number }> = ({ frame }) => {
+const SceneSubscribe: React.FC<{ frame: number; channelName?: string }> = ({ frame, channelName }) => {
 	const { fps } = useVideoConfig();
 
 	const PORTRAIT_IN = 10;
@@ -161,7 +174,7 @@ const SceneSubscribe: React.FC<{ frame: number }> = ({ frame }) => {
 						lineHeight: 1.1,
 						textShadow: "0 4px 40px rgba(0,0,0,0.8)",
 					}}>
-						Charles Spurgeon<br />Treasures
+						{quebrarNome(channelName || FALLBACK_CANAL)}
 					</h1>
 				</div>
 
@@ -235,7 +248,7 @@ const SceneSubscribe: React.FC<{ frame: number }> = ({ frame }) => {
 };
 
 // ─── SCENE 2: QR Code — Devotionals ──────────────────────────────────────────
-const SceneQRCode: React.FC<{ frame: number; qrCodeUrl?: string; linkLabel?: string }> = ({ frame, qrCodeUrl, linkLabel }) => {
+const SceneQRCode: React.FC<{ frame: number; qrCodeUrl?: string; linkLabel?: string; collectionTitle?: string }> = ({ frame, qrCodeUrl, linkLabel, collectionTitle }) => {
 	const { fps } = useVideoConfig();
 
 	// Everything enters together, with small staggered delays
@@ -298,7 +311,7 @@ const SceneQRCode: React.FC<{ frame: number; qrCodeUrl?: string; linkLabel?: str
 					textShadow: "0 4px 40px rgba(0,0,0,0.9)",
 					textAlign: "center",
 				}}>
-					The Best of Charles Spurgeon<br />
+					{collectionTitle || FALLBACK_COLECAO}<br />
 					<span style={{ color: "#c9a961" }}>Books &amp; Devotionals</span>
 				</h2>
 			</div>
@@ -347,7 +360,7 @@ const SceneQRCode: React.FC<{ frame: number; qrCodeUrl?: string; linkLabel?: str
 					color: "rgba(255,255,255,0.7)",
 					fontStyle: "italic",
 				}}>
-					{linkLabel || CLEAN_LINK_LABEL}
+					{linkLabel || FALLBACK_LINK}
 				</span>
 			</div>
 
@@ -368,7 +381,7 @@ const SceneQRCode: React.FC<{ frame: number; qrCodeUrl?: string; linkLabel?: str
 };
 
 // ─── COMPOSIÇÃO PRINCIPAL ────────────────────────────────────────────────────
-export const SpurgeonCTA: React.FC<{ ctaAudioUrl?: string; qrCodeUrl?: string; linkLabel?: string }> = ({ ctaAudioUrl, qrCodeUrl, linkLabel }) => {
+export const SpurgeonCTA: React.FC<{ ctaAudioUrl?: string; qrCodeUrl?: string; linkLabel?: string; channelName?: string; collectionTitle?: string }> = ({ ctaAudioUrl, qrCodeUrl, linkLabel, channelName, collectionTitle }) => {
 	const frame = useCurrentFrame();
 
 	const { durationInFrames } = useVideoConfig();
@@ -437,7 +450,7 @@ export const SpurgeonCTA: React.FC<{ ctaAudioUrl?: string; qrCodeUrl?: string; l
 
 			{/* ── CENA 1: Inscrição ── */}
 			<AbsoluteFill style={{ opacity: scene1Opacity }}>
-				<SceneSubscribe frame={scene1Frame} />
+				<SceneSubscribe channelName={channelName} frame={scene1Frame} />
 			</AbsoluteFill>
 
 			{/* ── CENA 2: QR Code Devocionais ── */}

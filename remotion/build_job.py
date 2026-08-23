@@ -266,6 +266,12 @@ def main():
         "kenBurnsIntensity": "subtle",
         "qrCodeUrl": f"{rel}/qr.png",
         "ctaBookTitle": C["cta_livro"],
+        # MARCA: tudo que o espectador LÊ na tela vem daqui, não do .tsx.
+        # Sem isso o vídeo do Moody saía com "Charles Spurgeon" escrito no CTA.
+        "channelName": C["nome"],
+        "preacherName": C.get("pregador", ""),
+        "collectionTitle": C.get("colecao_titulo", ""),
+        "linkLabel": C.get("link_label", ""),
         "sermonTitle": sermon_title,
         "sermonNumber": nnnn,
         "marketingTitle": marketing.get("marketingTitle", sermon_title),
