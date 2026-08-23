@@ -151,7 +151,7 @@ export const Thumbnail: React.FC<SermonMasterProps & { thumbnailText?: string }>
 					fontFamily: "Georgia, serif", fontSize: 26, color: "#c9a961",
 					textTransform: "uppercase", letterSpacing: 5, marginBottom: 18,
 				}}>
-					Charles Spurgeon
+					{props.preacherName || "Treasures"}
 				</div>
 				<div style={{
 					fontFamily: "Georgia, serif", fontSize: title.length > 46 ? 62 : 76,

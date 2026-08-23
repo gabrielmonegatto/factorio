@@ -32,7 +32,7 @@ def sh(cmd, **kw):
 REDIRECT = "https://mananciall.org/go?s=yt&v="
 
 
-def descricao(video_desc, nnnn):
+def descricao(C, video_desc, nnnn):
     # resumo apaixonado (do LLM) + link clicável (celular não lê QR). NUNCA revela a fonte.
     link = f"{REDIRECT}{nnnn}"
     return (
@@ -74,7 +74,10 @@ def main():
 
     # 3. vídeo: local (_hybrid) ou baixa do R2
     print("=== [3/4] localizando o vídeo ===")
-    video = os.path.join(HERE, "_hybrid", nnnn, f"{nnnn}.mp4")
+    # ⚠️ com o canal no caminho: sem isso o publish do Moody 0001 acha o
+    # 0001.mp4 do SPURGEON em _hybrid/0001 e publica o video do outro canal,
+    # sem erro nenhum. Mesma familia de armadilha do build_job (23/08).
+    video = os.path.join(HERE, "_hybrid", C["slug"], nnnn, f"{nnnn}.mp4")
     if not os.path.exists(video):
         import boto3
         from botocore.config import Config
@@ -89,7 +92,7 @@ def main():
     print("=== [4/4] subindo pro YouTube ===")
     title = P.get("marketingTitle") or P.get("sermonTitle")
     # pega o resumo apaixonado do marketing_meta (baixado pelo build_job)
-    mk_path = os.path.join(public, "storage", "sermons", nnnn, "marketing_meta.json")
+    mk_path = os.path.join(public, "storage", "sermons", C["slug"], nnnn, "marketing_meta.json")
     video_desc = ""
     if os.path.exists(mk_path):
         video_desc = json.load(open(mk_path, encoding="utf-8")).get("videoDescription", "")
@@ -97,7 +100,7 @@ def main():
         video_desc = title  # fallback
     cmd = [py, os.path.join(HERE, "publish_youtube.py"),
            "--video", video, "--title", title,
-           "--description", descricao(video_desc, nnnn),
+           "--description", descricao(C, video_desc, nnnn),
            "--thumbnail", thumb,
            "--tags", C["tags"],
            "--canal", C["slug"],

@@ -1,11 +1,11 @@
 """
-rp_handler.py — RunPods Serverless handler do canal Treasures of Spurgeon.
+rp_handler.py — RunPods Serverless handler de render (qualquer canal, via `canal` no job).
 
 Fluxo por job:
   input: { "sermon": 1 }   (ou "sermonNumber")
   1. build_job.py baixa os assets do R2, seleciona bg/busto/trilha, gera o QR e escreve props.json
   2. Remotion renderiza Sermon-Full-Production (duração calculada por calculateMetadata — sem bug de 3h)
-  3. Upload do mp4 pro R2 (bucket mananciall, renders/spurgeon/NNNN.mp4)
+  3. Upload do mp4 pro R2 (bucket mananciall, <renders_prefix do canal>/NNNN.mp4)
   4. Retorna a URL pública
 
 Credenciais R2 vêm por variável de ambiente (configuradas no endpoint do RunPods).
@@ -14,6 +14,8 @@ import os
 import subprocess
 import boto3
 import runpod
+
+import canais
 from botocore.config import Config
 
 BUCKET = "mananciall"
@@ -34,18 +36,21 @@ s3 = boto3.client(
 
 def handler(job):
     inp = job.get("input", {}) or {}
+    # `canal` no job, com o padrão do canais.py: job antigo sem o campo continua
+    # caindo no Spurgeon, que é o que ele sempre fez.
+    canal = inp.get("canal") or canais.PADRAO
     raw = inp.get("sermon", inp.get("sermonNumber", 1))
     frames = inp.get("frames")  # ex "0-150" p/ teste curto; ausente = vídeo completo
     concurrency = str(inp.get("concurrency", 4))  # paralelismo de frames; sobe p/ render full
     nnnn = f"{int(raw):04d}"
     props_path = os.path.join(APP, f"props_{nnnn}.json")
     suffix = "_test" if frames else ""
-    out_path = f"/tmp/spurgeon_{nnnn}{suffix}.mp4"
+    out_path = f"/tmp/render_{canal}_{nnnn}{suffix}.mp4"
 
     # 1. Prepara o job (download R2 + QR + props)
     print(f"🧱 [handler] build_job para sermão {nnnn}...")
     subprocess.run(
-        ["python3", "build_job.py", "--sermon", str(int(raw)),
+        ["python3", "build_job.py", "--canal", canal, "--sermon", str(int(raw)),
          "--out", props_path, "--public-dir", os.path.join(APP, "public")],
         cwd=APP, check=True,
     )
@@ -70,7 +75,9 @@ def handler(job):
         raise FileNotFoundError(f"Render terminou mas {out_path} não existe.")
 
     # 3. Upload pro R2
-    key = f"renders/spurgeon/{nnnn}{suffix}.mp4"
+    # ⚠️ era "renders/spurgeon/" fixo: o render serverless de QUALQUER canal
+    # subia por cima do acervo do Spurgeon. Auditoria de 23/08.
+    key = f"{canais.get(canal)['renders_prefix']}/{nnnn}{suffix}.mp4"
     print(f"📤 [handler] upload -> {key}")
     s3.upload_file(out_path, BUCKET, key, ExtraArgs={"ContentType": "video/mp4"})
 

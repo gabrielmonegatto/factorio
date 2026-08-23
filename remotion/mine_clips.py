@@ -31,16 +31,18 @@ import urllib.request
 import boto3
 from botocore.config import Config
 
+import canais
+
 BUCKET = "mananciall"
-CHANNEL_PREFIX = "channels/channels_youtube/treasures_charlesspurgeon"
+CHANNEL_PREFIX = None      # preenchido em main() a partir de canais.get()
 MODEL = "google/gemini-2.5-flash"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 MIN_S, MAX_S = 28.0, 62.0   # duração aceitável do clipe (com folga de 2s nas pontas)
 MIN_CLIPS, MAX_CLIPS = 3, 5
 
-SYSTEM = """You are the clip miner for "Charles Spurgeon Treasures", a channel of narrated
-Spurgeon sermons. Your job: find the 3-5 BEST self-contained moments to become
+SYSTEM_MOLDE = """You are the clip miner for "{canal}", a channel of narrated
+{pregador} sermons. Your job: find the 3-5 BEST self-contained moments to become
 vertical shorts (30-60s) for YouTube Shorts / TikTok / Reels.
 
 You receive the sermon as NUMBERED SENTENCES with start times. Return STRICT JSON:
@@ -63,7 +65,7 @@ Selection rules, all mandatory:
 - 30-60 SECONDS total (you see sentence start times — do the math).
 - What performs in this niche: a memorable, quotable line applicable to the
   viewer's life TODAY (fear, anxiety, guilt, hope, prayer, suffering, purpose)
-  beats abstract doctrine. Spurgeon is aphoristic — find the aphorisms.
+  beats abstract doctrine. {pregador} is aphoristic — find the aphorisms.
 - Prefer second-person or universal moments over historical references.
 - hook_text: max 6 words, tension or curiosity, TRUE to the excerpt, never a lie.
 - Clips must NOT overlap.
@@ -115,13 +117,13 @@ def build_sentences(words):
     } for i, s in enumerate(sentences)]
 
 
-def llm(env, title, sentences):
+def llm(env, system, title, sentences):
     lines = [f"[{s['i']}] t={s['start']/1000:.1f}s  {s['text']}" for s in sentences]
     body = json.dumps({
         "model": MODEL,
         "response_format": {"type": "json_object"},
         "messages": [
-            {"role": "system", "content": SYSTEM},
+            {"role": "system", "content": system},
             {"role": "user", "content": f"Sermon: {title}\n\n" + "\n".join(lines)},
         ],
     }).encode()
@@ -181,7 +183,7 @@ def materialize(clips_raw, sentences, words):
     return kept[:MAX_CLIPS]
 
 
-def process(env, s3, nnnn, dry=False, force=False):
+def process(env, s3, system, nnnn, dry=False, force=False):
     folder = find_folder(s3, nnnn)
     key = f"{folder}/clips_meta.json"
     if not force:
@@ -199,7 +201,7 @@ def process(env, s3, nnnn, dry=False, force=False):
     title = transcript.get("title", nnnn)
     print(f"⛏️  minerando {nnnn} — {title} ({len(sentences)} frases)")
 
-    raw = llm(env, title, sentences).get("clips", [])
+    raw = llm(env, system, title, sentences).get("clips", [])
     clips = materialize(raw, sentences, words)
     if len(clips) < MIN_CLIPS:
         print(f"⚠️  só {len(clips)} clipes válidos (LLM propôs {len(raw)}; o resto caiu na validação de duração/índice)")
@@ -219,17 +221,26 @@ def process(env, s3, nnnn, dry=False, force=False):
 
 def main():
     ap = argparse.ArgumentParser()
+    canais.add_arg_canal(ap)
     ap.add_argument("--sermon", required=True, help="número do sermão")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
+
+    global CHANNEL_PREFIX
+    C = canais.get(args.canal)
+    CHANNEL_PREFIX = C["prefix"]
+    if not C.get("pregador"):
+        sys.exit(f"❌ canal {C['slug']!r} sem `pregador`: este minerador corta SERMÃO.")
+    system = SYSTEM_MOLDE.format(canal=C["nome"], pregador=C["pregador"])
+    print(f"✂️  garimpando clipes de {C['nome']}")
 
     env = load_env()
     if not env.get("OPENROUTER_API_KEY"):
         sys.exit("❌ falta OPENROUTER_API_KEY")
     s3 = s3c(env)
     nnnn = f"{int(args.sermon):04d}"
-    process(env, s3, nnnn, dry=args.dry_run, force=args.force)
+    process(env, s3, system, nnnn, dry=args.dry_run, force=args.force)
 
 
 if __name__ == "__main__":
