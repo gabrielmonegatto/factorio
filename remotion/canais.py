@@ -178,17 +178,21 @@ CANAIS = {
         "buffer_days": 14,
         "max_uploads_per_run": 5,
         "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
-        # Mesma estrutura do Spurgeon, mas SEM prometer "livros do Moody": a
-        # coleção dele ainda não existe na livraria, e o biolink cai na
-        # biblioteca geral. Trocar quando a coleção sair (exige regravar).
+        # Idêntico ao Spurgeon, com o nome do Moody. Cheguei a gravar uma versão
+        # que só dizia "our library of Christian classics" pra não prometer uma
+        # coleção que ainda não existe na livraria. Decisão do Gabriel em 22/08,
+        # e ele está certo: a coleção sai em dias, o vídeo fica no ar por
+        # DÉCADAS. Gravar a versão fraca pra sempre, pra ficar correto por uma
+        # semana, é o pior lado da troca.
+        # ⬜ PENDENTE: criar a coleção "The Best of D.L. Moody" na livraria.
         "cta_intro_texto": (
             "So take this opportunity to subscribe to the channel, turn on notifications, "
-            "and visit our library of Christian classics to enrich your soul. "
-            "Link in the description below. God bless you, and let us begin."),
+            "and visit our collection with the best books and devotionals by D.L. Moody "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
         "cta_outro_texto": (
             "If you enjoyed this message, consider subscribing to the channel, turning on "
-            "notifications, and visiting our library of Christian classics to enrich your soul. "
-            "God bless you."),
+            "notifications, and visiting our collection with the best books and devotionals by "
+            "D.L. Moody to enrich your soul. God bless you."),
         "pregador": "D.L. Moody",
         "autor_mineracao": "%Moody%",
         "asr_modelo": "small.en",
