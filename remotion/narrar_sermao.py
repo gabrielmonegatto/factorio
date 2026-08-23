@@ -292,13 +292,48 @@ def para_mp3(wav, mp3):
     ], check=True)
 
 
-def transcrever(caminho, env):
-    """Groq por padrao; AssemblyAI so se o arquivo passar do teto do Groq."""
+ASR_IMAGE = os.environ.get("ASR_IMAGE", "factorio-asr")
+
+
+def transcrever_local(caminho, modelo="small.en", idioma="en"):
+    """faster-whisper na CPU da própria VPS. É o caminho padrão.
+
+    Medido em 22/08 no mesmo sermão de 33min, sempre contra o TEXTO FONTE que
+    mandamos narrar, que é a única verdade disponível:
+
+      AssemblyAI          US$ 0,15/h   minutos   99,2%    0 fora de ordem
+      Groq whisper-turbo  US$ 0,04/h        3s   98,9%   64 fora de ordem
+      small.en aqui       grátis          284s   98,8%    0 fora de ordem
+
+    Empata com a API paga, devolve timing em ordem e não custa nada. Mandar 53
+    horas de áudio pra fora pra ganhar 0,1% de fidelidade não se paga.
+    """
+    saida = caminho.replace(".mp3", ".words.json")
+    d = os.path.dirname(os.path.abspath(caminho))
+    subprocess.run([
+        "docker", "run", "--rm", "--memory=12g",
+        "-v", f"{d}:/data", "-v", "/srv/factorio/hfcache:/cache", ASR_IMAGE,
+        "--audio", f"/data/{os.path.basename(caminho)}",
+        "--out", f"/data/{os.path.basename(saida)}",
+        "--modelo", modelo, "--idioma", idioma,
+    ], check=True)
+    tr = json.load(open(saida, encoding="utf-8"))
+    os.remove(saida)
+    return tr
+
+
+def transcrever(caminho, env, c):
+    """Local por padrão. As APIs ficam como rede de segurança, nesta ordem."""
+    if os.environ.get("ASR_REMOTO") != "1":
+        try:
+            return transcrever_local(caminho, c.get("asr_modelo", "small.en"),
+                                     c.get("idioma", "en"))
+        except Exception as e:
+            print(f"     ⚠️ ASR local falhou ({str(e)[:90]}); tentando API", flush=True)
     if env.get("GROQ_API_KEY") and os.path.getsize(caminho) <= 24 * 1024 * 1024:
         return transcrever_groq(caminho, env["GROQ_API_KEY"])
     if not env.get("ASSEMBLYAI_API_KEY"):
-        raise RuntimeError("arquivo grande demais pro Groq e sem ASSEMBLYAI_API_KEY de reserva")
-    print("     (arquivo grande: caindo pro AssemblyAI)", flush=True)
+        raise RuntimeError("ASR local falhou, arquivo grande pro Groq e sem AssemblyAI")
     return transcrever_assemblyai(caminho, env["ASSEMBLYAI_API_KEY"])
 
 
@@ -460,7 +495,7 @@ def processar(env, s3, c, s, forcar=False):
     tam = os.path.getsize(mp3)
 
     print(f"  📝 transcrevendo ({tam//1024//1024}MB)...", flush=True)
-    tr = transcrever(mp3, env)
+    tr = transcrever(mp3, env, c)
     # `title` é o que o generate_marketing e o build_job leem pra nomear o vídeo
     tr["title"] = titulo
     dur = (tr.get("audio_duration") or 0)
@@ -496,8 +531,7 @@ def main():
     for k in ("CLOUDFLARE_API_TOKEN", "R2_ENDPOINT"):
         if not env.get(k):
             raise SystemExit(f"❌ falta {k} no .env")
-    if not env.get("GROQ_API_KEY") and not env.get("ASSEMBLYAI_API_KEY"):
-        raise SystemExit("❌ falta GROQ_API_KEY (ou ASSEMBLYAI_API_KEY de reserva)")
+
 
     novos, total = enfileirar(env, c)
     print(f"📋 {c['nome']}: {total} capítulos minerados, {novos} entraram na fila agora")

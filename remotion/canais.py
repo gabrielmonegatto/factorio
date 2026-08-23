@@ -69,6 +69,9 @@ CANAIS = {
         # `pregador` porque o banco guarda o nome como a FONTE escreveu
         # ("Charles Haddon Spurgeon"), nao como o canal assina.
         "autor_mineracao": "%purgeon%",
+        # modelo do faster-whisper na VPS. `.en` so serve pra ingles;
+        # canal em PT/ES tem que usar "small" (multilingue).
+        "asr_modelo": "small.en",
         "pausa_frase_s": 0.75,
         "titulo_sufixo": " (Charles Spurgeon)",
         "tags": "Charles Spurgeon,sermon,christian,gospel,faith,spurgeon sermons",
@@ -126,6 +129,7 @@ CANAIS = {
         "cta_assets": [],
         "pregador": "",
         "autor_mineracao": "",   # corpus vem do preparar_corpus, nao da mineracao
+        "asr_modelo": "small.en",
         "titulo_sufixo": " (KJV)",
         "tags": "bible,kjv,king james,scripture,bible reading,audio bible",
         "hashtags": "#Bible #KJV #Scripture #AudioBible",
@@ -163,6 +167,7 @@ CANAIS = {
         "cta_assets": [],
         "pregador": "D.L. Moody",
         "autor_mineracao": "%Moody%",
+        "asr_modelo": "small.en",
         "pausa_frase_s": 0.75,
         "titulo_sufixo": " (D.L. Moody)",
         "tags": "D.L. Moody,DL Moody,sermon,christian,gospel,evangelist,moody sermons",

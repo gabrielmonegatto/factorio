@@ -1,0 +1,27 @@
+# ─── FACTORIO ASR — faster-whisper (transcrição palavra a palavra) ──────────
+#
+# Irmão do factorio-tts: o TTS fala, este escuta. Existe pra esteira não pagar
+# API por um trabalho que a CPU da VPS faz de graça em 1/7 do tempo real.
+#
+# Roda em CPU com int8 (CTranslate2). Nada de GPU: medido em 22/08, small.en
+# faz 33min de áudio em 284s usando os 16 vCPU.
+#
+# Uso: docker run --rm -v /srv/factorio/data/x:/data -v /srv/factorio/hfcache:/cache \
+#        factorio-asr --audio /data/s.mp3 --out /data/words.json
+FROM python:3.11-slim
+
+# ffmpeg: o faster-whisper decodifica mp3 por ele
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir faster-whisper
+
+# Pesos do modelo ficam no volume montado em /cache, não na imagem: assim
+# trocar de modelo não obriga a reconstruir 1GB de imagem.
+ENV HF_HOME=/cache
+ENV OMP_NUM_THREADS=16
+
+WORKDIR /app
+COPY trigger/scripts/asr_whisper.py /app/asr_whisper.py
+
+ENTRYPOINT ["python3", "-u", "/app/asr_whisper.py"]
