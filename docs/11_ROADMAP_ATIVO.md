@@ -153,7 +153,10 @@ Canal: `Dwight Lyman Moody Treasures` (`UCX1HH8v0nQ03VLVq_DujdqA`), 0 vídeos.
 | F6.4 | Funil `/go/moody` + biolink `/preacher/moody` | ✅ no ar, logando em `go_scans` |
 | F6.5 | Watermark de inscrição | ✅ aplicado (HTTP 204) |
 | F6.6 | Voz `am_adam` speed 0.84 | ✅ travada no A/B de 20/08 |
-| F6.7 | **Narração dos 77 capítulos** | 🔴 **bloqueio real, ver abaixo** |
+| F6.7 | **Narração dos 77 capítulos** | 🟢 62/74 em 23/08, de graça na VPS |
+| F6.11 | Esteira inteira generalizada (10 scripts) | ✅ 23/08 |
+| F6.12 | CTAs fixos gravados | ✅ 23/08 |
+| F6.13 | Primeiro vídeo renderizado | 🟡 em render |
 | F6.8 | 2 CTAs narrados (intro/outro) + 3 vídeos pré-renderizados | ⬜ |
 | F6.9 | QR code do canal | ⬜ (gerado pelo build_job, falta rodar) |
 | F6.10 | Coleção "The Best of D.L. Moody" na livraria (gate do Gabriel) | ⬜ |
@@ -210,6 +213,39 @@ importava; para lote de 53h importa muito.
 7. **Um projeto do GCP pra fábrica inteira.** Projeto por canal é o que os
    Termos da API chamam de burlar cota, e a punição é suspender todos.
    Teto real: ~5 vídeos/dia somando os canais (hoje usamos 42% da cota).
+
+---
+
+
+## 🧨 A família de armadilhas que o 1º render revelou (23/08)
+
+Renderizar de verdade achou o que nenhuma leitura de código acharia: **quatro
+caminhos locais derivados só do NÚMERO do sermão**, sem o canal.
+
+| lugar | o que já estava lá | o que sairia |
+|---|---|---|
+| `storage/sermons/0001` | sermão do Spurgeon, 19/07 | áudio do Moody com legenda do Spurgeon |
+| `images/cathedral_bg_cf_1.png` | catedral do Spurgeon, 15/04 | Moody pregando na catedral errada |
+| `_hybrid/0001` | intro/body/outro do Spurgeon, 20/07 | pedaços dos dois canais concatenados |
+| `out/shorts/0001_c01.mp4` | short do Spurgeon | short sobrescrito |
+
+E o `download()` do build_job tem cache por existência: nada disso daria erro.
+É a mesma classe do incidente de 11/08 (canal errado, tudo respondendo 200).
+
+**A lei que fica:** número de sermão NÃO é identificador global. `(canal, número)`
+é. Todo caminho local tem que carregar o slug, e todo asset cujo nome local é
+contrato com o `.tsx` (o fundo do Moody aterrissa como `cathedral_bg_cf_N`) tem
+que baixar com `force=True`.
+
+## ⚡ Sobra de máquina medida (23/08)
+
+O lote produziu 39,2h de áudio gastando 14h de VPS (RTF combinado 0,36: 1 min de
+máquina vira 2,8 min de áudio). Mas o load average ficou em ~5 de 16 núcleos.
+
+A causa: as duas etapas têm perfis opostos. O faster-whisper satura os 16
+núcleos; o Kokoro processa frase a frase num processo só e deixa ~10 parados.
+**Rodar 2 ou 3 sermões em paralelo corta o lote quase pela metade.** Não vale
+mexer no meio de um lote; vale muito antes do canal 3.
 
 ---
 
