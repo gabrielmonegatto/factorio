@@ -455,7 +455,7 @@ export const SpurgeonCTA: React.FC<{ ctaAudioUrl?: string; qrCodeUrl?: string; l
 
 			{/* ── CENA 2: QR Code Devocionais ── */}
 			<AbsoluteFill style={{ opacity: scene2Opacity }}>
-				<SceneQRCode frame={scene2Frame} qrCodeUrl={qrCodeUrl} linkLabel={linkLabel} />
+				<SceneQRCode frame={scene2Frame} qrCodeUrl={qrCodeUrl} linkLabel={linkLabel} collectionTitle={collectionTitle} />
 			</AbsoluteFill>
 
 		</AbsoluteFill>
