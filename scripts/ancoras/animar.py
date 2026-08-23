@@ -269,11 +269,26 @@ def main():
         # Recursos do pod, ANTES de gastar. O 14B baixa ~56GB (dois experts) e
         # precisa de RAM de sistema pro offload. Disco cheio e OOM do kernel matam
         # o processo sem traceback: parecem "não fez nada". Melhor ver os números.
-        r = ssh(ip, porta, "df -BG --output=avail / | tail -1; "
-                           "free -g | awk '/Mem:/{print $2}'", timeout=60)
+        # 🧨 `free -g` mostra a RAM do HOST, não o limite do container. Em 23/08 li
+        # "503GB" e concluí que RAM não era o problema — era. O 14B carrega dois
+        # experts de ~28GB e o kernel matou o processo no segundo, sem traceback,
+        # contra um teto de cgroup MUITO menor. O número que importa é o do cgroup.
+        r = ssh(ip, porta,
+                "df -BG --output=avail / | tail -1; "
+                "cat /sys/fs/cgroup/memory.max 2>/dev/null "
+                "|| cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null "
+                "|| echo max", timeout=60)
         vals = (r.stdout or "").split()
         if len(vals) >= 2:
-            print(f"    disco livre {vals[0]} · RAM {vals[1]}GB")
+            lim = vals[1]
+            ram_gb = None if lim == "max" else int(lim) / 1e9
+            print(f"    disco livre {vals[0]} · RAM do container "
+                  + (f"{ram_gb:.0f}GB" if ram_gb else "sem limite"))
+            if args.modelo == "14b" and ram_gb and ram_gb < 70:
+                raise SystemExit(
+                    f"❌ container com {ram_gb:.0f}GB de RAM: o 14B precisa de ~70GB "
+                    "(dois experts de 28GB + text encoder). Use --modelo 5b, ou peça "
+                    "um pod com mais RAM.")
 
         scp(ip, porta, os.path.join(HERE, "pod_wan_i2v.py"), f"root@{ip}:/work/")
         for s in stills:

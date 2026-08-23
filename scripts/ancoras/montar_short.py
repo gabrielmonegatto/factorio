@@ -116,7 +116,9 @@ def main():
     meta = json.loads(cli.get_object(Bucket="mananciall", Key=f"{pasta}/clips_meta.json")["Body"].read())
     clip = meta["clips"][args.clip - 1]
     dur_ms = clip["end_ms"] - clip["start_ms"]
-    tag = f"{nnnn}_c{args.clip:02d}_cenas"
+    # a fonte entra no nome: sem isso a montagem em vídeo sobrescreve a de stills
+    # e não sobra com o que comparar
+    tag = f"{nnnn}_c{args.clip:02d}_cenas_{args.fonte}"
     print(f"📖 {meta.get('title', nnnn)} · clipe {args.clip} · {dur_ms/1000:.1f}s")
     print(f"   \"{clip['hook_text']}\"\n")
 
