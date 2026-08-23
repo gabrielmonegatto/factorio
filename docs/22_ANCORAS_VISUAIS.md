@@ -478,6 +478,101 @@ MDMZ, Curious Refuge, Tao Prompts (Hailuo), Preguiça Artificial (BR).
 
 ---
 
+## 11. Taxonomia de cenas e o que a evidência REALMENTE sustenta (22/08)
+
+### 11a. Nossa vantagem competitiva não é a biblioteca, é o ÍNDICE
+
+Filmpac (57 coleções), Storyblocks (19 categorias) e Artgrid (26 temas) foram
+enumerados: **nenhum dos três indexa por SIGNIFICADO.** Todos indexam por assunto
++ parâmetro técnico. Só o Filmpac tem um eixo emocional, e como coleção curada,
+não como taxonomia.
+
+O nosso `catalogo_cenas.json` indexa por tema (`provacao`, `consolo`, `morte`),
+e os temas saíram do próprio Spurgeon. É a camada que o mercado não vende.
+
+### 11b. 🔴 Os números que TODO MUNDO cita e que NÃO EXISTEM
+
+Rastreados até a origem e inexistentes: "3,1 segundos de atenção", "67% desliza
+em 3s", "corte a cada 1,5-2s", "8 segundos de atenção". São blogspam de SEO
+reciclado. **Não usar em material nosso.**
+
+### 11c. O que tem lastro (e favorece a nossa aposta no ritmo lento)
+
+| Achado | Evidência |
+|---|---|
+| **~12 planos/60s (5s cada) rende MAIS que ~24** | 1.200 Reels, 1.007 avaliadores; termo quadrático b=-1,08, p<.001 (arXiv 2604.19995) |
+| **O que captura atenção é o INÍCIO do movimento, não o movimento contínuo** | Abrams & Christ, Psych Science 2003 + réplica 2018. E só com movimento irregular (8-17 Hz), não suave |
+| Slow motion aumenta gravidade/intencionalidade percebida | 12 experimentos, 27.227 participantes (JMR 2023, PNAS 2016) |
+| Mediana de atenção = 82% da duração; 45% vê até o fim | CHI 2024, 347 usuários, 9,2M recomendações |
+
+📌 **Consequência prática pro nosso corte:** o certo é **cortar ENTRANDO no
+movimento** (a chama já tremendo, a onda já subindo), não deixar um plano
+deslizando parado. O onset é o que prende. Isso muda o ponto de corte do clipe,
+não o conteúdo dele.
+
+📌 A hipótese do §6 ("ritmo lento, contra o conselho genérico de Shorts") passou
+de palpite a **posição defensável com evidência**.
+
+### 11d. 🚩 Lista negra do nicho cristão (conferida contra o nosso catálogo)
+
+Clichês documentados como saturados: cruz brilhando ou no pôr do sol · mãos em
+oração · pomba com lens flare · silhueta em campo de trigo · mãos sobre Bíblia
+desfocada · santuário de megachurch · Bíblia aberta com latte e canetinha pastel.
+No estoico: busto de mármore, Roma antiga, montagem de academia, skyline synthwave.
+
+✅ **Rodado contra as 42 cenas em 22/08: zero colisões.** (Verificação por regex,
+10 clichês; repetir sempre que o catálogo crescer.)
+
+A frase que resume o risco, de Layne McDonald sobre esse visual: ele
+*"signals to the audience that the work lacks original thought"*.
+
+### 11e. ⚠️ TENSÃO REAL: declarar IA custa engajamento
+
+Eu havia recomendado (§7) declarar IA como "ativo de marca". A evidência
+complica isso: rotular conteúdo como gerado por IA **reduziu engajamento afetivo
+e comportamental, particularmente em conteúdo EMOCIONAL** (Electronic Markets /
+Springer, reforçado por JCOM e NIM). Conteúdo emocional é exatamente o nosso.
+
+**Não desfaço a recomendação, mas ela deixa de ser grátis.** A leitura honesta:
+o disclosure tem custo mensurável de alcance e se paga em credibilidade num
+nicho onde a fraude de sermão por IA acabou de acontecer. É decisão do Gabriel,
+com o custo agora explícito.
+
+### 11f. 🔴 O texto EXATO da política do YouTube que mira o nosso formato
+
+Não elegível ao YPP: *"Image slideshows, templated storylines, or scrolling text
+with minimal or no narrative"* e *"AI-generated content made with generic or
+unoriginal templates"*. O alvo nomeado pelo YouTube:
+*"channels that upload slideshows that all have the same narration."*
+
+O Creator Liaison esclareceu que é **renomeação, não restrição nova**, e que
+*"channels that use AI in their content remain eligible for monetization"*.
+
+**Leitura pra nós:** o que é punido é o TEMPLATE, não a IA nem o clipe. Nenhuma
+plataforma declara penalizar footage por origem. Nossa defesa é a camada
+editorial (seleção curatorial do `mine_clips`, contexto histórico, rotação real
+de famílias), não esconder a IA.
+
+### 11g. Gramática de prompt (regras de fornecedor, não de blog)
+
+- **Um movimento de câmera por plano.** Kling, Luma e HeyGen dizem explicitamente.
+- **Só frase positiva.** Runway, oficial: escrever `"Locked camera. The camera
+  remains still."` e NUNCA "no camera movement". ⚠️ Vale revisar nosso
+  `movimento_en`, que usa "static camera" (aceitável, mas a forma afirmativa
+  completa é mais segura).
+- Prefixar com "slow"/"gentle": os modelos exageram velocidade.
+- Substantivo concreto vence adjetivo. Banir "perfect", "stunning".
+- B-roll quer 3-6s, um sujeito, uma ação, um cenário.
+- Fórmulas oficiais: Veo = `[Cinematografia]+[Sujeito]+[Ação]+[Contexto]+[Estilo]`;
+  Kling = mesma coisa com a **câmera por último**.
+
+Fontes densas pra clonar: [ai-shortfilm-prompts](https://github.com/jnMetaCode/ai-shortfilm-prompts)
+(50 movimentos + prefabs de atmosfera; tem um preset literalmente chamado
+"top light / sacred") · [Runway Camera Terms](https://help.runwayml.com/hc/en-us/articles/47313504791059-Camera-Terms-Prompts-Examples)
+· [Veo 3.1 guide](https://cloud.google.com/blog/products/ai-machine-learning/ultimate-prompting-guide-for-veo-3-1)
+
+---
+
 ## 9. Fontes
 
 **Consistência:** [Lights, Camera, Consistency (arXiv 2512.16954)](https://arxiv.org/html/2512.16954v1) ·
