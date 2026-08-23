@@ -29,28 +29,39 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.abspath(os.path.join(HERE, "..", ".."))
 PREFIXO_R2 = "renders/ancoras"
-# Faixas medidas no lote 5B de 22/08, o que o Gabriel chamou de "estático":
-#   arquitetura_01 0.30 e fogo_01 0.42  → parados de fato
-#   mar_05         5.41                 → movimento farto
-# Cena escura com névoa se mexe pouco por natureza, então o corte não é binário:
-# abaixo de PARADO não sobe; entre PARADO e FRACO sobe com aviso.
-YDIF_PARADO = 0.35
-YDIF_FRACO = 1.0
+# 🧨 MEDIR YDIF CRU MENTE. Ele é diferença ABSOLUTA de luminância, então cena
+# escura marca pouco mesmo se mexendo muito — e escuro é a direção deste canal.
+# Medido em 23/08: mar_05 marcava 5.41 e parecia dez vezes melhor que os outros,
+# mas só era mais CLARO (luminância 116 contra 25). Relativizado, a distância cai
+# de 10x pra 2x. Por isso o corte é sobre YDIF/YAVG, em porcentagem.
+#   controle com prompt tímido  0.3%   parado de verdade
+#   storm_swell / wave_on_rock  2.3-2.8%  utilizável
+#   mar_05 (o melhor que já saiu) 4.7%
+MOV_PARADO = 1.0   # abaixo disso não sobe
+MOV_FRACO = 2.0    # entre os dois, sobe com aviso
 
 sys.path.insert(0, HERE)
 import casar_ancora as ca  # noqa: E402
 
 
-def medir_movimento(caminho):
-    """YDIF médio: diferença de luminância entre quadros consecutivos."""
+def _stat(caminho, chave):
     r = subprocess.run(
-        ["ffmpeg", "-v", "info", "-i", caminho, "-vf", "signalstats,metadata=print:key=lavfi.signalstats.YDIF",
-         "-f", "null", "-"],
+        ["ffmpeg", "-v", "info", "-i", caminho, "-vf",
+         f"signalstats,metadata=print:key=lavfi.signalstats.{chave}", "-f", "null", "-"],
         capture_output=True, text=True)
-    vals = [float(m) for m in re.findall(r"YDIF=([\d.]+)", r.stderr)]
-    if not vals:
-        return None, 0
-    return sum(vals) / len(vals), len(vals)
+    return [float(m) for m in re.findall(chave + r"=([\d.]+)", r.stderr)]
+
+
+def medir_movimento(caminho):
+    """Movimento RELATIVO: diferença média entre quadros dividida pela luminância
+    média da cena. Devolve (percentual, n_quadros, luminancia)."""
+    dif = _stat(caminho, "YDIF")
+    lum = _stat(caminho, "YAVG")
+    if not dif or not lum:
+        return None, 0, 0
+    d = sum(dif) / len(dif)
+    y = sum(lum) / len(lum)
+    return 100.0 * d / max(y, 1.0), len(dif), y
 
 
 def id_de_cena(base, ids):
@@ -88,16 +99,16 @@ def main():
             print(f"  ⚠️  {base:28} não bate com nenhuma cena do catálogo")
             orfaos += 1
             continue
-        ydif, n = medir_movimento(f)
+        mov, n, lum = medir_movimento(f)
         mb = os.path.getsize(f) / 1e6
-        if ydif is None:
+        if mov is None:
             print(f"  ⚠️  {cid:28} não deu pra medir")
             continue
-        vivo = ydif >= YDIF_PARADO
-        fraco = vivo and ydif < YDIF_FRACO
+        vivo = mov >= MOV_PARADO
+        fraco = vivo and mov < MOV_FRACO
         marca = "🧊" if not vivo else ("🌫️ " if fraco else "🎞️ ")
         nota = "  ← PARADO, não sobe" if not vivo else ("  ← movimento fraco" if fraco else "")
-        print(f"  {marca} {cid:28} YDIF {ydif:5.2f} · {n:3d} quadros · {mb:4.1f}MB{nota}")
+        print(f"  {marca} {cid:28} mov {mov:4.1f}% · luz {lum:5.1f} · {n:3d}q · {mb:4.1f}MB{nota}")
         if not vivo:
             parados += 1
         if args.conferir or (not vivo and not args.forcar):

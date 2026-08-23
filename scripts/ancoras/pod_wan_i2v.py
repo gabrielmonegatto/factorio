@@ -65,6 +65,9 @@ def main():
     ap.add_argument("--loop", action="store_true",
                     help="primeiro frame = ultimo frame: o clipe fecha sem emenda")
     ap.add_argument("--modelo", choices=["5b", "14b"], default="14b")
+    ap.add_argument("--prompts", help="JSON {nome_do_still: prompt}: movimento "
+                    "próprio de CADA cena, vindo do catálogo. Sem isso o gerador "
+                    "cai num prompt por família e as 5 cenas de mar saem iguais.")
     ap.add_argument("--variantes", help="JSON [{nome,prompt,negativo?}]: gera uma "
                     "saída por variante A PARTIR DO PRIMEIRO still. Banco de prova "
                     "de prompt pagando UM setup de pod em vez de um por tentativa.")
@@ -110,6 +113,12 @@ def main():
     pipe.vae.enable_slicing()
     print(f"[wan] modelo carregado em {time.time()-t0:.0f}s", flush=True)
 
+    por_cena = {}
+    if args.prompts:
+        with open(args.prompts, encoding="utf-8") as fh:
+            por_cena = json.load(fh)
+        print(f"[wan] {len(por_cena)} prompts próprios do catálogo", flush=True)
+
     # modo banco de prova: um still, N prompts
     variantes = None
     if args.variantes:
@@ -134,7 +143,8 @@ def main():
         else:
             nh = int(w / alvo); im = im.crop((0, (h - nh) // 2, w, (h + nh) // 2))
         img = im.resize((larg, alt), Image.LANCZOS)
-        prompt = var["prompt"] if var else MOVIMENTO.get(fam, PADRAO)
+        prompt = (var["prompt"] if var
+                  else por_cena.get(base) or MOVIMENTO.get(fam, PADRAO))
         negativo = (var.get("negativo") if var else None) or NEGATIVO
 
         t = time.time()

@@ -220,6 +220,9 @@ def main():
     ap.add_argument("--loop", action="store_true")
     ap.add_argument("--variantes", help="JSON de variantes de prompt: banco de prova "
                     "sobre o primeiro still, um setup de pod pra N tentativas")
+    ap.add_argument("--sem-catalogo", action="store_true",
+                    help="ignora o movimento próprio de cada cena e usa o prompt "
+                         "genérico por família (só pra comparar)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -234,6 +237,35 @@ def main():
     print(f"📦 {len(stills)} stills | {GPU} {vram}GB (US$ {custo_h}/h community) | modelo {args.modelo} "
           f"| {args.largura}x{args.altura} | teto {args.teto}min "
           f"(exposição máx US$ {teto_max:.2f} se cair na secure)")
+    # 🧨 O catálogo tem movimento escrito PARA CADA CENA (42 deles), e até 23/08 o
+    # gerador ignorava todos e usava um prompt genérico por família: as 5 cenas de
+    # mar recebiam o mesmo texto e saíam iguais. Aqui o catálogo volta a mandar.
+    prompts_path = None
+    if not args.sem_catalogo and not args.variantes:
+        import json as _json
+        sys.path.insert(0, HERE)
+        import casar_ancora as _ca
+        import subir_clipes as _sc
+        cenas = _ca.carregar_catalogo()
+        ids = [c["id"] for c in cenas]
+        por_id = {c["id"]: c for c in cenas}
+        mapa = {}
+        for s_nome in stills:
+            base = os.path.splitext(s_nome)[0]
+            cid = _sc.id_de_cena(base, ids)
+            mov = (por_id.get(cid) or {}).get("movimento_en") if cid else None
+            if mov:
+                mapa[base] = mov
+        if mapa:
+            prompts_path = os.path.join(RAIZ, "scratch", "ancoras", "_prompts.json")
+            os.makedirs(os.path.dirname(prompts_path), exist_ok=True)
+            with open(prompts_path, "w", encoding="utf-8") as fh:
+                _json.dump(mapa, fh, ensure_ascii=False, indent=1)
+            print(f"📝 {len(mapa)}/{len(stills)} cenas com movimento próprio do catálogo")
+        if len(mapa) < len(stills):
+            print(f"   ⚠️  {len(stills)-len(mapa)} still(s) sem cena no catálogo: "
+                  "vão cair no prompt genérico da família")
+
     if args.dry_run:
         print("(dry-run — nada criado)")
         return
@@ -295,6 +327,8 @@ def main():
         scp(ip, porta, os.path.join(HERE, "pod_wan_i2v.py"), f"root@{ip}:/work/")
         if args.variantes:
             scp(ip, porta, args.variantes, f"root@{ip}:/work/variantes.json")
+        if prompts_path:
+            scp(ip, porta, prompts_path, f"root@{ip}:/work/prompts.json")
         for s in stills:
             scp(ip, porta, os.path.join(args.stills, s), f"root@{ip}:/work/stills/")
         print(f"📤 {len(stills)} stills enviados ({time.time()-t_inicio:.0f}s)")
@@ -322,6 +356,7 @@ def main():
              f"--modelo {args.modelo} --largura {args.largura} --altura {args.altura} "
              + ("--loop " if args.loop else "")
              + ("--variantes /work/variantes.json " if args.variantes else "")
+             + ("--prompts /work/prompts.json " if prompts_path else "")
              + f"> /work/log.txt 2>&1"),
             "touch /work/PRONTO",
             "",

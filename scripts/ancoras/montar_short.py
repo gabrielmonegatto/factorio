@@ -184,14 +184,31 @@ def main():
     prefixo_r2 = "renders/ancoras" if args.fonte == "video" else "ancoras/spurgeon"
     for sh in shots:
         c = sh["cena"]
+        sh["kind"] = "video" if args.fonte == "video" else "image"
         nome = f"{c['id']}.{ext}"
         destino = os.path.join(PUBLIC_CENAS, nome)
         if not os.path.exists(destino):
             chave = (f"{prefixo_r2}/{c['id']}.{ext}" if args.fonte == "video"
                      else f"{prefixo_r2}/{c['familia']}/{c['id']}.png")
-            cli.download_file("mananciall", chave, destino)
+            try:
+                cli.download_file("mananciall", chave, destino)
+            except Exception:
+                # Nem toda cena tem clipe: o verificador recusa subir o que saiu
+                # congelado. Melhor a cena aparecer como still (com push-in) do
+                # que a montagem inteira quebrar por causa de uma batida.
+                if args.fonte != "video":
+                    raise
+                if os.path.exists(destino):
+                    os.remove(destino)
+                nome = f"{c['id']}.png"
+                destino = os.path.join(PUBLIC_CENAS, nome)
+                if not os.path.exists(destino):
+                    cli.download_file("mananciall",
+                        f"ancoras/spurgeon/{c['familia']}/{c['id']}.png", destino)
+                sh["kind"] = "image"
+                print(f"     ↩️  {c['id']}: sem clipe no R2, usando o still")
         sh["src"] = f"cenas/{nome}"
-        if args.fonte == "video":
+        if sh["kind"] == "video":
             # duração real do mp4: a composição usa pra esticar o clipe até
             # cobrir a cena em vez de repetir o loop no meio dela
             p = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
@@ -238,7 +255,7 @@ def main():
         "words": clip["words"],
         "hookText": clip["hook_text"],
         "anchorShots": [{"start": s["start"], "end": s["end"], "src": s["src"],
-                         "kind": "video" if args.fonte == "video" else "image",
+                         "kind": s["kind"],
                          "nome": s["cena"]["nome_pt"],
                          **({"clipMs": s["clip_ms"]} if s.get("clip_ms") else {})}
                         for s in shots],

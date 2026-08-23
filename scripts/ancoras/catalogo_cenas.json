@@ -1,60 +1,643 @@
 {
-  "_sobre": "Catálogo de cenas das âncoras visuais. NÃO foi inventado: as imagens saíram da mineração dos 212 sermões do Spurgeon no R2 (1.195.613 palavras). O campo 'frequencia' é a contagem real da imagem no corpus. Palavras muito frequentes mas idiomáticas (way 1325x, well 1146x, house 767x) foram descartadas: no uso dele quase nunca são figura visual.",
-  "_regras": [
-    "Sem pessoas, sem rostos, sem figuras, sem mãos em quadro, sem texto na imagem.",
-    "Nunca Cristo nem personagem bíblico (doc 22 §6).",
-    "Onde a imagem implica gente (pastor, soldado, peregrino), filma-se o OBJETO ou o RASTRO.",
-    "Uma cena = um instante fotografável que fecha em loop de 5s com UM movimento lento.",
-    "Todo prompt concatena o style block da bíblia visual; aqui mora só o ASSUNTO."
-  ],
-  "cenas": [
-    {"id":"light_shaft_nave","familia":"capela","nome_pt":"Raio de luz na nave","imagem_en":"a single shaft of pale light falling through a high gothic window onto the worn stone floor of an empty chapel nave, dust suspended in the beam","movimento_en":"dust motes drift slowly through the beam, light holds steady, static camera","significado":"A luz que entra sozinha no escuro: graça que encontra o homem sem que ele a busque.","temas":["graca","revelacao","esperanca","presenca"],"frequencia":689},
-    {"id":"empty_pews","familia":"capela","nome_pt":"Bancos vazios","imagem_en":"rows of empty dark wooden pews receding into shadow, one distant lamp lit at the far end","movimento_en":"the distant lamp flickers faintly, everything else still, static camera","significado":"A congregação ausente: solidão espiritual, o culto que esfriou.","temas":["solidao","abandono","arrependimento","igreja"],"frequencia":137},
-    {"id":"stained_glass_floor","familia":"capela","nome_pt":"Vitral no chão","imagem_en":"coloured light from a stained glass window falling across a cold stone floor, the window itself out of frame","movimento_en":"the coloured patch creeps almost imperceptibly across the stone, static camera","significado":"A verdade que chega filtrada e ainda assim colorida: revelação parcial neste mundo.","temas":["revelacao","fe","misterio","esperanca"],"frequencia":689},
-    {"id":"empty_pulpit","familia":"capela","nome_pt":"Púlpito vazio","imagem_en":"an empty pulpit of dark carved wood lit from one side, the vast hall beyond it in darkness","movimento_en":"faint dust drifts in the side light, extremely slow push in","significado":"A palavra que já foi pregada e continua ecoando: a voz que sobrevive ao pregador.","temas":["pregacao","legado","morte","palavra"],"frequencia":137},
-    {"id":"temple_veil","familia":"capela","nome_pt":"Véu do templo","imagem_en":"a heavy dark curtain hanging in a stone sanctuary, faint light glowing behind its edge","movimento_en":"the curtain breathes slightly as if from a draught, static camera","significado":"O acesso que era vedado: separação, e o véu que se rasga.","temas":["acesso","santidade","graca","misterio"],"frequencia":137},
-
-    {"id":"storm_swell","familia":"mar","nome_pt":"Mar revolto","imagem_en":"dark storm waves rolling under a heavy leaden sky, cold spray catching the last light, open sea with no land","movimento_en":"the swell rises and falls in slow heavy motion, foam sliding across the surface, static camera","significado":"A provação que não se controla: o crente no meio da tempestade.","temas":["provacao","medo","fe","perseveranca"],"frequencia":339},
-    {"id":"anchor_on_stone","familia":"mar","nome_pt":"Âncora na pedra","imagem_en":"a weathered iron ship anchor resting on wet dark stone, cold grey light, sea mist beyond","movimento_en":"mist drifts slowly past, water beads catch the light, static camera","significado":"A esperança como âncora da alma: firmeza que não depende do humor do mar.","temas":["esperanca","seguranca","fe","ancora"],"frequencia":339},
-    {"id":"lighthouse_beam","familia":"mar","nome_pt":"Farol na noite","imagem_en":"a distant lighthouse beam sweeping across black water at night, low horizon, no shore visible","movimento_en":"the beam sweeps slowly across the water once, static camera","significado":"O aviso que persiste na escuridão: a advertência da graça a quem navega perdido.","temas":["advertencia","salvacao","escuridao","esperanca"],"frequencia":373},
-    {"id":"wave_on_rock","familia":"mar","nome_pt":"Onda na rocha","imagem_en":"a wave breaking hard against black rock, spray suspended in the air, dark sea beyond","movimento_en":"the wave rises and breaks once in slow motion, static camera","significado":"A Rocha que não cede ao golpe: a imutabilidade de Deus contra o assalto.","temas":["imutabilidade","seguranca","provacao","fundamento"],"frequencia":196},
-    {"id":"still_water_dawn","familia":"mar","nome_pt":"Águas quietas","imagem_en":"perfectly calm black water under low fog at first light, absolute stillness after a storm","movimento_en":"fog drifts slowly across the surface, water almost motionless, static camera","significado":"A paz depois da tempestade: consolo, descanso, o mar aquietado.","temas":["consolo","paz","descanso","alivio"],"frequencia":339},
-    {"id":"flood_waters","familia":"mar","nome_pt":"Águas da cheia","imagem_en":"dark floodwater covering a submerged field, only fence posts and bare branches breaking the surface","movimento_en":"the water moves slowly, faint ripples spreading, static camera","significado":"O juízo que sobe sem pressa: a inevitabilidade do que foi decretado.","temas":["juizo","morte","inevitabilidade","medo"],"frequencia":186},
-
-    {"id":"single_candle","familia":"fogo","nome_pt":"Vela solitária","imagem_en":"a single tall candle burning alone in a vast dark room, thin wisp of smoke rising","movimento_en":"the flame sways gently, smoke curls slowly upward, static camera","significado":"A fé pequena que não se apaga: o pavio que fumega e não é extinto.","temas":["fe","perseveranca","fraqueza","esperanca"],"frequencia":115},
-    {"id":"dying_embers","familia":"fogo","nome_pt":"Brasas morrendo","imagem_en":"glowing embers dying down in an old stone hearth, slow curls of smoke, the last orange light in a dark room","movimento_en":"embers pulse and dim, smoke rises slowly, static camera","significado":"O amor que esfriou: zelo perdido, o chamado de volta ao primeiro amor.","temas":["arrependimento","frieza","perda","chamado"],"frequencia":506},
-    {"id":"furnace_mouth","familia":"fogo","nome_pt":"Boca da fornalha","imagem_en":"the open mouth of an old iron furnace glowing white hot, dark forge around it","movimento_en":"the glow pulses slowly, heat shimmer rises, static camera","significado":"A fornalha que purifica sem consumir: a provação que refina o ouro.","temas":["provacao","purificacao","sofrimento","santificacao"],"frequencia":129},
-    {"id":"oil_lamp_low","familia":"fogo","nome_pt":"Lamparina baixa","imagem_en":"an old oil lamp with a low flame on a bare wooden table, deep darkness all around","movimento_en":"the flame wavers gently, shadows shifting on the table, static camera","significado":"A vigília: esperar acordado, óleo na lâmpada, a volta que tarda.","temas":["vigilancia","espera","oracao","prontidao"],"frequencia":506},
-    {"id":"guttering_flame","familia":"fogo","nome_pt":"Chama se apagando","imagem_en":"the last flame guttering on a spent candle, wax pooled and cold, darkness closing in","movimento_en":"the flame struggles and shrinks, smoke thickening, static camera","significado":"A brevidade da vida: a vela que se acaba enquanto ainda se fala.","temas":["morte","brevidade","urgencia","tempo"],"frequencia":115},
-
-    {"id":"mist_moor","familia":"natureza","nome_pt":"Névoa no campo","imagem_en":"thick mist rolling slowly across an empty moor at first light, one bare tree standing alone in silhouette","movimento_en":"mist drifts slowly across the frame, branches barely stir, static camera","significado":"A vida como vapor que aparece e logo se desfaz.","temas":["brevidade","morte","incerteza","humildade"],"frequencia":129},
-    {"id":"wheat_in_wind","familia":"natureza","nome_pt":"Trigo ao vento","imagem_en":"a field of ripe wheat bending in a slow wind under a heavy overcast sky","movimento_en":"the wheat bends and rises in a slow wave, static camera","significado":"A ceifa: o que foi semeado chegando ao seu dia.","temas":["colheita","juizo","frutos","tempo"],"frequencia":110},
-    {"id":"lone_oak_storm","familia":"natureza","nome_pt":"Carvalho na tormenta","imagem_en":"an ancient oak alone in a dark empty field, storm light behind it, heavy branches","movimento_en":"branches sway slowly in the wind, clouds creep behind, static camera","significado":"A raiz que segura: o justo firmado quando o vento vem.","temas":["perseveranca","raiz","provacao","firmeza"],"frequencia":226},
-    {"id":"mountain_in_cloud","familia":"natureza","nome_pt":"Montanha na nuvem","imagem_en":"a dark mountain ridge emerging from low cloud at dawn, cold light on the rock","movimento_en":"cloud drifts slowly across the ridge, static camera","significado":"A grandeza que humilha: o olhar levantado para os montes.","temas":["majestade","humildade","socorro","adoracao"],"frequencia":244},
-    {"id":"rain_on_reeds","familia":"natureza","nome_pt":"Chuva nos juncos","imagem_en":"heavy rain falling on still water among tall reeds, grey and quiet, no horizon","movimento_en":"rain dimples the water continuously, reeds barely move, static camera","significado":"A chuva que cai sobre justos e injustos: a bondade comum e paciente.","temas":["paciencia","provisao","graca","quietude"],"frequencia":446},
-    {"id":"bare_branches_snow","familia":"natureza","nome_pt":"Galhos na neve","imagem_en":"snow falling slowly through bare black branches at dusk, no ground visible","movimento_en":"snow drifts down slowly, branches still, static camera","significado":"O inverno da alma: aridez, silêncio, espera da primavera.","temas":["aridez","espera","silencio","tristeza"],"frequencia":165},
-
-    {"id":"open_bible_candle","familia":"objetos","nome_pt":"Bíblia aberta","imagem_en":"an old worn leather Bible lying open on a dark wooden table, gilded page edges catching candlelight from just out of frame","movimento_en":"the light flickers softly across the pages, a page edge lifts slightly, static camera","significado":"A palavra que permanece quando tudo o mais passa.","temas":["palavra","verdade","permanencia","estudo"],"frequencia":361},
-    {"id":"broken_chain","familia":"objetos","nome_pt":"Corrente rompida","imagem_en":"a heavy iron chain lying on stone with one link parted open, dim light, dust","movimento_en":"dust drifts over the chain, faint light shifts across the iron, static camera","significado":"A libertação: o cativo solto, o pecado que já não prende.","temas":["libertacao","redencao","pecado","alivio"],"frequencia":186},
-    {"id":"empty_armour","familia":"objetos","nome_pt":"Armadura no chão","imagem_en":"an old breastplate and helmet lying abandoned on stone ground beside a sword, dim light","movimento_en":"dust drifts slowly, a faint glint moves across the metal, static camera","significado":"A batalha travada: a armadura que se veste ou se abandona.","temas":["batalha","tentacao","vigilancia","desistencia"],"frequencia":181},
-    {"id":"quill_and_book","familia":"objetos","nome_pt":"Pena e tinteiro","imagem_en":"a quill and inkwell beside a closed leather ledger on dark wood, single warm light","movimento_en":"the light wavers gently, a shadow shifts across the page, very slow push in","significado":"O registro que será lido: os livros abertos no juízo.","temas":["juizo","registro","responsabilidade","memoria"],"frequencia":361},
-    {"id":"bread_and_cup","familia":"objetos","nome_pt":"Pão e cálice","imagem_en":"a torn loaf of dark bread and a plain metal cup of wine on a bare wooden table, one candle beyond","movimento_en":"candlelight flickers across the surfaces, static camera","significado":"A ceia: memória, sacrifício, comunhão.","temas":["comunhao","sacrificio","memoria","graca"],"frequencia":220},
-    {"id":"gold_in_crucible","familia":"objetos","nome_pt":"Ouro no cadinho","imagem_en":"molten gold glowing inside a clay crucible, dark forge, dross floating on the surface","movimento_en":"the molten surface moves slowly, glow pulsing, static camera","significado":"A prova que separa o ouro da escória.","temas":["provacao","purificacao","valor","paciencia"],"frequencia":165},
-    {"id":"crown_on_stone","familia":"objetos","nome_pt":"Coroa sobre pedra","imagem_en":"a simple gold crown resting on a rough stone ledge in a dark room, a single shaft of light on it","movimento_en":"dust drifts in the light, a faint glint crosses the gold, extremely slow push in","significado":"A coroa reservada: recompensa que não se recebe aqui.","temas":["recompensa","esperanca","perseveranca","eternidade"],"frequencia":191},
-    {"id":"grave_stone_grass","familia":"objetos","nome_pt":"Lápide na relva","imagem_en":"a weathered gravestone half sunk in long wet grass, inscription eroded beyond reading, grey light","movimento_en":"grass sways slowly in the wind, static camera","significado":"O esquecimento dos homens e a memória de Deus.","temas":["morte","esquecimento","eternidade","humildade"],"frequencia":203},
-
-    {"id":"narrow_door_light","familia":"arquitetura","nome_pt":"Porta estreita","imagem_en":"a narrow stone doorway at the far end of a dark corridor, warm light spilling through from beyond, heavy walls","movimento_en":"the warm light flickers gently, dust drifting, extremely slow push in","significado":"A porta estreita: o caminho único e a urgência de entrar.","temas":["salvacao","urgencia","escolha","esperanca"],"frequencia":182},
-    {"id":"stone_stairs_dark","familia":"arquitetura","nome_pt":"Escada de pedra","imagem_en":"worn stone steps ascending into darkness, faint light from somewhere above, damp walls","movimento_en":"the light above shifts faintly, dust drifting, static camera","significado":"A subida cujo fim não se vê: santificação como caminho longo.","temas":["santificacao","perseveranca","caminho","fe"],"frequencia":226},
-    {"id":"fortress_wall","familia":"arquitetura","nome_pt":"Muralha","imagem_en":"a massive weathered stone fortress wall seen from below, storm sky above, no gate visible","movimento_en":"clouds move slowly behind the wall, static camera","significado":"O refúgio forte: torre alta para onde o justo corre.","temas":["refugio","seguranca","protecao","forca"],"frequencia":149},
-    {"id":"empty_road_storm","familia":"arquitetura","nome_pt":"Estrada vazia","imagem_en":"an empty stone road under a heavy dark sky stretching toward the horizon, low stone walls on both sides","movimento_en":"clouds drift slowly, faint dust moves along the road, static camera","significado":"A peregrinação: o caminho a percorrer sem companhia visível.","temas":["caminho","solidao","perseveranca","jornada"],"frequencia":1325},
-    {"id":"foundation_stone","familia":"arquitetura","nome_pt":"Pedra fundamental","imagem_en":"a massive squared cornerstone at the base of an unfinished stone wall, fresh mortar, cold light","movimento_en":"dust drifts across the stone, light shifts slowly, very slow push in","significado":"O fundamento que não se remove: a pedra angular.","temas":["fundamento","seguranca","cristo","firmeza"],"frequencia":205},
-    {"id":"iron_gate_closed","familia":"arquitetura","nome_pt":"Portão fechado","imagem_en":"a heavy closed iron gate in a stone wall, thin light showing at its edges, rust and age","movimento_en":"light at the edges flickers faintly, static camera","significado":"A porta que se fecha: o tempo da graça tem limite.","temas":["juizo","urgencia","limite","advertencia"],"frequencia":146},
-    {"id":"ruined_wall_ivy","familia":"arquitetura","nome_pt":"Muro em ruína","imagem_en":"a collapsed stone wall overgrown with dark ivy, remains of a doorway, grey overcast light","movimento_en":"ivy leaves stir slowly in a light wind, static camera","significado":"O que o homem constrói e o tempo derruba.","temas":["vaidade","tempo","ruina","humildade"],"frequencia":149},
-
-    {"id":"dust_in_beam","familia":"abstrato","nome_pt":"Poeira na luz","imagem_en":"fine dust motes drifting slowly through a single shaft of light against deep darkness","movimento_en":"dust drifts and turns slowly in the beam, static camera","significado":"O pó que somos, visível só quando a luz bate.","temas":["humildade","fragilidade","revelacao","brevidade"],"frequencia":130},
-    {"id":"rising_smoke","familia":"abstrato","nome_pt":"Fumaça subindo","imagem_en":"a thin column of smoke curling slowly upward through a beam of pale light in a black room","movimento_en":"smoke curls and rises continuously, static camera","significado":"A oração que sobe como incenso.","temas":["oracao","adoracao","subida","silencio"],"frequencia":129},
-    {"id":"rain_on_dark_glass","familia":"abstrato","nome_pt":"Chuva no vidro","imagem_en":"rain running down old dark window glass, warm blurred light beyond, no view of the room","movimento_en":"droplets run down the glass continuously, blurred light shifts, static camera","significado":"O consolo visto de dentro: abrigo enquanto a tempestade dura.","temas":["consolo","abrigo","tristeza","paz"],"frequencia":446},
-    {"id":"embers_rising","familia":"abstrato","nome_pt":"Fagulhas subindo","imagem_en":"orange sparks rising slowly against total blackness, embers lifted from a fire out of frame","movimento_en":"sparks drift upward slowly and fade, static camera","significado":"O homem nasce para o sofrimento como as fagulhas voam para cima.","temas":["sofrimento","condicao","brevidade","aceitacao"],"frequencia":506},
-    {"id":"ripple_amber","familia":"abstrato","nome_pt":"Ondulação âmbar","imagem_en":"the surface of deep still water rippling slowly, a single amber reflection breaking apart and reforming","movimento_en":"rings spread slowly outward, the reflection reforms, static camera","significado":"A perturbação que passa e a superfície que volta a refletir.","temas":["quietude","restauracao","paz","meditacao"],"frequencia":446}
-  ]
+ "_sobre": "Catálogo de cenas das âncoras visuais. NÃO foi inventado: as imagens saíram da mineração dos 212 sermões do Spurgeon no R2 (1.195.613 palavras). O campo 'frequencia' é a contagem real da imagem no corpus. Palavras muito frequentes mas idiomáticas (way 1325x, well 1146x, house 767x) foram descartadas: no uso dele quase nunca são figura visual.",
+ "_regras": [
+  "Sem pessoas, sem rostos, sem figuras, sem mãos em quadro, sem texto na imagem.",
+  "Nunca Cristo nem personagem bíblico (doc 22 §6).",
+  "Onde a imagem implica gente (pastor, soldado, peregrino), filma-se o OBJETO ou o RASTRO.",
+  "Uma cena = um instante fotografável que fecha em loop de 5s com UM movimento lento.",
+  "Todo prompt concatena o style block da bíblia visual; aqui mora só o ASSUNTO.",
+  "MOVIMENTO: descrever o que se move de forma concreta e CONTÍNUA. Medido em 23/08 num banco de prova de 4 variantes: prompt tímido ('barely', 'almost imperceptible', 'holds steady') rende 0,3% de movimento relativo; o mesmo quadro com movimento descrito rende 1,3%, 4x mais. Mexer no prompt NEGATIVO pra proibir imobilidade PIOROU (0,7%). Manter 'static camera': a variante que tirou também piorou."
+ ],
+ "cenas": [
+  {
+   "id": "light_shaft_nave",
+   "familia": "capela",
+   "nome_pt": "Raio de luz na nave",
+   "imagem_en": "a single shaft of pale light falling through a high gothic window onto the worn stone floor of an empty chapel nave, dust suspended in the beam",
+   "movimento_en": "dust motes swirl and tumble continuously through the bright beam, drifting across the shaft in visible currents, static camera",
+   "significado": "A luz que entra sozinha no escuro: graça que encontra o homem sem que ele a busque.",
+   "temas": [
+    "graca",
+    "revelacao",
+    "esperanca",
+    "presenca"
+   ],
+   "frequencia": 689
+  },
+  {
+   "id": "empty_pews",
+   "familia": "capela",
+   "nome_pt": "Bancos vazios",
+   "imagem_en": "rows of empty dark wooden pews receding into shadow, one distant lamp lit at the far end",
+   "movimento_en": "the distant lamp flame wavers and throws shifting shadows down the rows of pews, shadows sliding across the wood, static camera",
+   "significado": "A congregação ausente: solidão espiritual, o culto que esfriou.",
+   "temas": [
+    "solidao",
+    "abandono",
+    "arrependimento",
+    "igreja"
+   ],
+   "frequencia": 137
+  },
+  {
+   "id": "stained_glass_floor",
+   "familia": "capela",
+   "nome_pt": "Vitral no chão",
+   "imagem_en": "coloured light from a stained glass window falling across a cold stone floor, the window itself out of frame",
+   "movimento_en": "the coloured patch of light slides across the stone floor, colours rippling and shifting as the light moves, static camera",
+   "significado": "A verdade que chega filtrada e ainda assim colorida: revelação parcial neste mundo.",
+   "temas": [
+    "revelacao",
+    "fe",
+    "misterio",
+    "esperanca"
+   ],
+   "frequencia": 689
+  },
+  {
+   "id": "empty_pulpit",
+   "familia": "capela",
+   "nome_pt": "Púlpito vazio",
+   "imagem_en": "an empty pulpit of dark carved wood lit from one side, the vast hall beyond it in darkness",
+   "movimento_en": "dust drifts and turns in the side light, shadows sliding across the carved wood, slow push in",
+   "significado": "A palavra que já foi pregada e continua ecoando: a voz que sobrevive ao pregador.",
+   "temas": [
+    "pregacao",
+    "legado",
+    "morte",
+    "palavra"
+   ],
+   "frequencia": 137
+  },
+  {
+   "id": "temple_veil",
+   "familia": "capela",
+   "nome_pt": "Véu do templo",
+   "imagem_en": "a heavy dark curtain hanging in a stone sanctuary, faint light glowing behind its edge",
+   "movimento_en": "the heavy curtain billows and ripples in a draught, deep folds moving, the light behind it shifting, static camera",
+   "significado": "O acesso que era vedado: separação, e o véu que se rasga.",
+   "temas": [
+    "acesso",
+    "santidade",
+    "graca",
+    "misterio"
+   ],
+   "frequencia": 137
+  },
+  {
+   "id": "storm_swell",
+   "familia": "mar",
+   "nome_pt": "Mar revolto",
+   "imagem_en": "dark storm waves rolling under a heavy leaden sky, cold spray catching the last light, open sea with no land",
+   "movimento_en": "heavy waves roll and surge continuously across the frame, foam sliding and breaking over the crests, spray blowing off the tops, static camera",
+   "significado": "A provação que não se controla: o crente no meio da tempestade.",
+   "temas": [
+    "provacao",
+    "medo",
+    "fe",
+    "perseveranca"
+   ],
+   "frequencia": 339
+  },
+  {
+   "id": "anchor_on_stone",
+   "familia": "mar",
+   "nome_pt": "Âncora na pedra",
+   "imagem_en": "a weathered iron ship anchor resting on wet dark stone, cold grey light, sea mist beyond",
+   "movimento_en": "sea mist rolls past in visible currents, water runs and drips down the iron, waves moving in the background, static camera",
+   "significado": "A esperança como âncora da alma: firmeza que não depende do humor do mar.",
+   "temas": [
+    "esperanca",
+    "seguranca",
+    "fe",
+    "ancora"
+   ],
+   "frequencia": 339
+  },
+  {
+   "id": "lighthouse_beam",
+   "familia": "mar",
+   "nome_pt": "Farol na noite",
+   "imagem_en": "a distant lighthouse beam sweeping across black water at night, low horizon, no shore visible",
+   "movimento_en": "the beam sweeps across the black water and returns, the surface rippling and glinting as the light passes, static camera",
+   "significado": "O aviso que persiste na escuridão: a advertência da graça a quem navega perdido.",
+   "temas": [
+    "advertencia",
+    "salvacao",
+    "escuridao",
+    "esperanca"
+   ],
+   "frequencia": 373
+  },
+  {
+   "id": "wave_on_rock",
+   "familia": "mar",
+   "nome_pt": "Onda na rocha",
+   "imagem_en": "a wave breaking hard against black rock, spray suspended in the air, dark sea beyond",
+   "movimento_en": "the wave surges up and bursts against the rock, spray flying and falling, water streaming back down the stone, static camera",
+   "significado": "A Rocha que não cede ao golpe: a imutabilidade de Deus contra o assalto.",
+   "temas": [
+    "imutabilidade",
+    "seguranca",
+    "provacao",
+    "fundamento"
+   ],
+   "frequencia": 196
+  },
+  {
+   "id": "still_water_dawn",
+   "familia": "mar",
+   "nome_pt": "Águas quietas",
+   "imagem_en": "perfectly calm black water under low fog at first light, absolute stillness after a storm",
+   "movimento_en": "fog rolls and curls across the water in visible currents, slow wide ripples spreading over the black surface, static camera",
+   "significado": "A paz depois da tempestade: consolo, descanso, o mar aquietado.",
+   "temas": [
+    "consolo",
+    "paz",
+    "descanso",
+    "alivio"
+   ],
+   "frequencia": 339
+  },
+  {
+   "id": "flood_waters",
+   "familia": "mar",
+   "nome_pt": "Águas da cheia",
+   "imagem_en": "dark floodwater covering a submerged field, only fence posts and bare branches breaking the surface",
+   "movimento_en": "the floodwater flows steadily past the posts, ripples and eddies spreading across the surface, debris drifting by, static camera",
+   "significado": "O juízo que sobe sem pressa: a inevitabilidade do que foi decretado.",
+   "temas": [
+    "juizo",
+    "morte",
+    "inevitabilidade",
+    "medo"
+   ],
+   "frequencia": 186
+  },
+  {
+   "id": "single_candle",
+   "familia": "fogo",
+   "nome_pt": "Vela solitária",
+   "imagem_en": "a single tall candle burning alone in a vast dark room, thin wisp of smoke rising",
+   "movimento_en": "the flame dances and leans, growing and shrinking, smoke curling upward in continuous ribbons, light pulsing on the walls, static camera",
+   "significado": "A fé pequena que não se apaga: o pavio que fumega e não é extinto.",
+   "temas": [
+    "fe",
+    "perseveranca",
+    "fraqueza",
+    "esperanca"
+   ],
+   "frequencia": 115
+  },
+  {
+   "id": "dying_embers",
+   "familia": "fogo",
+   "nome_pt": "Brasas morrendo",
+   "imagem_en": "glowing embers dying down in an old stone hearth, slow curls of smoke, the last orange light in a dark room",
+   "movimento_en": "embers pulse bright and dim, ash crumbling and shifting, smoke rising in continuous curls, static camera",
+   "significado": "O amor que esfriou: zelo perdido, o chamado de volta ao primeiro amor.",
+   "temas": [
+    "arrependimento",
+    "frieza",
+    "perda",
+    "chamado"
+   ],
+   "frequencia": 506
+  },
+  {
+   "id": "furnace_mouth",
+   "familia": "fogo",
+   "nome_pt": "Boca da fornalha",
+   "imagem_en": "the open mouth of an old iron furnace glowing white hot, dark forge around it",
+   "movimento_en": "the white hot glow surges and pulses, heat shimmer rippling the air, sparks lifting and fading, static camera",
+   "significado": "A fornalha que purifica sem consumir: a provação que refina o ouro.",
+   "temas": [
+    "provacao",
+    "purificacao",
+    "sofrimento",
+    "santificacao"
+   ],
+   "frequencia": 129
+  },
+  {
+   "id": "oil_lamp_low",
+   "familia": "fogo",
+   "nome_pt": "Lamparina baixa",
+   "imagem_en": "an old oil lamp with a low flame on a bare wooden table, deep darkness all around",
+   "movimento_en": "the flame wavers and leans, shadows swinging across the table, light pulsing on the wood, static camera",
+   "significado": "A vigília: esperar acordado, óleo na lâmpada, a volta que tarda.",
+   "temas": [
+    "vigilancia",
+    "espera",
+    "oracao",
+    "prontidao"
+   ],
+   "frequencia": 506
+  },
+  {
+   "id": "guttering_flame",
+   "familia": "fogo",
+   "nome_pt": "Chama se apagando",
+   "imagem_en": "the last flame guttering on a spent candle, wax pooled and cold, darkness closing in",
+   "movimento_en": "the flame struggles, flaring and shrinking, thick smoke pouring upward, wax running down the candle, static camera",
+   "significado": "A brevidade da vida: a vela que se acaba enquanto ainda se fala.",
+   "temas": [
+    "morte",
+    "brevidade",
+    "urgencia",
+    "tempo"
+   ],
+   "frequencia": 115
+  },
+  {
+   "id": "mist_moor",
+   "familia": "natureza",
+   "nome_pt": "Névoa no campo",
+   "imagem_en": "thick mist rolling slowly across an empty moor at first light, one bare tree standing alone in silhouette",
+   "movimento_en": "mist rolls across the moor in thick moving banks, branches swaying in the wind, grass bending in waves, static camera",
+   "significado": "A vida como vapor que aparece e logo se desfaz.",
+   "temas": [
+    "brevidade",
+    "morte",
+    "incerteza",
+    "humildade"
+   ],
+   "frequencia": 129
+  },
+  {
+   "id": "wheat_in_wind",
+   "familia": "natureza",
+   "nome_pt": "Trigo ao vento",
+   "imagem_en": "a field of ripe wheat bending in a slow wind under a heavy overcast sky",
+   "movimento_en": "the wheat bends and rises in continuous waves across the whole field, stalks rippling, static camera",
+   "significado": "A ceifa: o que foi semeado chegando ao seu dia.",
+   "temas": [
+    "colheita",
+    "juizo",
+    "frutos",
+    "tempo"
+   ],
+   "frequencia": 110
+  },
+  {
+   "id": "lone_oak_storm",
+   "familia": "natureza",
+   "nome_pt": "Carvalho na tormenta",
+   "imagem_en": "an ancient oak alone in a dark empty field, storm light behind it, heavy branches",
+   "movimento_en": "branches toss and sway in strong wind, leaves shaking, clouds racing behind the tree, static camera",
+   "significado": "A raiz que segura: o justo firmado quando o vento vem.",
+   "temas": [
+    "perseveranca",
+    "raiz",
+    "provacao",
+    "firmeza"
+   ],
+   "frequencia": 226
+  },
+  {
+   "id": "mountain_in_cloud",
+   "familia": "natureza",
+   "nome_pt": "Montanha na nuvem",
+   "imagem_en": "a dark mountain ridge emerging from low cloud at dawn, cold light on the rock",
+   "movimento_en": "cloud pours and rolls across the ridge in continuous motion, revealing and hiding the rock, static camera",
+   "significado": "A grandeza que humilha: o olhar levantado para os montes.",
+   "temas": [
+    "majestade",
+    "humildade",
+    "socorro",
+    "adoracao"
+   ],
+   "frequencia": 244
+  },
+  {
+   "id": "rain_on_reeds",
+   "familia": "natureza",
+   "nome_pt": "Chuva nos juncos",
+   "imagem_en": "heavy rain falling on still water among tall reeds, grey and quiet, no horizon",
+   "movimento_en": "rain falls hard and dimples the water continuously, reeds bending and springing back, ripples spreading outward, static camera",
+   "significado": "A chuva que cai sobre justos e injustos: a bondade comum e paciente.",
+   "temas": [
+    "paciencia",
+    "provisao",
+    "graca",
+    "quietude"
+   ],
+   "frequencia": 446
+  },
+  {
+   "id": "bare_branches_snow",
+   "familia": "natureza",
+   "nome_pt": "Galhos na neve",
+   "imagem_en": "snow falling slowly through bare black branches at dusk, no ground visible",
+   "movimento_en": "snow falls steadily across the frame, flakes drifting and swirling, branches shifting under the weight, static camera",
+   "significado": "O inverno da alma: aridez, silêncio, espera da primavera.",
+   "temas": [
+    "aridez",
+    "espera",
+    "silencio",
+    "tristeza"
+   ],
+   "frequencia": 165
+  },
+  {
+   "id": "open_bible_candle",
+   "familia": "objetos",
+   "nome_pt": "Bíblia aberta",
+   "imagem_en": "an old worn leather Bible lying open on a dark wooden table, gilded page edges catching candlelight from just out of frame",
+   "movimento_en": "candlelight flickers and swings across the pages, a page lifts and settles, shadows sliding over the text, static camera",
+   "significado": "A palavra que permanece quando tudo o mais passa.",
+   "temas": [
+    "palavra",
+    "verdade",
+    "permanencia",
+    "estudo"
+   ],
+   "frequencia": 361
+  },
+  {
+   "id": "broken_chain",
+   "familia": "objetos",
+   "nome_pt": "Corrente rompida",
+   "imagem_en": "a heavy iron chain lying on stone with one link parted open, dim light, dust",
+   "movimento_en": "light shifts and glints along the iron links, dust drifting through the air in visible currents, static camera",
+   "significado": "A libertação: o cativo solto, o pecado que já não prende.",
+   "temas": [
+    "libertacao",
+    "redencao",
+    "pecado",
+    "alivio"
+   ],
+   "frequencia": 186
+  },
+  {
+   "id": "empty_armour",
+   "familia": "objetos",
+   "nome_pt": "Armadura no chão",
+   "imagem_en": "an old breastplate and helmet lying abandoned on stone ground beside a sword, dim light",
+   "movimento_en": "light moves across the metal in shifting glints, dust drifting and turning in the air, static camera",
+   "significado": "A batalha travada: a armadura que se veste ou se abandona.",
+   "temas": [
+    "batalha",
+    "tentacao",
+    "vigilancia",
+    "desistencia"
+   ],
+   "frequencia": 181
+  },
+  {
+   "id": "quill_and_book",
+   "familia": "objetos",
+   "nome_pt": "Pena e tinteiro",
+   "imagem_en": "a quill and inkwell beside a closed leather ledger on dark wood, single warm light",
+   "movimento_en": "the flame wavers, shadows swinging across the page, the quill feather trembling, slow push in",
+   "significado": "O registro que será lido: os livros abertos no juízo.",
+   "temas": [
+    "juizo",
+    "registro",
+    "responsabilidade",
+    "memoria"
+   ],
+   "frequencia": 361
+  },
+  {
+   "id": "bread_and_cup",
+   "familia": "objetos",
+   "nome_pt": "Pão e cálice",
+   "imagem_en": "a torn loaf of dark bread and a plain metal cup of wine on a bare wooden table, one candle beyond",
+   "movimento_en": "candlelight flickers and swings across the bread and the cup, the wine surface rippling, shadows moving, static camera",
+   "significado": "A ceia: memória, sacrifício, comunhão.",
+   "temas": [
+    "comunhao",
+    "sacrificio",
+    "memoria",
+    "graca"
+   ],
+   "frequencia": 220
+  },
+  {
+   "id": "gold_in_crucible",
+   "familia": "objetos",
+   "nome_pt": "Ouro no cadinho",
+   "imagem_en": "molten gold glowing inside a clay crucible, dark forge, dross floating on the surface",
+   "movimento_en": "the molten gold churns and swirls, the surface glowing and pulsing, heat shimmer rising, static camera",
+   "significado": "A prova que separa o ouro da escória.",
+   "temas": [
+    "provacao",
+    "purificacao",
+    "valor",
+    "paciencia"
+   ],
+   "frequencia": 165
+  },
+  {
+   "id": "crown_on_stone",
+   "familia": "objetos",
+   "nome_pt": "Coroa sobre pedra",
+   "imagem_en": "a simple gold crown resting on a rough stone ledge in a dark room, a single shaft of light on it",
+   "movimento_en": "light sweeps across the gold in moving glints, dust drifting through the beam, slow push in",
+   "significado": "A coroa reservada: recompensa que não se recebe aqui.",
+   "temas": [
+    "recompensa",
+    "esperanca",
+    "perseveranca",
+    "eternidade"
+   ],
+   "frequencia": 191
+  },
+  {
+   "id": "grave_stone_grass",
+   "familia": "objetos",
+   "nome_pt": "Lápide na relva",
+   "imagem_en": "a weathered gravestone half sunk in long wet grass, inscription eroded beyond reading, grey light",
+   "movimento_en": "grass bends and rises in waves of wind, shadows sliding across the stone, static camera",
+   "significado": "O esquecimento dos homens e a memória de Deus.",
+   "temas": [
+    "morte",
+    "esquecimento",
+    "eternidade",
+    "humildade"
+   ],
+   "frequencia": 203
+  },
+  {
+   "id": "narrow_door_light",
+   "familia": "arquitetura",
+   "nome_pt": "Porta estreita",
+   "imagem_en": "a narrow stone doorway at the far end of a dark corridor, warm light spilling through from beyond, heavy walls",
+   "movimento_en": "warm light flickers and pulses through the opening, dust swirling in the beam, shadows shifting on the walls, slow push in",
+   "significado": "A porta estreita: o caminho único e a urgência de entrar.",
+   "temas": [
+    "salvacao",
+    "urgencia",
+    "escolha",
+    "esperanca"
+   ],
+   "frequencia": 182
+  },
+  {
+   "id": "stone_stairs_dark",
+   "familia": "arquitetura",
+   "nome_pt": "Escada de pedra",
+   "imagem_en": "worn stone steps ascending into darkness, faint light from somewhere above, damp walls",
+   "movimento_en": "the light from above shifts and wavers, shadows sliding down the steps, dust drifting through the air, static camera",
+   "significado": "A subida cujo fim não se vê: santificação como caminho longo.",
+   "temas": [
+    "santificacao",
+    "perseveranca",
+    "caminho",
+    "fe"
+   ],
+   "frequencia": 226
+  },
+  {
+   "id": "fortress_wall",
+   "familia": "arquitetura",
+   "nome_pt": "Muralha",
+   "imagem_en": "a massive weathered stone fortress wall seen from below, storm sky above, no gate visible",
+   "movimento_en": "heavy clouds move fast behind the wall, light and shadow sweeping across the stone, static camera",
+   "significado": "O refúgio forte: torre alta para onde o justo corre.",
+   "temas": [
+    "refugio",
+    "seguranca",
+    "protecao",
+    "forca"
+   ],
+   "frequencia": 149
+  },
+  {
+   "id": "empty_road_storm",
+   "familia": "arquitetura",
+   "nome_pt": "Estrada vazia",
+   "imagem_en": "an empty stone road under a heavy dark sky stretching toward the horizon, low stone walls on both sides",
+   "movimento_en": "clouds race across the sky, dust and debris blowing along the road, grass at the verge bending in the wind, static camera",
+   "significado": "A peregrinação: o caminho a percorrer sem companhia visível.",
+   "temas": [
+    "caminho",
+    "solidao",
+    "perseveranca",
+    "jornada"
+   ],
+   "frequencia": 1325
+  },
+  {
+   "id": "foundation_stone",
+   "familia": "arquitetura",
+   "nome_pt": "Pedra fundamental",
+   "imagem_en": "a massive squared cornerstone at the base of an unfinished stone wall, fresh mortar, cold light",
+   "movimento_en": "light sweeps across the stone surface, dust drifting and turning in the air, slow push in",
+   "significado": "O fundamento que não se remove: a pedra angular.",
+   "temas": [
+    "fundamento",
+    "seguranca",
+    "cristo",
+    "firmeza"
+   ],
+   "frequencia": 205
+  },
+  {
+   "id": "iron_gate_closed",
+   "familia": "arquitetura",
+   "nome_pt": "Portão fechado",
+   "imagem_en": "a heavy closed iron gate in a stone wall, thin light showing at its edges, rust and age",
+   "movimento_en": "light beyond the gate flickers and shifts, shadows of the bars sliding across the ground, static camera",
+   "significado": "A porta que se fecha: o tempo da graça tem limite.",
+   "temas": [
+    "juizo",
+    "urgencia",
+    "limite",
+    "advertencia"
+   ],
+   "frequencia": 146
+  },
+  {
+   "id": "ruined_wall_ivy",
+   "familia": "arquitetura",
+   "nome_pt": "Muro em ruína",
+   "imagem_en": "a collapsed stone wall overgrown with dark ivy, remains of a doorway, grey overcast light",
+   "movimento_en": "ivy leaves toss and turn in the wind, shadows moving across the broken stone, static camera",
+   "significado": "O que o homem constrói e o tempo derruba.",
+   "temas": [
+    "vaidade",
+    "tempo",
+    "ruina",
+    "humildade"
+   ],
+   "frequencia": 149
+  },
+  {
+   "id": "dust_in_beam",
+   "familia": "abstrato",
+   "nome_pt": "Poeira na luz",
+   "imagem_en": "fine dust motes drifting slowly through a single shaft of light against deep darkness",
+   "movimento_en": "dust motes swirl, tumble and turn continuously through the beam in visible currents, static camera",
+   "significado": "O pó que somos, visível só quando a luz bate.",
+   "temas": [
+    "humildade",
+    "fragilidade",
+    "revelacao",
+    "brevidade"
+   ],
+   "frequencia": 130
+  },
+  {
+   "id": "rising_smoke",
+   "familia": "abstrato",
+   "nome_pt": "Fumaça subindo",
+   "imagem_en": "a thin column of smoke curling slowly upward through a beam of pale light in a black room",
+   "movimento_en": "smoke pours upward in continuous curling ribbons, twisting and spreading as it rises, static camera",
+   "significado": "A oração que sobe como incenso.",
+   "temas": [
+    "oracao",
+    "adoracao",
+    "subida",
+    "silencio"
+   ],
+   "frequencia": 129
+  },
+  {
+   "id": "rain_on_dark_glass",
+   "familia": "abstrato",
+   "nome_pt": "Chuva no vidro",
+   "imagem_en": "rain running down old dark window glass, warm blurred light beyond, no view of the room",
+   "movimento_en": "heavy rain runs down the dark glass in continuous streaks, droplets sliding, merging and falling, the blurred light behind shifting as the water moves, static camera",
+   "significado": "O consolo visto de dentro: abrigo enquanto a tempestade dura.",
+   "temas": [
+    "consolo",
+    "abrigo",
+    "tristeza",
+    "paz"
+   ],
+   "frequencia": 446
+  },
+  {
+   "id": "embers_rising",
+   "familia": "abstrato",
+   "nome_pt": "Fagulhas subindo",
+   "imagem_en": "orange sparks rising slowly against total blackness, embers lifted from a fire out of frame",
+   "movimento_en": "sparks lift, drift and swirl upward continuously, glowing and fading, static camera",
+   "significado": "O homem nasce para o sofrimento como as fagulhas voam para cima.",
+   "temas": [
+    "sofrimento",
+    "condicao",
+    "brevidade",
+    "aceitacao"
+   ],
+   "frequencia": 506
+  },
+  {
+   "id": "ripple_amber",
+   "familia": "abstrato",
+   "nome_pt": "Ondulação âmbar",
+   "imagem_en": "the surface of deep still water rippling slowly, a single amber reflection breaking apart and reforming",
+   "movimento_en": "rings spread outward across the surface continuously, new drops falling, the reflection breaking and reforming, static camera",
+   "significado": "A perturbação que passa e a superfície que volta a refletir.",
+   "temas": [
+    "quietude",
+    "restauracao",
+    "paz",
+    "meditacao"
+   ],
+   "frequencia": 446
+  }
+ ]
 }
