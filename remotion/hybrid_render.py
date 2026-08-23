@@ -57,7 +57,11 @@ def main():
     C = canais.get(args.canal)
     nnnn = f"{int(args.sermon):04d}"
     print(f"🎬 {C['nome']} · sermão {nnnn}")
-    work = os.path.join(HERE, "_hybrid", nnnn)
+    # ⚠️ NAMESPACE POR CANAL, mesma armadilha do build_job (23/08). Era
+    # `_hybrid/0001` pra todo canal, e o 0001 do Moody caiu em cima do 0001 do
+    # Spurgeon de julho: base.png, body.mp4 e outro.mp4 do canal ERRADO
+    # esperando pra serem concatenados sem nenhum erro na tela.
+    work = os.path.join(HERE, "_hybrid", C["slug"], nnnn)
     os.makedirs(work, exist_ok=True)
     props = os.path.join(HERE, f"props_{nnnn}.json")
 

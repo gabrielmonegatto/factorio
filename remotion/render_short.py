@@ -27,7 +27,9 @@ import canais
 BUCKET = CHANNEL_PREFIX = SHORTS_RENDER_PREFIX = None
 HERE = os.path.dirname(os.path.abspath(__file__))
 PUBLIC_SHORTS = os.path.join(HERE, "public", "shorts")
-OUT_DIR = os.path.join(HERE, "out", "shorts")
+# Sem o canal no caminho, o short 0001_c01 do Moody sobrescreve o do Spurgeon.
+# Mesma armadilha que o build_job e o hybrid_render tinham (23/08).
+OUT_DIR = None   # preenchido em main() com o slug do canal
 FADE_S = 0.15  # fade de áudio nas pontas do corte, tira o "tec" do corte seco
 
 
@@ -128,6 +130,8 @@ def main():
     BUCKET, CHANNEL_PREFIX = C["bucket"], C["prefix"]
     # shorts saem ao lado dos longos, com sufixo: renders/moody -> renders/moody_shorts
     SHORTS_RENDER_PREFIX = C["renders_prefix"] + "_shorts"
+    global OUT_DIR
+    OUT_DIR = os.path.join(HERE, "out", "shorts", C["slug"])
     print(f"✂️  {C['nome']} · shorts de {int(args.sermon):04d}")
 
     env = load_env()
