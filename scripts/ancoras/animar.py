@@ -218,6 +218,8 @@ def main():
     ap.add_argument("--largura", type=int, default=1280)
     ap.add_argument("--altura", type=int, default=720)
     ap.add_argument("--loop", action="store_true")
+    ap.add_argument("--variantes", help="JSON de variantes de prompt: banco de prova "
+                    "sobre o primeiro still, um setup de pod pra N tentativas")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -291,6 +293,8 @@ def main():
                     "um pod com mais RAM.")
 
         scp(ip, porta, os.path.join(HERE, "pod_wan_i2v.py"), f"root@{ip}:/work/")
+        if args.variantes:
+            scp(ip, porta, args.variantes, f"root@{ip}:/work/variantes.json")
         for s in stills:
             scp(ip, porta, os.path.join(args.stills, s), f"root@{ip}:/work/stills/")
         print(f"📤 {len(stills)} stills enviados ({time.time()-t_inicio:.0f}s)")
@@ -317,6 +321,7 @@ def main():
              f"--frames {args.frames} --steps {args.steps} --lado {args.lado} "
              f"--modelo {args.modelo} --largura {args.largura} --altura {args.altura} "
              + ("--loop " if args.loop else "")
+             + ("--variantes /work/variantes.json " if args.variantes else "")
              + f"> /work/log.txt 2>&1"),
             "touch /work/PRONTO",
             "",

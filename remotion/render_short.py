@@ -75,7 +75,31 @@ def run(cmd):
     return r
 
 
-def process_clip(env, s3, nnnn, idx, clip, master_local, upload=True, anchor=None):
+def assets_da_marca(s3, C, nnnn):
+    """🧨 A composição não tem mais default de fundo nem de busto (commit 0b2be45:
+    default nomeado fazia o vídeo do Moody exibir o Spurgeon). Quem monta manda.
+    Sem isso o short sai sem catedral e sem busto, e nada acusa erro."""
+    A = C.get("assets") or sys.exit(f"❌ canal {C['slug']!r} sem bloco `assets`")
+    imagens = os.path.join(HERE, "public", "images")
+    os.makedirs(imagens, exist_ok=True)
+    out = {}
+    for prop, campo in (("backgroundImageUrl", "fundo"), ("preacherImageUrl", "busto")):
+        subdir, padrao = A[campo]
+        res = s3.list_objects_v2(Bucket=BUCKET,
+                                 Prefix=f"{CHANNEL_PREFIX}/_assets/{subdir}/", MaxKeys=200)
+        chaves = sorted(o["Key"] for o in res.get("Contents", []) if re.search(padrao, o["Key"]))
+        if not chaves:
+            sys.exit(f"❌ nenhum asset em _assets/{subdir}/ casando {padrao}")
+        chave = chaves[(int(nnnn) - 1) % len(chaves)]
+        nome = chave.rsplit("/", 1)[-1]
+        # force: o nome local é contrato com o .tsx e é o MESMO entre canais
+        s3.download_file(BUCKET, chave, os.path.join(imagens, nome))
+        out[prop] = f"images/{nome}"
+    out["attribution"] = (C.get("pregador") or "").upper()
+    return out
+
+
+def process_clip(env, s3, nnnn, idx, clip, master_local, upload=True, anchor=None, C=None):
     tag = f"{nnnn}_c{idx:02d}" + (f"_{anchor}" if anchor else "")
     os.makedirs(PUBLIC_SHORTS, exist_ok=True)
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -96,6 +120,8 @@ def process_clip(env, s3, nnnn, idx, clip, master_local, upload=True, anchor=Non
     }
     if anchor:
         props["anchorVideoUrl"] = f"anchors/{anchor}.mp4"
+    if C:
+        props.update(assets_da_marca(s3, C, nnnn))
     props_path = os.path.join(PUBLIC_SHORTS, f"{tag}_props.json")
     json.dump(props, open(props_path, "w", encoding="utf-8"), ensure_ascii=False)
 
@@ -157,7 +183,8 @@ def main():
     todo = [(args.clip, clips[args.clip - 1])] if args.clip else list(enumerate(clips, 1))
     outs = []
     for idx, clip in todo:
-        outs.append(process_clip(env, s3, nnnn, idx, clip, master_local, upload=not args.no_upload, anchor=args.anchor))
+        outs.append(process_clip(env, s3, nnnn, idx, clip, master_local,
+                                 upload=not args.no_upload, anchor=args.anchor, C=C))
     print(f"\n🏁 {len(outs)} short(s) prontos")
 
 

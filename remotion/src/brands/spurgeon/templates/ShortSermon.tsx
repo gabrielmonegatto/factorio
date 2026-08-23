@@ -50,6 +50,14 @@ export interface ShortSermonProps {
 		src: string;
 		kind?: "image" | "video";
 		nome?: string;   // só pra depuração
+		/**
+		 * Duração real do mp4, medida por ffprobe na montagem. Serve pra ESTICAR
+		 * o clipe até cobrir a cena: um clipe de 3,4s numa cena de 6,4s tocaria
+		 * duas vezes, com um salto visível na emenda. Desacelerar resolve sem
+		 * emenda nenhuma, e de quebra deixa o movimento mais lento, que é o que
+		 * a direção do canal pede. Sem este campo, toca na velocidade normal.
+		 */
+		clipMs?: number;
 	}[];
 	/** trilha de fundo. Volume MUITO baixo de propósito: a voz é o produto. */
 	bgmUrl?: string;
@@ -169,8 +177,16 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 								// Começa no fade-in, então o movimento já está em curso quando abre.
 								const deFrame = Math.max(0, Math.floor(((shot.start - fade) / 1000) * fps));
 								const duraFrames = Math.max(1, Math.ceil(((shot.end - shot.start + fade) / 1000) * fps));
+								// Estica o clipe até cobrir a cena. O piso de 0.35 evita o efeito
+								// "quadro travando": abaixo disso o movimento fica lento demais pra
+								// parecer vídeo. Cena mais longa que isso ainda dá a volta no loop,
+								// agora uma vez só e devagar.
+								const clipMs = shot.clipMs || 0;
+								const taxa = clipMs
+									? Math.min(1, Math.max(0.35, clipMs / Math.max(1, shot.end - shot.start)))
+									: 1;
 								const conteudo = ehVideo ? (
-									<Video src={resolveAsset(shot.src)} loop muted style={comum} />
+									<Video src={resolveAsset(shot.src)} loop muted playbackRate={taxa} style={comum} />
 								) : (
 									<Img src={resolveAsset(shot.src)} style={comum} />
 								);

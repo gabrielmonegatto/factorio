@@ -44,7 +44,43 @@ PREFIXO = "channels/channels_youtube/treasures_charlesspurgeon"
 FADE_S = 0.15
 
 sys.path.insert(0, HERE)
+sys.path.insert(0, REMOTION)
 import casar_ancora as ca  # noqa: E402
+import canais  # noqa: E402
+
+PUBLIC_IMAGENS = os.path.join(REMOTION, "public", "images")
+
+
+def asset_rotativo(cli, prefixo_canal, subdir, padrao, n):
+    """Mesma escolha determinística do build_job: o asset varia por sermão mas é
+    sempre o mesmo pro mesmo N, então re-render dá o mesmo vídeo."""
+    res = cli.list_objects_v2(Bucket="mananciall",
+                              Prefix=f"{prefixo_canal}/_assets/{subdir}/", MaxKeys=200)
+    chaves = sorted(o["Key"] for o in res.get("Contents", [])
+                    if re.search(padrao, o["Key"]))
+    if not chaves:
+        sys.exit(f"❌ nenhum asset em _assets/{subdir}/ casando {padrao}")
+    return chaves[(int(n) - 1) % len(chaves)]
+
+
+def assets_da_marca(cli, C, nnnn):
+    """🧨 A composição NÃO tem mais default de fundo nem de busto (commit 0b2be45:
+    o default nomeado fazia o vídeo do Moody exibir o Spurgeon). Quem monta é
+    obrigado a mandar. Sem isso o short renderiza sem catedral e sem busto, e
+    nada acusa erro: sai um vídeo, só que careca."""
+    A = C.get("assets") or sys.exit(f"❌ canal {C['slug']!r} sem bloco `assets` em canais.py")
+    os.makedirs(PUBLIC_IMAGENS, exist_ok=True)
+    saida = {}
+    for prop, campo in (("backgroundImageUrl", "fundo"), ("preacherImageUrl", "busto")):
+        chave = asset_rotativo(cli, C["prefix"], *A[campo], nnnn)
+        nome = chave.rsplit("/", 1)[-1]
+        # force: o nome local é contrato com o .tsx e é o MESMO entre canais, então
+        # cache por existência serviria a catedral do Spurgeon num vídeo do Moody
+        cli.download_file("mananciall", chave, os.path.join(PUBLIC_IMAGENS, nome))
+        saida[prop] = f"images/{nome}"
+    # o campo é `pregador` (o nome como o espectador conhece), não o nome do canal
+    saida["attribution"] = (C.get("pregador") or "").upper()
+    return saida
 
 
 def s3():
@@ -105,8 +141,9 @@ def main():
     args = ap.parse_args()
 
     cli = s3()
+    C = canais.get("spurgeon")
     nnnn = f"{int(args.sermao):04d}"
-    res = cli.list_objects_v2(Bucket="mananciall", Prefix=f"{PREFIXO}/{nnnn}", MaxKeys=200)
+    res = cli.list_objects_v2(Bucket="mananciall", Prefix=f"{C['prefix']}/{nnnn}", MaxKeys=200)
     keys = [o["Key"] for o in res.get("Contents", [])]
     if not keys:
         sys.exit(f"❌ sermão {nnnn} não achado no R2")
@@ -154,6 +191,16 @@ def main():
                      else f"{prefixo_r2}/{c['familia']}/{c['id']}.png")
             cli.download_file("mananciall", chave, destino)
         sh["src"] = f"cenas/{nome}"
+        if args.fonte == "video":
+            # duração real do mp4: a composição usa pra esticar o clipe até
+            # cobrir a cena em vez de repetir o loop no meio dela
+            p = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
+                                "format=duration", "-of", "csv=p=0", destino],
+                               capture_output=True, text=True)
+            try:
+                sh["clip_ms"] = int(float(p.stdout.strip()) * 1000)
+            except ValueError:
+                sh["clip_ms"] = 0
 
     # 3. áudio do clipe
     master = None
@@ -192,8 +239,12 @@ def main():
         "hookText": clip["hook_text"],
         "anchorShots": [{"start": s["start"], "end": s["end"], "src": s["src"],
                          "kind": "video" if args.fonte == "video" else "image",
-                         "nome": s["cena"]["nome_pt"]} for s in shots],
+                         "nome": s["cena"]["nome_pt"],
+                         **({"clipMs": s["clip_ms"]} if s.get("clip_ms") else {})}
+                        for s in shots],
     }
+    props.update(assets_da_marca(cli, C, nnnn))
+    print(f"🖼️  fundo/busto: {props['backgroundImageUrl']} · {props['preacherImageUrl']}")
     if bgm:
         props["bgmUrl"] = bgm
         props["bgmVolume"] = args.trilha_volume

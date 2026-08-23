@@ -65,6 +65,9 @@ def main():
     ap.add_argument("--loop", action="store_true",
                     help="primeiro frame = ultimo frame: o clipe fecha sem emenda")
     ap.add_argument("--modelo", choices=["5b", "14b"], default="14b")
+    ap.add_argument("--variantes", help="JSON [{nome,prompt,negativo?}]: gera uma "
+                    "saída por variante A PARTIR DO PRIMEIRO still. Banco de prova "
+                    "de prompt pagando UM setup de pod em vez de um por tentativa.")
     ap.add_argument("--largura", type=int, help="se omitido, usa --lado (quadrado)")
     ap.add_argument("--altura", type=int)
     args = ap.parse_args()
@@ -107,10 +110,21 @@ def main():
     pipe.vae.enable_slicing()
     print(f"[wan] modelo carregado em {time.time()-t0:.0f}s", flush=True)
 
+    # modo banco de prova: um still, N prompts
+    variantes = None
+    if args.variantes:
+        with open(args.variantes, encoding="utf-8") as fh:
+            variantes = json.load(fh)
+        stills = [stills[0]] * len(variantes)
+        print(f"[wan] banco de prova: {len(variantes)} variantes sobre {stills[0]}", flush=True)
+
     medidas = []
     for i, nome in enumerate(stills, 1):
         base = os.path.splitext(nome)[0]
         fam = familia_de(base)
+        var = variantes[i - 1] if variantes else None
+        if var:
+            base = var["nome"]
         # recorta pro aspecto alvo ANTES de redimensionar: esticar deforma
         im = Image.open(os.path.join(args.entrada, nome)).convert("RGB")
         alvo = larg / alt
@@ -120,13 +134,14 @@ def main():
         else:
             nh = int(w / alvo); im = im.crop((0, (h - nh) // 2, w, (h + nh) // 2))
         img = im.resize((larg, alt), Image.LANCZOS)
-        prompt = MOVIMENTO.get(fam, PADRAO)
+        prompt = var["prompt"] if var else MOVIMENTO.get(fam, PADRAO)
+        negativo = (var.get("negativo") if var else None) or NEGATIVO
 
         t = time.time()
         extra = {"last_image": img} if args.loop else {}
         frames = pipe(
             prompt=prompt,
-            negative_prompt=NEGATIVO,
+            negative_prompt=negativo,
             image=img,
             height=alt,
             width=larg,

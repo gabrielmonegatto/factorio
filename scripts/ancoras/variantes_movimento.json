@@ -1,0 +1,20 @@
+[
+  {
+    "nome": "A_controle_atual",
+    "prompt": "slow continuous drifting motion, particles and haze moving gently, static camera"
+  },
+  {
+    "nome": "B_movimento_explicito",
+    "prompt": "heavy rain runs down the dark window glass in continuous streaks, droplets slide, merge and fall, water sheets rippling over the surface, the blurred light behind shifts as the water moves, static camera"
+  },
+  {
+    "nome": "C_explicito_negativo_forte",
+    "prompt": "heavy rain runs down the dark window glass in continuous streaks, droplets slide, merge and fall, water sheets rippling over the surface, the blurred light behind shifts as the water moves, static camera",
+    "negativo": "still image, frozen frame, motionless, no movement, freeze frame, photograph, bright colors, overexposed, blurred details, subtitles, text, watermark, people, faces, hands, figures, camera shake, jump cut, cartoon, low quality, jpeg artifacts, deformed"
+  },
+  {
+    "nome": "D_explicito_sem_static_camera",
+    "prompt": "heavy rain pours down the dark window glass, thick droplets racing downward and merging into running streams, the whole surface alive with moving water, blurred lamplight rippling behind the glass",
+    "negativo": "still image, frozen frame, motionless, no movement, freeze frame, photograph, bright colors, overexposed, blurred details, subtitles, text, watermark, people, faces, hands, figures, camera shake, jump cut, cartoon, low quality, jpeg artifacts, deformed"
+  }
+]
