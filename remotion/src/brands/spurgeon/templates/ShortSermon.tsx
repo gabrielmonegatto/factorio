@@ -3,6 +3,7 @@ import {
 	AbsoluteFill,
 	Audio as RemotionAudio,
 	Img,
+	Sequence,
 	Video,
 	interpolate,
 	useCurrentFrame,
@@ -147,21 +148,37 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 									{ extrapolateLeft: "clamp", extrapolateRight: "clamp" },
 								);
 								if (op <= 0.001) return null;
-								// push-in lento: dá vida ao still sem competir com a palavra
+								const ehVideo = shot.kind === "video";
+								// Push-in SÓ no still. No clipe animado o movimento já está lá dentro:
+								// somar zoom por cima dá aquele "duplo movimento" que denuncia edição
+								// barata, e ainda amplia o artefato do modelo.
 								const prog = (tMs - shot.start) / Math.max(1, shot.end - shot.start);
-								const escala = 1.04 + 0.06 * Math.min(1, Math.max(0, prog));
+								const escala = ehVideo ? 1 : 1.04 + 0.06 * Math.min(1, Math.max(0, prog));
 								const comum = {
 									width: "100%",
 									height: "100%",
 									objectFit: "cover" as const,
 									transform: `scale(${escala})`,
 								};
+								// O <Video> conta o tempo a partir do início da Sequence. Sem ela,
+								// todo clipe começa no frame 0 da composição: uma cena que entra aos
+								// 12s apareceria já no meio (ou no fim) do loop, em fase aleatória.
+								// Começa no fade-in, então o movimento já está em curso quando abre.
+								const deFrame = Math.max(0, Math.floor(((shot.start - fade) / 1000) * fps));
+								const duraFrames = Math.max(1, Math.ceil(((shot.end - shot.start + fade) / 1000) * fps));
+								const conteudo = ehVideo ? (
+									<Video src={resolveAsset(shot.src)} loop muted style={comum} />
+								) : (
+									<Img src={resolveAsset(shot.src)} style={comum} />
+								);
 								return (
 									<div key={`${shot.src}-${i}`} style={{ position: "absolute", inset: 0, opacity: op }}>
-										{shot.kind === "video" ? (
-											<Video src={resolveAsset(shot.src)} loop muted style={comum} />
+										{ehVideo ? (
+											<Sequence from={deFrame} durationInFrames={duraFrames} layout="none">
+												{conteudo}
+											</Sequence>
 										) : (
-											<Img src={resolveAsset(shot.src)} style={comum} />
+											conteudo
 										)}
 									</div>
 								);

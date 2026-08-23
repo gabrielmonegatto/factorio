@@ -344,7 +344,7 @@ Primeiros micro-clipes nossos gerados. Não é mais estimativa.
 **Projeção com número medido:** biblioteca de 300 clipes = **US$ 2,40 e ~7h de
 máquina**. Bate com a estimativa da §5. O gargalo é curadoria humana, não custo.
 
-### 🧨 As 7 minas do RunPod (todas custaram rodada; todas viraram trava no script)
+### 🧨 As 10 minas do RunPod (todas custaram rodada; todas viraram trava no script)
 
 | # | Mina | Sintoma enganoso | Conserto no `animar.py` |
 |---|---|---|---|
@@ -355,6 +355,19 @@ máquina**. Bate com a estimativa da §5. O gargalo é curadoria humana, não cu
 | 5 | Porta 22 aparece ANTES da chave ser instalada | `Permission denied`, e o script seguia calado | exige `echo PRONTO` autenticado antes de usar o pod |
 | 6 | **Sessão SSH cai em trabalho longo** | 33min de geração perdidos, US$ 0,22 no lixo | roda `setsid` solto com log; acompanha por conexões curtas |
 | 7 | 5B bf16 a 704px estoura os 24GB no decode do VAE | OOM pedindo 230MB com 22,9GB alocados | `enable_model_cpu_offload()` + `vae.enable_tiling()` + slicing. ⚠️ offload NÃO convive com `.to("cuda")` |
+| 8 | **Nome de exibição da GPU não é o id da API** | `Unknown GPU type: NVIDIA A100 PCIe`, 9 vezes seguidas; parece falta de estoque | tabela `GPUS` com os **ids** conferidos + trava que recusa 14B em placa <40GB |
+| 9 | **Flag some entre o script local e o pod** | log diz `704x704` com `--largura 1280` na linha de comando; o vídeo sai quadrado e feio, e nada acusa erro | repassar TODAS as flags no runner + **imprimir o comando real** que roda no pod |
+| 10 | Sem estoque na COMMUNITY, o script cai na SECURE, que é mais cara | teto anunciado em US$ 0,33 vira US$ 0,55 de exposição real (A6000 medida: 0,547/h contra 0,33) | `FATOR_SECURE` no cálculo: o teto é anunciado no **pior** caso |
+
+**A mina 9 é a mais perigosa das dez**, porque é a única que não quebra nada. As
+outras nove derrubam a rodada e gritam. Essa entrega um mp4 com duração certa,
+tamanho certo e conteúdo errado: o operador só descobre olhando o vídeo, depois
+de ter pago. Daí a regra que ficou: **flag que não aparece no log não existe.**
+
+Corolário no mesmo espírito, agora do lado do resultado: um clipe pode voltar com
+81 quadros idênticos e passar por vídeo. Por isso o `subir_clipes.py` mede a
+diferença média entre quadros consecutivos (`signalstats YDIF`) e **recusa subir
+still disfarçado de clipe**.
 
 ### 🧨 A mina do modelo (custou 1 rodada)
 

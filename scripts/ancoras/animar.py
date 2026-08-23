@@ -36,12 +36,25 @@ TEMPLATE = "runpod-torch-v280"           # runpod/pytorch:1.0.2-cu1281-torch280-
 # 🧨 O Wan 2.2 14B é MoE: dois experts de ~28GB em bf16. NÃO cabe nos 24GB do
 # 4090 nem com offload (um expert sozinho já estoura). Pra 14B a placa mínima
 # é A100 80GB. O 4090 só serve pro 5B, que é modelo de demo.
+# 🧨 MINA (23/08): o campo que a mutation aceita é o `id` do gpuType, NÃO o
+# `displayName`. "NVIDIA A100 PCIe" (display) devolve "Unknown GPU type"; o id
+# certo é "NVIDIA A100 80GB PCIe". Sempre conferir com a query gpuTypes { id }.
+#
+# 📌 ACHADO DE CUSTO: a RTX A6000 tem 48GB pelo MESMO preço do 4090 (US$0,33/h)
+# e é 3,6x mais barata que a A100 80GB. Como o 14B com cpu_offload precisa de
+# ~28GB (um expert por vez), 48GB bastam. É a placa certa pra esta fábrica.
+# Preço da tabela = nuvem COMMUNITY. Quando ela está sem estoque o script cai na
+# SECURE, que cobra mais (A6000 medida em 23/08: US$ 0,547/h contra 0,33). Por isso
+# o teto é anunciado no PIOR caso: teto que subestima o gasto não é teto.
+FATOR_SECURE = 1.7
 GPUS = {
-    "4090": ("NVIDIA GeForce RTX 4090", 0.34),
-    "a100": ("NVIDIA A100 PCIe", 1.19),
-    "h100": ("NVIDIA H100 PCIe", 1.99),
+    "a6000": ("NVIDIA RTX A6000", 0.33, 48),      # ⭐ padrão pro 14B
+    "4090":  ("NVIDIA GeForce RTX 4090", 0.34, 24),   # só serve pro 5B
+    "l40s":  ("NVIDIA L40S", 0.79, 48),
+    "a100":  ("NVIDIA A100 80GB PCIe", 1.19, 80),
+    "h100":  ("NVIDIA H100 PCIe", 1.99, 80),
 }
-GPU = GPUS["a100"][0]
+GPU = GPUS["a6000"][0]
 CHAVE_SSH = os.path.expanduser("~/.ssh/id_ed25519_factorio")
 DISCO_GB = 120                           # 14B: dois experts + text encoder + torch
 
@@ -200,7 +213,7 @@ def main():
     ap.add_argument("--steps", type=int, default=25)
     ap.add_argument("--lado", type=int, default=704)
     ap.add_argument("--teto", type=int, default=45, help="teto duro em minutos")
-    ap.add_argument("--gpu", choices=list(GPUS), default="a100")
+    ap.add_argument("--gpu", choices=list(GPUS), default="a6000")
     ap.add_argument("--modelo", choices=["5b", "14b"], default="14b")
     ap.add_argument("--largura", type=int, default=1280)
     ap.add_argument("--altura", type=int, default=720)
@@ -212,10 +225,13 @@ def main():
     if not stills:
         sys.exit(f"❌ nenhum still em {args.stills}")
     global GPU
-    GPU, custo_h = GPUS[args.gpu]
-    print(f"📦 {len(stills)} stills | {GPU} (US$ {custo_h}/h) | modelo {args.modelo} "
+    GPU, custo_h, vram = GPUS[args.gpu]
+    if args.modelo == "14b" and vram < 40:
+        sys.exit(f"❌ {GPU} tem {vram}GB: o 14B precisa de 40GB+. Use --gpu a6000 (48GB, US$0,33/h)")
+    teto_max = custo_h * FATOR_SECURE * args.teto / 60
+    print(f"📦 {len(stills)} stills | {GPU} {vram}GB (US$ {custo_h}/h community) | modelo {args.modelo} "
           f"| {args.largura}x{args.altura} | teto {args.teto}min "
-          f"(máx US$ {custo_h*args.teto/60:.2f})")
+          f"(exposição máx US$ {teto_max:.2f} se cair na secure)")
     if args.dry_run:
         print("(dry-run — nada criado)")
         return
@@ -250,6 +266,15 @@ def main():
             raise RuntimeError(f"ambiente não ficou pronto: {(v.stdout + v.stderr)[-500:]}")
         print("   ", v.stdout.strip())
 
+        # Recursos do pod, ANTES de gastar. O 14B baixa ~56GB (dois experts) e
+        # precisa de RAM de sistema pro offload. Disco cheio e OOM do kernel matam
+        # o processo sem traceback: parecem "não fez nada". Melhor ver os números.
+        r = ssh(ip, porta, "df -BG --output=avail / | tail -1; "
+                           "free -g | awk '/Mem:/{print $2}'", timeout=60)
+        vals = (r.stdout or "").split()
+        if len(vals) >= 2:
+            print(f"    disco livre {vals[0]} · RAM {vals[1]}GB")
+
         scp(ip, porta, os.path.join(HERE, "pod_wan_i2v.py"), f"root@{ip}:/work/")
         for s in stills:
             scp(ip, porta, os.path.join(args.stills, s), f"root@{ip}:/work/stills/")
@@ -269,12 +294,20 @@ def main():
             "#!/bin/bash",
             "cd /work",
             "export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True",
+            # 🧨 REPASSAR TODAS as flags. Em 23/08 só --lado ia, e o pod caía no
+            # default 704x704 quadrado: a mesma resolução que o modelo não conhece
+            # e que produziu o lote horrível. Flag que existe aqui e não atravessa
+            # o ssh é flag que mente pro operador.
             (f"python -u pod_wan_i2v.py --entrada /work/stills --saida /work/out "
              f"--frames {args.frames} --steps {args.steps} --lado {args.lado} "
-             f"> /work/log.txt 2>&1"),
+             f"--modelo {args.modelo} --largura {args.largura} --altura {args.altura} "
+             + ("--loop " if args.loop else "")
+             + f"> /work/log.txt 2>&1"),
             "touch /work/PRONTO",
             "",
         ])
+        # imprimir o comando REAL: é a única prova de que a flag atravessou o ssh
+        print("   $ " + [l for l in runner.split(NL) if l.startswith("python")][0])
         ssh(ip, porta, "rm -f /work/log.txt /work/PRONTO && "
                        "cat > /work/run.sh <<'EOS'" + NL + runner + "EOS" + NL +
                        "chmod +x /work/run.sh", timeout=60)
@@ -294,13 +327,39 @@ def main():
                 print("   " + l)
             visto = len(linhas)
             if "__FIM__" in saida:
+                ultimo_log = saida
                 break
             time.sleep(30)
 
+        # 🧨 O filtro "[wan]" acima ESCONDE o traceback: em 23/08 o pod morreu logo
+        # depois de carregar o modelo e a rodada terminou sem uma linha de erro na
+        # tela. Quando não sai clipe, despejar o log cru é a única pista que resta,
+        # porque o pod é destruído em seguida e leva o /work/log.txt junto.
+        r = ssh(ip, porta, "ls /work/out/*.mp4 2>/dev/null | wc -l", timeout=60)
+        n_remoto = int((r.stdout or "0").strip() or 0)
+        if n_remoto == 0:
+            print("")
+            print("❌ o pod não produziu NENHUM mp4. Log cru do pod:")
+            r = ssh(ip, porta, "tail -40 /work/log.txt 2>/dev/null", timeout=90)
+            for l in (r.stdout or "(log vazio)").splitlines():
+                print("   | " + l)
+            raise SystemExit("❌ geração falhou no pod (nada pra baixar)")
+
         os.makedirs(args.saida, exist_ok=True)
-        scp(ip, porta, f"root@{ip}:/work/out/*", args.saida + "/")
-        baixados = [f for f in os.listdir(args.saida) if f.endswith(".mp4")]
-        print(f"📥 {len(baixados)} clipes baixados -> {args.saida}")
+        # 🧨 Contar os mp4 da PASTA depois do scp mente: sobra de rodada antiga é
+        # contada como clipe novo. Em 23/08 o scp não achou nada e mesmo assim o
+        # script anunciou "7 clipes baixados", todos velhos, do modelo errado.
+        antes = {f: os.path.getmtime(os.path.join(args.saida, f))
+                 for f in os.listdir(args.saida)}
+        r = scp(ip, porta, f"root@{ip}:/work/out/*", args.saida + "/")
+        if r.returncode != 0:
+            raise SystemExit(f"❌ scp falhou: {(r.stderr or r.stdout)[-500:]}")
+        novos = [f for f in os.listdir(args.saida)
+                 if f.endswith(".mp4")
+                 and os.path.getmtime(os.path.join(args.saida, f)) != antes.get(f)]
+        print(f"📥 {len(novos)}/{n_remoto} clipes NOVOS -> {args.saida}")
+        if len(novos) < n_remoto:
+            print(f"   ⚠️  o pod tinha {n_remoto}; confira o que ficou pra trás")
 
     finally:
         if pod_id:
