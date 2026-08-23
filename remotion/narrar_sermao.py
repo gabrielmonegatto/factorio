@@ -308,7 +308,10 @@ def transcrever_local(caminho, modelo="small.en", idioma="en"):
     Empata com a API paga, devolve timing em ordem e não custa nada. Mandar 53
     horas de áudio pra fora pra ganhar 0,1% de fidelidade não se paga.
     """
-    saida = caminho.replace(".mp3", ".words.json")
+    # splitext e não replace(".mp3"): o hook do narrate_marketing chega como
+    # .wav, o replace não casava, `saida` ficava IGUAL a `caminho`, o container
+    # escrevia o JSON por cima do áudio e o os.remove no fim apagava o áudio.
+    saida = os.path.splitext(caminho)[0] + ".words.json"
     d = os.path.dirname(os.path.abspath(caminho))
     subprocess.run([
         "docker", "run", "--rm", "--memory=12g",

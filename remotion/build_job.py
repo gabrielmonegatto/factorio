@@ -186,7 +186,12 @@ def main():
     if missing:
         raise SystemExit(f"❌ Sermão {nnnn} sem arquivos essenciais: {missing}\n   Keys: {[k.rsplit('/',1)[-1] for k in sermon_keys]}")
 
-    sd = os.path.join(public, "storage", "sermons", nnnn)
+    # ⚠️ NAMESPACE POR CANAL, descoberto em 23/08 no 1º render do Moody.
+    # `download()` tem cache por existência de arquivo, e a pasta era
+    # storage/sermons/0001 pra TODO canal. O sermão 0001 do Moody encontrou o
+    # 0001 do Spurgeon de julho já ali e reaproveitou transcrição, hook e wav:
+    # o vídeo sairia com áudio do Moody e legenda do Spurgeon, sem erro nenhum.
+    sd = os.path.join(public, "storage", "sermons", C["slug"], nnnn)
     # preserva a extensão de origem (.wav ou .mp3) — renomear quebraria a leitura do áudio
     sermon_ext = os.path.splitext(wanted["sermon"])[1].lower() or ".wav"
     sermon_local = f"sermon{sermon_ext}"
@@ -216,14 +221,19 @@ def main():
     bust_name = bust_key.rsplit("/", 1)[-1]
     bgm_name = bgm_key.rsplit("/", 1)[-1]
 
-    download(s3, bg_key,   os.path.join(public, "images", bg_name))
-    download(s3, bust_key, os.path.join(public, "images", bust_name))
-    download(s3, bgm_key,  os.path.join(public, "audio", bgm_name))
+    # force=True nos três: o nome local é contrato com o .tsx e portanto é o
+    # MESMO entre canais (o fundo do Moody aterrissa como cathedral_bg_cf_N).
+    # Sem forçar, o cache por existência serve a catedral do Spurgeon num vídeo
+    # do Moody. São ~2MB por render; o silêncio de servir o asset errado é caro.
+    download(s3, bg_key,   os.path.join(public, "images", bg_name), force=True)
+    download(s3, bust_key, os.path.join(public, "images", bust_name), force=True)
+    download(s3, bgm_key,  os.path.join(public, "audio", bgm_name), force=True)
 
     # --- assets FIXOS: chave no R2 -> NOME LOCAL que o staticFile() dos
     # templates espera cravado. Ver a nota "nome local é contrato" em canais.py.
     for origem, local in A["fixos"].items():
-        download(s3, f"{CHANNEL_PREFIX}/_assets/{origem}", os.path.join(public, "images", local))
+        download(s3, f"{CHANNEL_PREFIX}/_assets/{origem}",
+                 os.path.join(public, "images", local), force=True)
     # BGM fixa do hook (432hz)
     download(s3, f"{GLOBAL_WORSHIP_PREFIX}/frequencial_432hz_01.mp3", os.path.join(public, "audio", "frequencial_432hz_01.mp3"))
     # narração FIXA das telas de CTA. Canal sem CTA gravado (`cta_assets: []`)
@@ -244,7 +254,7 @@ def main():
     generate_qr(os.path.join(sd, "qr.png"), redirect_url)
 
     # --- props.json (caminhos relativos ao public/, resolvidos por staticFile) ---
-    rel = f"storage/sermons/{nnnn}"
+    rel = f"storage/sermons/{C['slug']}/{nnnn}"
     props = {
         "narrationUrl": f"{rel}/{sermon_local}",
         "bgmUrl": f"audio/{bgm_name}",

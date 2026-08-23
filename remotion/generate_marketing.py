@@ -29,7 +29,15 @@ from botocore.config import Config
 import canais
 
 BUCKET = CHANNEL_PREFIX = None      # preenchidos em main() a partir de canais.get()
-MODEL = "google/gemini-2.5-flash"
+# Dois provedores porque um deles fica sem credito na hora errada (o OpenRouter
+# devolveu 402 em 23/08 no meio da producao do primeiro video do Moody). A
+# escolha e por chave presente, nao por config: quem tiver credito, escreve.
+PROVEDORES = [
+    ("groq", "https://api.groq.com/openai/v1/chat/completions",
+     "GROQ_API_KEY", "openai/gpt-oss-120b"),
+    ("openrouter", "https://openrouter.ai/api/v1/chat/completions",
+     "OPENROUTER_API_KEY", "google/gemini-2.5-flash"),
+]
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # ─── O PROMPT ───────────────────────────────────────────────────────────────
@@ -120,18 +128,32 @@ def montar_system(c):
 
 
 def llm(env, system, sermon_title, transcript_text):
+    erros = []
+    for nome, url, chave, modelo in PROVEDORES:
+        if not env.get(chave):
+            continue
+        try:
+            return _pedir(env[chave], url, modelo, system, sermon_title, transcript_text)
+        except Exception as e:
+            erros.append(f"{nome}: {str(e)[:90]}")
+    raise RuntimeError("nenhum provedor de copy respondeu -> " + " | ".join(erros or ["sem chave"]))
+
+
+def _pedir(chave, url, modelo, system, sermon_title, transcript_text):
     body = json.dumps({
-        "model": MODEL,
+        "model": modelo,
         "response_format": {"type": "json_object"},
         "messages": [
             {"role": "system", "content": system},
             {"role": "user", "content": f"Sermon Title: {sermon_title}\n\nTranscript:\n{transcript_text[:14000]}"},
         ],
     }).encode()
-    req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions",
-                                 data=body, method="POST",
-                                 headers={"Authorization": f"Bearer {env['OPENROUTER_API_KEY']}",
-                                          "Content-Type": "application/json"})
+    req = urllib.request.Request(url, data=body, method="POST",
+                                 headers={"Authorization": f"Bearer {chave}",
+                                          "Content-Type": "application/json",
+                                          # MINA: a borda da Cloudflare na frente do Groq
+                                          # bloqueia o User-Agent padrao do urllib (403/1010).
+                                          "User-Agent": "factorio-copy/1.0"})
     with urllib.request.urlopen(req, timeout=180) as r:
         out = json.loads(r.read())
     return json.loads(out["choices"][0]["message"]["content"])
@@ -209,8 +231,8 @@ def main():
     print(f"✍️  copy de {C['nome']} (assina como {C['titulo_sufixo'].strip()})")
 
     env = load_env()
-    if not env.get("OPENROUTER_API_KEY"):
-        sys.exit("❌ falta OPENROUTER_API_KEY")
+    if not any(env.get(k) for _, _, k, _ in PROVEDORES):
+        sys.exit("❌ sem chave de nenhum provedor de copy (GROQ_API_KEY ou OPENROUTER_API_KEY)")
 
     if args.all:
         s3 = s3c(env)
@@ -232,8 +254,8 @@ def main():
 
     if not args.sermon:
         sys.exit("informe --sermon N ou --all")
-    if not env.get("OPENROUTER_API_KEY"):
-        sys.exit("❌ falta OPENROUTER_API_KEY")
+    if not any(env.get(k) for _, _, k, _ in PROVEDORES):
+        sys.exit("❌ sem chave de nenhum provedor de copy (GROQ_API_KEY ou OPENROUTER_API_KEY)")
     s3 = s3c(env)
     nnnn = f"{int(args.sermon):04d}"
     folder = find_folder(s3, nnnn)
