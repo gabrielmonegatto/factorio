@@ -33,9 +33,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.abspath(os.path.join(HERE, "..", ".."))
 GQL = "https://api.runpod.io/graphql?api_key="
 TEMPLATE = "runpod-torch-v280"           # runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
-GPU = "NVIDIA GeForce RTX 4090"          # US$ 0,34/h — melhor custo por clipe (doc 22 §5)
+# 🧨 O Wan 2.2 14B é MoE: dois experts de ~28GB em bf16. NÃO cabe nos 24GB do
+# 4090 nem com offload (um expert sozinho já estoura). Pra 14B a placa mínima
+# é A100 80GB. O 4090 só serve pro 5B, que é modelo de demo.
+GPUS = {
+    "4090": ("NVIDIA GeForce RTX 4090", 0.34),
+    "a100": ("NVIDIA A100 PCIe", 1.19),
+    "h100": ("NVIDIA H100 PCIe", 1.99),
+}
+GPU = GPUS["a100"][0]
 CHAVE_SSH = os.path.expanduser("~/.ssh/id_ed25519_factorio")
-DISCO_GB = 60                            # modelo ~10GB + torch + saída
+DISCO_GB = 120                           # 14B: dois experts + text encoder + torch
 
 
 def env_fabrica():
@@ -192,14 +200,21 @@ def main():
     ap.add_argument("--steps", type=int, default=25)
     ap.add_argument("--lado", type=int, default=704)
     ap.add_argument("--teto", type=int, default=45, help="teto duro em minutos")
+    ap.add_argument("--gpu", choices=list(GPUS), default="a100")
+    ap.add_argument("--modelo", choices=["5b", "14b"], default="14b")
+    ap.add_argument("--largura", type=int, default=1280)
+    ap.add_argument("--altura", type=int, default=720)
+    ap.add_argument("--loop", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
     stills = [f for f in os.listdir(args.stills) if f.lower().endswith((".png", ".jpg"))]
     if not stills:
         sys.exit(f"❌ nenhum still em {args.stills}")
-    custo_h = 0.34
-    print(f"📦 {len(stills)} stills | GPU {GPU} (US$ {custo_h}/h) | teto {args.teto}min "
+    global GPU
+    GPU, custo_h = GPUS[args.gpu]
+    print(f"📦 {len(stills)} stills | {GPU} (US$ {custo_h}/h) | modelo {args.modelo} "
+          f"| {args.largura}x{args.altura} | teto {args.teto}min "
           f"(máx US$ {custo_h*args.teto/60:.2f})")
     if args.dry_run:
         print("(dry-run — nada criado)")

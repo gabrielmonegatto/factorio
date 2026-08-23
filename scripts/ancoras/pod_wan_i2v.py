@@ -23,7 +23,12 @@ from diffusers import WanImageToVideoPipeline, AutoencoderKLWan
 from diffusers.utils import export_to_video
 from PIL import Image
 
-REPO = "Wan-AI/Wan2.2-TI2V-5B-Diffusers"
+# 🧨 O 5B é modelo de DEMO pra hardware fraco. Nenhum criador sério entrega com
+# ele (doc 22 §10a). O 14B é o salto de qualidade documentado. Ele é MoE (dois
+# experts de ~28GB em bf16), então NÃO cabe num 4090 de 24GB: pede A100 80GB.
+REPO_5B  = "Wan-AI/Wan2.2-TI2V-5B-Diffusers"
+REPO_14B = "Wan-AI/Wan2.2-I2V-A14B-Diffusers"
+REPO = REPO_14B
 
 # Movimento por família. O still já decidiu enquadramento, luz e cor;
 # aqui só se descreve O QUE SE MEXE. Movimento lento é regra do canal:
@@ -59,13 +64,21 @@ def main():
     ap.add_argument("--guidance", type=float, default=5.0)
     ap.add_argument("--loop", action="store_true",
                     help="primeiro frame = ultimo frame: o clipe fecha sem emenda")
+    ap.add_argument("--modelo", choices=["5b", "14b"], default="14b")
+    ap.add_argument("--largura", type=int, help="se omitido, usa --lado (quadrado)")
+    ap.add_argument("--altura", type=int)
     args = ap.parse_args()
 
+    global REPO
+    REPO = REPO_14B if args.modelo == "14b" else REPO_5B
+    larg = args.largura or args.lado
+    alt = args.altura or args.lado
     os.makedirs(args.saida, exist_ok=True)
     stills = sorted(f for f in os.listdir(args.entrada) if f.lower().endswith((".png", ".jpg")))
     if not stills:
         raise SystemExit(f"nenhum still em {args.entrada}")
-    print(f"[wan] {len(stills)} stills, {args.frames}f @ {args.steps} steps, {args.lado}x{args.lado}", flush=True)
+    print(f"[wan] {REPO}", flush=True)
+    print(f"[wan] {len(stills)} stills, {args.frames}f @ {args.steps} steps, {larg}x{alt}", flush=True)
 
     # 🧨 MINA (22/08): o card do modelo mostra `WanPipeline(image=...)`, mas o
     # WanPipeline é TEXTO-para-vídeo e recusa `image`. O caminho i2v do Wan 2.2
@@ -98,8 +111,15 @@ def main():
     for i, nome in enumerate(stills, 1):
         base = os.path.splitext(nome)[0]
         fam = familia_de(base)
-        img = Image.open(os.path.join(args.entrada, nome)).convert("RGB").resize(
-            (args.lado, args.lado), Image.LANCZOS)
+        # recorta pro aspecto alvo ANTES de redimensionar: esticar deforma
+        im = Image.open(os.path.join(args.entrada, nome)).convert("RGB")
+        alvo = larg / alt
+        w, h = im.size
+        if w / h > alvo:
+            nw = int(h * alvo); im = im.crop(((w - nw) // 2, 0, (w + nw) // 2, h))
+        else:
+            nh = int(w / alvo); im = im.crop((0, (h - nh) // 2, w, (h + nh) // 2))
+        img = im.resize((larg, alt), Image.LANCZOS)
         prompt = MOVIMENTO.get(fam, PADRAO)
 
         t = time.time()
@@ -108,8 +128,8 @@ def main():
             prompt=prompt,
             negative_prompt=NEGATIVO,
             image=img,
-            height=args.lado,
-            width=args.lado,
+            height=alt,
+            width=larg,
             num_frames=args.frames,
             guidance_scale=args.guidance,
             num_inference_steps=args.steps,
@@ -124,7 +144,7 @@ def main():
 
     total = time.time() - t0
     resumo = {
-        "modelo": REPO, "frames": args.frames, "steps": args.steps, "lado": args.lado,
+        "modelo": REPO, "frames": args.frames, "steps": args.steps, "res": f"{larg}x{alt}",
         "n": len(stills), "total_s": round(total, 1),
         "media_s_por_clipe": round(sum(m["segundos"] for m in medidas) / len(medidas), 1),
         "clipes": medidas,

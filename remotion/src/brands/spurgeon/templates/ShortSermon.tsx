@@ -50,6 +50,9 @@ export interface ShortSermonProps {
 		kind?: "image" | "video";
 		nome?: string;   // só pra depuração
 	}[];
+	/** trilha de fundo. Volume MUITO baixo de propósito: a voz é o produto. */
+	bgmUrl?: string;
+	bgmVolume?: number;
 }
 
 const HOOK_SECONDS = 2.5;
@@ -80,6 +83,8 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 	attribution = "CHARLES SPURGEON",
 	anchorVideoUrl,
 	anchorShots,
+	bgmUrl,
+	bgmVolume = 0.07,
 }) => {
 	const frame = useCurrentFrame();
 	const { fps, durationInFrames } = useVideoConfig();
@@ -195,6 +200,25 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 			</AbsoluteFill>
 
 			<RemotionAudio src={resolveAsset(audioUrl)} />
+
+			{/* TRILHA: entra e sai em fade pra não ter estalo no loop do short.
+			    O volume default é 0.07 porque no short a voz compete com o feed:
+			    trilha alta rouba inteligibilidade, que é o único ativo aqui. */}
+			{bgmUrl && (
+				<RemotionAudio
+					src={resolveAsset(bgmUrl)}
+					loop
+					volume={(f) =>
+						bgmVolume *
+						interpolate(
+							f,
+							[0, fps * 1.2, durationInFrames - fps * 1.5, durationInFrames],
+							[0, 1, 1, 0],
+							{ extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+						)
+					}
+				/>
+			)}
 
 			{/* HOOK CARD — primeiros 2.5s */}
 			<AbsoluteFill

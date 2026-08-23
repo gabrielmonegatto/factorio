@@ -99,6 +99,9 @@ def main():
     ap.add_argument("--fonte", choices=["imagem", "video"], default="imagem")
     ap.add_argument("--min-batida", type=float, default=4.0)
     ap.add_argument("--sem-render", action="store_true")
+    ap.add_argument("--trilha", default="worship_piano_01",
+                    help="faixa em _globalassets/worship (sem extensão), ou 'nenhuma'")
+    ap.add_argument("--trilha-volume", type=float, default=0.07)
     args = ap.parse_args()
 
     cli = s3()
@@ -168,6 +171,18 @@ def main():
          "-i", cache, "-af", f"afade=t=in:st=0:d={FADE_S},afade=t=out:st={d-FADE_S:.3f}:d={FADE_S}",
          "-ar", "44100", "-ac", "2", wav])
 
+    # 3b. trilha de fundo
+    bgm = None
+    if args.trilha and args.trilha != "nenhuma":
+        os.makedirs(os.path.join(PUBLIC_SHORTS, "_bgm"), exist_ok=True)
+        local = os.path.join(PUBLIC_SHORTS, "_bgm", f"{args.trilha}.mp3")
+        if not os.path.exists(local):
+            print(f"⬇️  baixando trilha {args.trilha} ...")
+            cli.download_file("mananciall",
+                f"channels/channels_youtube/_globalassets/worship/{args.trilha}.mp3", local)
+        bgm = f"shorts/_bgm/{args.trilha}.mp3"
+        print(f"🎵 trilha: {args.trilha} @ {args.trilha_volume}")
+
     # 4. props
     props = {
         "audioUrl": f"shorts/{tag}.wav",
@@ -177,6 +192,9 @@ def main():
                          "kind": "video" if args.fonte == "video" else "image",
                          "nome": s["cena"]["nome_pt"]} for s in shots],
     }
+    if bgm:
+        props["bgmUrl"] = bgm
+        props["bgmVolume"] = args.trilha_volume
     props_path = os.path.join(PUBLIC_SHORTS, f"{tag}_props.json")
     json.dump(props, open(props_path, "w", encoding="utf-8"), ensure_ascii=False)
     print(f"\n🎞️  {len(shots)} cenas na linha do tempo")
