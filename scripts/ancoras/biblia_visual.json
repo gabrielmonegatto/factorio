@@ -1,0 +1,38 @@
+{
+  "_sobre": "Bíblia visual do canal Charles Spurgeon Treasures. NÃO é gosto pessoal: a paleta foi MEDIDA por código nos assets que já estão no ar no vídeo longo (remotion/public/images/cathedral_bg_cf_*.png, 4 arquivos, quantizados). Mudar este arquivo = rebranding, não ajuste. Toda imagem da marca concatena o style_block.",
+  "paleta_medida": {
+    "fonte": "cathedral_bg_cf_1/3/7/10.png",
+    "preto_puro_pct": 53.5,
+    "dominantes": ["#000000", "#001818", "#181818", "#000018", "#183030", "#303030"],
+    "leitura": "Quase tudo é preto. O que não é preto puxa para o cinza-azulado frio (viés teal), NUNCA para o marrom quente. O âmbar entra só como fonte de luz pontual, jamais como banho geral."
+  },
+  "style_block": " Solemn, reverent, cinematic still. Predominantly near-black frame: deep blacks and cold charcoal with a subtle blue-teal cast, and a single warm amber light source as the only warm element. Extreme contrast between the lit area and deep shadow, most of the frame falling to black. Volumetric haze in the light, shallow depth of field, subtle 35mm film grain, anamorphic look, muted desaturated palette. No people, no faces, no figures, no hands, no text, no lettering, no watermark.",
+  "negative_pt": "cores berrantes, superexposição, cena clara, luz difusa, imagem plana, HDR, pessoas, rostos, mãos, texto, marca d'água, desenho, 3D render, saturado",
+  "negative_en": "bright colors, overexposed, bright scene, flat even lighting, HDR, oversaturated, people, faces, hands, figures, text, lettering, watermark, cartoon, 3d render, plastic look",
+  "negative_zh_video": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+  "_nota_negativo_zh": "O negative prompt do Wan vai EM CHINÊS de propósito: o modelo foi treinado assim (confirmado no doc 22 §10b). Traduzir degrada.",
+  "formato": {
+    "resolucao_padrao": "1280x704",
+    "resolucao_vertical": "704x1280",
+    "_por_que": "É a única resolução nativa do Wan 2.2 TI2V. Gerar quadrado (704x704) foi o erro do piloto de 22/08: resolução que o modelo não conhece."
+  },
+  "regras_de_movimento": {
+    "principio": "UM movimento por clipe, sempre lento. Dois movimentos no prompt causam morphing.",
+    "camera": "static camera, ou no máximo um único 'extremely slow push in' de 1-2%",
+    "vocabulario": ["slowly", "gently", "faintly", "barely", "drifts", "sways", "curls"],
+    "proibido": ["fast", "quick", "sudden", "zoom", "pan and tilt juntos", "corte"]
+  },
+  "pos_producao": {
+    "ordem": ["interpolação de frames (RIFE ou minterpolate do ffmpeg)", "LUT única de igualação", "film grain sutil"],
+    "grain": "intensidade ~15-20%, granulação fina",
+    "_por_que": "É o que devolve a aleatoriedade orgânica que o denoising apaga. Sem isso o clipe tem cara de render, não de filmagem."
+  },
+  "proibicoes_permanentes": [
+    "Rosto de Cristo ou qualquer personagem bíblico.",
+    "Pessoas, rostos, figuras humanas, mãos em quadro.",
+    "Qualquer coisa que pareça o próprio Spurgeon falando.",
+    "Fotorrealismo que possa ser confundido com registro histórico real.",
+    "Texto dentro da imagem.",
+    "Estética épica de videogame ou super-herói."
+  ]
+}
