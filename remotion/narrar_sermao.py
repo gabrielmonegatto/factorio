@@ -292,15 +292,103 @@ def para_mp3(wav, mp3):
     ], check=True)
 
 
-def transcrever(caminho, chave):
-    """AssemblyAI, palavra a palavra.
+def transcrever(caminho, env):
+    """Groq por padrao; AssemblyAI so se o arquivo passar do teto do Groq."""
+    if env.get("GROQ_API_KEY") and os.path.getsize(caminho) <= 24 * 1024 * 1024:
+        return transcrever_groq(caminho, env["GROQ_API_KEY"])
+    if not env.get("ASSEMBLYAI_API_KEY"):
+        raise RuntimeError("arquivo grande demais pro Groq e sem ASSEMBLYAI_API_KEY de reserva")
+    print("     (arquivo grande: caindo pro AssemblyAI)", flush=True)
+    return transcrever_assemblyai(caminho, env["ASSEMBLYAI_API_KEY"])
+
+
+def endireitar(palavras):
+    """Força os tempos a só andarem pra frente.
+
+    O Whisper devolve ~1% das palavras com o início ANTES da anterior (80 a
+    460ms, sempre em fronteira de segmento). Medido no sermão 0001: 64 de 5604.
+    Parece pouco, mas a legenda desta esteira destaca PALAVRA POR PALAVRA, e
+    tempo andando pra trás faz o destaque pular. O AssemblyAI não tem isso; é o
+    preço de usar um motor 4x mais barato e 60x mais rápido.
+
+    O conserto é o mínimo possível: empurra o início pra frente quando ele
+    regride e garante fim depois do início. Sobreposição entre palavras
+    vizinhas é normal na fala e fica como está.
+    """
+    ant = 0
+    for w in palavras:
+        if w["start"] < ant:
+            w["start"] = ant
+        if w["end"] <= w["start"]:
+            w["end"] = w["start"] + 30
+        ant = w["start"]
+    return palavras
+
+
+def transcrever_groq(caminho, chave):
+    """Groq (whisper-large-v3-turbo), palavra a palavra. É o caminho padrão.
 
     Por que transcrever um áudio que NÓS sintetizamos e cujo texto já sabemos:
     o Kokoro não devolve alinhamento, e a legenda precisa do tempo de cada
-    palavra. É mais barato pedir pra ASR do que construir alinhamento forçado.
-    AssemblyAI e não Groq porque o Groq tem teto de tamanho de arquivo e aqui
-    o áudio tem 45 minutos.
+    palavra. Sai mais barato pedir pra ASR do que construir alinhamento forçado.
+
+    ⚠️ Eu tinha escrito aqui que o Groq não servia "porque tem teto de tamanho
+    e o áudio tem 45 minutos", SEM medir. Errado: a 64kbps um sermão de 37min
+    dá 17MB e o teto é 25MB. A diferença de preço não é pequena — US$ 0,04/h
+    contra US$ 0,15/h do AssemblyAI, ou seja US$ 2 contra US$ 8 no acervo do
+    Moody inteiro. Medir antes de escolher.
+
+    Devolve no formato do AssemblyAI porque é ele que o resto da esteira lê:
+    `words[].text` e tempos em MILISSEGUNDOS (o Groq responde em segundos).
     """
+    limite = 24 * 1024 * 1024
+    if os.path.getsize(caminho) > limite:
+        raise RuntimeError(
+            f"{os.path.getsize(caminho)//1024//1024}MB passa do teto de 25MB do Groq. "
+            f"Baixe o bitrate do MP3 ou parta o áudio.")
+
+    lim = "----" + os.urandom(16).hex()
+    corpo = b""
+    for campo, valor in (("model", "whisper-large-v3-turbo"),
+                         ("response_format", "verbose_json"),
+                         ("timestamp_granularities[]", "word"),
+                         ("timestamp_granularities[]", "segment"),
+                         ("language", "en")):
+        corpo += (f"--{lim}\r\nContent-Disposition: form-data; name=\"{campo}\"\r\n\r\n"
+                  f"{valor}\r\n").encode()
+    corpo += (f"--{lim}\r\nContent-Disposition: form-data; name=\"file\"; "
+              f"filename=\"a.mp3\"\r\nContent-Type: audio/mpeg\r\n\r\n").encode()
+    corpo += open(caminho, "rb").read() + f"\r\n--{lim}--\r\n".encode()
+
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/audio/transcriptions", data=corpo, method="POST",
+        headers={"Authorization": "Bearer " + chave,
+                 "Content-Type": f"multipart/form-data; boundary={lim}",
+                 # MINA: sem User-Agent proprio a borda da Cloudflare na frente
+                 # do Groq responde 403 codigo 1010 (bloqueio de bot) ao
+                 # User-Agent padrao do urllib. Mesma pegadinha do workers.dev.
+                 "User-Agent": "factorio-narrador/1.0"})
+    with urllib.request.urlopen(req, timeout=900) as r:
+        d = json.loads(r.read())
+
+    palavras = [{"text": w["word"].strip(),
+                 "start": int(round(w["start"] * 1000)),
+                 "end": int(round(w["end"] * 1000)),
+                 "confidence": 1.0, "speaker": None}
+                for w in (d.get("words") or []) if w.get("word", "").strip()]
+    if not palavras:
+        raise RuntimeError("Groq não devolveu palavras (timestamp_granularities ignorado?)")
+    endireitar(palavras)
+    return {"text": d.get("text", "").strip(),
+            "words": palavras,
+            "audio_duration": round(d.get("duration") or palavras[-1]["end"] / 1000, 2),
+            "confidence": 1.0,
+            "language_code": "en_us",
+            "motor": "groq/whisper-large-v3-turbo"}
+
+
+def transcrever_assemblyai(caminho, chave):
+    """Reserva: aguenta arquivo grande, mas custa ~4x o Groq."""
     with open(caminho, "rb") as f:
         req = urllib.request.Request("https://api.assemblyai.com/v2/upload", data=f.read(),
                                      headers={"authorization": chave}, method="POST")
@@ -372,7 +460,7 @@ def processar(env, s3, c, s, forcar=False):
     tam = os.path.getsize(mp3)
 
     print(f"  📝 transcrevendo ({tam//1024//1024}MB)...", flush=True)
-    tr = transcrever(mp3, env["ASSEMBLYAI_API_KEY"])
+    tr = transcrever(mp3, env)
     # `title` é o que o generate_marketing e o build_job leem pra nomear o vídeo
     tr["title"] = titulo
     dur = (tr.get("audio_duration") or 0)
@@ -405,9 +493,11 @@ def main():
     if not c.get("autor_mineracao"):
         raise SystemExit(f"❌ canal {c['slug']!r} sem `autor_mineracao` em canais.py.")
     env = load_env()
-    for k in ("CLOUDFLARE_API_TOKEN", "R2_ENDPOINT", "ASSEMBLYAI_API_KEY"):
+    for k in ("CLOUDFLARE_API_TOKEN", "R2_ENDPOINT"):
         if not env.get(k):
             raise SystemExit(f"❌ falta {k} no .env")
+    if not env.get("GROQ_API_KEY") and not env.get("ASSEMBLYAI_API_KEY"):
+        raise SystemExit("❌ falta GROQ_API_KEY (ou ASSEMBLYAI_API_KEY de reserva)")
 
     novos, total = enfileirar(env, c)
     print(f"📋 {c['nome']}: {total} capítulos minerados, {novos} entraram na fila agora")
