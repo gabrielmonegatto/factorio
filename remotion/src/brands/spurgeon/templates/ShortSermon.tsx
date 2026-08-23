@@ -38,6 +38,18 @@ export interface ShortSermonProps {
 	attribution?: string;
 	/** vídeo de retenção (loop, mudo) na faixa superior; sem ele, layout full-bleed */
 	anchorVideoUrl?: string;
+	/**
+	 * LINHA DO TEMPO DE CENAS: a âncora TROCA conforme a fala avança.
+	 * Cada corte cai numa fronteira de frase, escolhida por `casar_ancora.py`
+	 * a partir do tema do trecho. Aceita imagem (com push-in lento) ou vídeo.
+	 */
+	anchorShots?: {
+		start: number;   // ms, relativo ao início do clipe
+		end: number;
+		src: string;
+		kind?: "image" | "video";
+		nome?: string;   // só pra depuração
+	}[];
 }
 
 const HOOK_SECONDS = 2.5;
@@ -67,11 +79,13 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 	preacherImageUrl = "images/spurgeon_bust_cf_1.png",
 	attribution = "CHARLES SPURGEON",
 	anchorVideoUrl,
+	anchorShots,
 }) => {
 	const frame = useCurrentFrame();
 	const { fps, durationInFrames } = useVideoConfig();
 	const tMs = (frame / fps) * 1000;
 
+	const temAncora = Boolean((anchorShots && anchorShots.length) || anchorVideoUrl);
 	const groups = useMemo(() => buildGroups(words || []), [words]);
 	const active = groups.find((g) => tMs >= g[0].start && tMs <= g[g.length - 1].end + 250);
 
@@ -103,8 +117,9 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 				/>
 			</AbsoluteFill>
 
-			{/* ÂNCORA VISUAL (retention footage): faixa superior, loop, mudo */}
-			{anchorVideoUrl && (
+			{/* ÂNCORA VISUAL: faixa superior. Uma cena fixa, ou a linha do tempo
+			    que troca com a fala (anchorShots vence anchorVideoUrl). */}
+			{temAncora && (
 				<div
 					style={{
 						position: "absolute",
@@ -113,14 +128,47 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 						right: 0,
 						height: "42%",
 						overflow: "hidden",
+						backgroundColor: "#050505",
 					}}
 				>
-					<Video
-						src={resolveAsset(anchorVideoUrl)}
-						loop
-						muted
-						style={{ width: "100%", height: "100%", objectFit: "cover" }}
-					/>
+					{anchorShots && anchorShots.length > 0
+						? anchorShots.map((shot, i) => {
+								// crossfade nas pontas: corte seco em cena escura pisca feio
+								const fade = 400;
+								const op = interpolate(
+									tMs,
+									[shot.start - fade, shot.start, shot.end - fade, shot.end],
+									[0, 1, 1, 0],
+									{ extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+								);
+								if (op <= 0.001) return null;
+								// push-in lento: dá vida ao still sem competir com a palavra
+								const prog = (tMs - shot.start) / Math.max(1, shot.end - shot.start);
+								const escala = 1.04 + 0.06 * Math.min(1, Math.max(0, prog));
+								const comum = {
+									width: "100%",
+									height: "100%",
+									objectFit: "cover" as const,
+									transform: `scale(${escala})`,
+								};
+								return (
+									<div key={`${shot.src}-${i}`} style={{ position: "absolute", inset: 0, opacity: op }}>
+										{shot.kind === "video" ? (
+											<Video src={resolveAsset(shot.src)} loop muted style={comum} />
+										) : (
+											<Img src={resolveAsset(shot.src)} style={comum} />
+										)}
+									</div>
+								);
+						  })
+						: anchorVideoUrl && (
+								<Video
+									src={resolveAsset(anchorVideoUrl)}
+									loop
+									muted
+									style={{ width: "100%", height: "100%", objectFit: "cover" }}
+								/>
+						  )}
 					{/* fusão da âncora com o fundo escuro */}
 					<div
 						style={{
@@ -138,9 +186,9 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 				<Img
 					src={resolveAsset(preacherImageUrl)}
 					style={{
-						height: anchorVideoUrl ? "30%" : "38%",
+						height: temAncora ? "30%" : "38%",
 						mixBlendMode: "screen",
-						opacity: anchorVideoUrl ? 0.65 : 0.5,
+						opacity: temAncora ? 0.65 : 0.5,
 						filter: "contrast(1.1) brightness(1.05)",
 					}}
 				/>
@@ -182,8 +230,8 @@ export const ShortSermon: React.FC<ShortSermonProps> = ({
 			<div
 				style={{
 					position: "absolute",
-					top: anchorVideoUrl ? "42%" : 0,
-					bottom: anchorVideoUrl ? "28%" : 0,
+					top: temAncora ? "42%" : 0,
+					bottom: temAncora ? "28%" : 0,
 					left: 0,
 					right: 0,
 					display: "flex",

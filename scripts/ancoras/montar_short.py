@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+"""
+montar_short.py — monta o short COMPLETO com as cenas trocando junto com a fala.
+
+## O que muda em relação ao short anterior
+
+Antes: uma âncora fixa o clipe inteiro. Agora o trecho é dividido em BATIDAS
+(fronteiras de frase, tiradas do word-level) e cada batida recebe a cena que
+casa com o que está sendo dito naquele instante.
+
+## Por que o corte cai em fronteira de frase
+
+Duas razões, as duas com fonte (doc 22 §11c):
+  1. O estudo de 1.200 Reels mede que ~12 planos/60s rende MAIS que ~24, ou
+     seja ~5s por plano. Frase do Spurgeon dá mais ou menos isso.
+  2. O que captura atenção é o INÍCIO do movimento, não o movimento contínuo
+     (Abrams & Christ 2003). Trocar de cena É um onset. Cortar no meio da frase
+     desperdiça o onset em cima de uma palavra sem peso.
+
+## Fonte das cenas
+
+Por padrão usa os STILLS (com push-in lento na composição), porque eles já estão
+prontos e bonitos. Quando os clipes animados existirem, é só `--fonte video`:
+a composição aceita os dois.
+
+Uso:
+  python scripts/ancoras/montar_short.py --sermao 1 --clip 1
+  python scripts/ancoras/montar_short.py --sermao 1 --clip 1 --min-batida 4.5
+"""
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+RAIZ = os.path.abspath(os.path.join(HERE, "..", ".."))
+REMOTION = os.path.join(RAIZ, "remotion")
+PUBLIC_SHORTS = os.path.join(REMOTION, "public", "shorts")
+PUBLIC_CENAS = os.path.join(REMOTION, "public", "cenas")
+OUT_DIR = os.path.join(REMOTION, "out", "shorts")
+PREFIXO = "channels/channels_youtube/treasures_charlesspurgeon"
+FADE_S = 0.15
+
+sys.path.insert(0, HERE)
+import casar_ancora as ca  # noqa: E402
+
+
+def s3():
+    return ca.s3()
+
+
+def run(cmd, **kw):
+    r = subprocess.run(cmd, capture_output=True, text=True, **kw)
+    if r.returncode != 0:
+        sys.exit(f"❌ falhou: {' '.join(map(str, cmd))}\n{(r.stderr or r.stdout)[-1500:]}")
+    return r
+
+
+def batidas(words, min_s=4.0, max_s=9.0):
+    """Divide o clipe em batidas em FRONTEIRA DE FRASE. Uma batida curta demais
+    vira corte nervoso; longa demais desperdiça o catálogo."""
+    frases, cur = [], []
+    for w in words:
+        cur.append(w)
+        if re.search(r"[.!?;:][\"')\]]?$", w["text"]):
+            frases.append(cur); cur = []
+    if cur:
+        frases.append(cur)
+
+    out, buf = [], []
+    for f in frases:
+        buf.extend(f)
+        dur = (buf[-1]["end"] - buf[0]["start"]) / 1000.0
+        if dur >= min_s:
+            out.append(buf); buf = []
+    if buf:
+        if out and (buf[-1]["end"] - buf[0]["start"]) / 1000.0 < min_s / 2:
+            out[-1].extend(buf)          # sobra curta: gruda na anterior
+        else:
+            out.append(buf)
+    # quebra batida longa demais no meio (sem fronteira disponível)
+    final = []
+    for b in out:
+        dur = (b[-1]["end"] - b[0]["start"]) / 1000.0
+        if dur > max_s and len(b) > 6:
+            meio = len(b) // 2
+            final += [b[:meio], b[meio:]]
+        else:
+            final.append(b)
+    return final
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--sermao", required=True)
+    ap.add_argument("--clip", type=int, default=1)
+    ap.add_argument("--fonte", choices=["imagem", "video"], default="imagem")
+    ap.add_argument("--min-batida", type=float, default=4.0)
+    ap.add_argument("--sem-render", action="store_true")
+    args = ap.parse_args()
+
+    cli = s3()
+    nnnn = f"{int(args.sermao):04d}"
+    res = cli.list_objects_v2(Bucket="mananciall", Prefix=f"{PREFIXO}/{nnnn}", MaxKeys=200)
+    keys = [o["Key"] for o in res.get("Contents", [])]
+    if not keys:
+        sys.exit(f"❌ sermão {nnnn} não achado no R2")
+    pasta = keys[0].rsplit("/", 1)[0]
+    arquivos = [k.rsplit("/", 1)[1] for k in keys]
+
+    meta = json.loads(cli.get_object(Bucket="mananciall", Key=f"{pasta}/clips_meta.json")["Body"].read())
+    clip = meta["clips"][args.clip - 1]
+    dur_ms = clip["end_ms"] - clip["start_ms"]
+    tag = f"{nnnn}_c{args.clip:02d}_cenas"
+    print(f"📖 {meta.get('title', nnnn)} · clipe {args.clip} · {dur_ms/1000:.1f}s")
+    print(f"   \"{clip['hook_text']}\"\n")
+
+    # 1. batidas + cena por batida
+    cenas_cat = ca.carregar_catalogo()
+    bs = batidas(clip["words"], min_s=args.min_batida)
+    # bússola do clipe inteiro: guia as batidas que sozinhas não casam
+    fam_pref = ca.familia_dominante(clip["text"], cenas_cat)
+    usados, shots = set(), []
+    for i, b in enumerate(bs):
+        texto = " ".join(w["text"] for w in b)
+        r, _ = ca.escolher(texto, cenas_cat, usados, familia_pref=fam_pref)
+        usados.add(r["cena"]["id"])
+        ini = 0 if i == 0 else b[0]["start"]
+        fim = dur_ms if i == len(bs) - 1 else bs[i + 1][0]["start"]
+        shots.append({"start": ini, "end": fim, "cena": r["cena"],
+                      "pontos": r["pontos"], "motivos": r["motivos"][:3]})
+        print(f"  {ini/1000:>5.1f}s→{fim/1000:>5.1f}s  {r['cena']['nome_pt']:24} "
+              f"({r['pontos']:>4} pts) {r['motivos'][:2]}")
+        print(f"          \"{texto[:78]}...\"")
+
+    # 2. assets locais (a composição lê de public/)
+    os.makedirs(PUBLIC_CENAS, exist_ok=True)
+    os.makedirs(PUBLIC_SHORTS, exist_ok=True)
+    ext = "mp4" if args.fonte == "video" else "png"
+    prefixo_r2 = "renders/ancoras" if args.fonte == "video" else "ancoras/spurgeon"
+    for sh in shots:
+        c = sh["cena"]
+        nome = f"{c['id']}.{ext}"
+        destino = os.path.join(PUBLIC_CENAS, nome)
+        if not os.path.exists(destino):
+            chave = (f"{prefixo_r2}/{c['id']}.{ext}" if args.fonte == "video"
+                     else f"{prefixo_r2}/{c['familia']}/{c['id']}.png")
+            cli.download_file("mananciall", chave, destino)
+        sh["src"] = f"cenas/{nome}"
+
+    # 3. áudio do clipe
+    master = None
+    for f in arquivos:
+        if re.match(r"^sermon[\w-]*\.(wav|mp3)$", f):
+            master = f"{pasta}/{f}"; break
+    if not master:
+        sys.exit("❌ áudio master não achado")
+    cache = os.path.join(PUBLIC_SHORTS, "_masters", f"{nnnn}_{os.path.basename(master)}")
+    os.makedirs(os.path.dirname(cache), exist_ok=True)
+    if not os.path.exists(cache):
+        print(f"\n⬇️  baixando master ...")
+        cli.download_file("mananciall", master, cache)
+    wav = os.path.join(PUBLIC_SHORTS, f"{tag}.wav")
+    d = dur_ms / 1000.0
+    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{clip['start_ms']/1000:.3f}", "-t", f"{d:.3f}",
+         "-i", cache, "-af", f"afade=t=in:st=0:d={FADE_S},afade=t=out:st={d-FADE_S:.3f}:d={FADE_S}",
+         "-ar", "44100", "-ac", "2", wav])
+
+    # 4. props
+    props = {
+        "audioUrl": f"shorts/{tag}.wav",
+        "words": clip["words"],
+        "hookText": clip["hook_text"],
+        "anchorShots": [{"start": s["start"], "end": s["end"], "src": s["src"],
+                         "kind": "video" if args.fonte == "video" else "image",
+                         "nome": s["cena"]["nome_pt"]} for s in shots],
+    }
+    props_path = os.path.join(PUBLIC_SHORTS, f"{tag}_props.json")
+    json.dump(props, open(props_path, "w", encoding="utf-8"), ensure_ascii=False)
+    print(f"\n🎞️  {len(shots)} cenas na linha do tempo")
+
+    if args.sem_render:
+        print(f"(--sem-render) props em {props_path}")
+        return
+
+    os.makedirs(OUT_DIR, exist_ok=True)
+    saida = os.path.join(OUT_DIR, f"{tag}.mp4")
+    npx = "npx.cmd" if os.name == "nt" else "npx"
+    print("🎬 renderizando ...")
+    run([npx, "remotion", "render", "Short-Sermon", saida,
+         f"--props={props_path}", "--log=error"], cwd=REMOTION)
+    print(f"✅ {saida} ({os.path.getsize(saida)/1e6:.1f} MB)")
+
+
+if __name__ == "__main__":
+    main()

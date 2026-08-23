@@ -122,19 +122,37 @@ def pontuar(texto, cenas):
     return resultados
 
 
-def escolher(texto, cenas, usados=None, topo=3):
+def escolher(texto, cenas, usados=None, topo=3, familia_pref=None):
     """Melhor cena não usada ainda. Evitar repetição não é estética: a política
-    de 'inauthentic content' do YouTube mira template repetido (doc 22 §11f)."""
+    de 'inauthentic content' do YouTube mira template repetido (doc 22 §11f).
+
+    `familia_pref` é o desempate quando NADA casa por léxico nem por tema: em vez
+    de jogar uma cena aleatória, mantém a família visual do resto do clipe. Sem
+    isso o último plano de um short sobre tempestade caía em poeira na luz."""
     usados = usados or set()
     ranking = pontuar(texto, cenas)
     for r in ranking:
         if r["cena"]["id"] not in usados:
             return r, ranking[:topo]
-    # nada casou: cai numa cena neutra da família abstrato, também sem repetir
+    # nada casou: prefere a família dominante do clipe, senão abstrato
+    for fam in ([familia_pref] if familia_pref else []) + ["abstrato"]:
+        for c in cenas:
+            if c["familia"] == fam and c["id"] not in usados:
+                return {"cena": c, "pontos": 0, "motivos": [f"continuidade:{fam}"]}, ranking[:topo]
     for c in cenas:
-        if c["familia"] == "abstrato" and c["id"] not in usados:
-            return {"cena": c, "pontos": 0, "motivos": ["fallback"]}, ranking[:topo]
+        if c["id"] not in usados:
+            return {"cena": c, "pontos": 0, "motivos": ["ultimo recurso"]}, ranking[:topo]
     return None, ranking[:topo]
+
+
+def familia_dominante(texto, cenas):
+    """Família visual que melhor representa o clipe INTEIRO. Serve de bússola
+    pros trechos que sozinhos não casam com nada."""
+    from collections import Counter
+    placar = Counter()
+    for r in pontuar(texto, cenas)[:6]:
+        placar[r["cena"]["familia"]] += r["pontos"]
+    return placar.most_common(1)[0][0] if placar else None
 
 
 def env_fabrica(chave):
