@@ -380,6 +380,104 @@ tudo em fp32 e estoura a placa.
 
 ---
 
+## 10. Rodada 2 de pesquisa (22/08, noite): quem faz, quem ensina, e o plano de qualidade
+
+Disparada depois do veredito do Gabriel sobre o piloto: "funcionou, mas ficou
+horrível". Três frentes; o detalhe integral está nos relatórios desta seção.
+
+### 10a. Por que o piloto ficou feio (autópsia honesta)
+
+1. **Config fora da spec**: o TI2V-5B só conhece 1280x704 (ou 704x1280).
+   Rodamos 704x704 (resolução que o modelo NÃO suporta), com 61 frames
+   (nativo: 121) . Steps 25 estavam ok (default oficial do template: 20).
+2. **Modelo errado pra resultado final**: NENHUM tutorial sério usa o 5B pra
+   entrega. Todos usam o par 14B high/low noise, mesmo quantizado (GGUF Q4/Q5
+   roda em 8GB). O 5B é modelo de demo pra hardware fraco.
+3. **Zero curadoria**: entregamos 6 de 6. O padrão da indústria é descartar
+   12-25 por 1.
+
+### 10b. Consenso de qualidade dos criadores do YouTube (as 8 alavancas)
+
+Extraído de ~20 canais com workflow público (CaoCao2025, Olivio Sarikas,
+Next Diffusion, AI2Play, MDMZ, Benji, Curious Refuge, Tao Prompts, PurzBeats
+do canal oficial ComfyUI, Endangered AI, e os BR Preguiça Artificial e
+Santinello):
+
+1. **Clipe bonito nasce de still bonito** (upscale ANTES de animar: Curious Refuge).
+2. **14B, nunca 5B.**
+3. **LoRA lightx2v/Lightning com a receita certa**: 8 steps (4 high + 4 low),
+   CFG 1, LCM/euler. Defeito conhecido (admitido pelos autores na discussion
+   #26): suprime movimento. Conserto publicado (Next Diffusion): tirar a LoRA
+   do high, subir high pra 10-20 steps com CFG 3, manter LoRA só no low.
+4. **UM movimento por clipe + advérbio de lentidão** ("slowly", "gently").
+   Dois movimentos no prompt = morphing. Câmera: "static shot" ou um único
+   "slow push-in".
+5. **Negative prompt oficial do Wan EM CHINÊS** (o modelo foi treinado assim)
+   + extras anti-morphing ("morphing, warping, distortion, flickering").
+6. **Loop de verdade = FLF2V com a mesma imagem nas duas pontas** + remover o
+   frame final duplicado. No Kling: aba Frames, start = end (método AI2Play).
+   Ping-pong de CapCut denuncia em fumaça/água.
+7. **Pós obrigatória mata o "plástico de IA"**: interpolação RIFE (16→32fps),
+   upscale, e film grain sutil (~15-20%, size ~0.4) ou filtro NTSC-RS por cima.
+8. **Curto e emendado**: 81 frames (5s) é o sweet spot; artefato piora com
+   duração.
+
+Settings de referência (template oficial ComfyUI, JSON conferido):
+5B = 1280x704, 121f, 20 steps, CFG 5, uni_pc, shift 8 ·
+14B FLF2V = 81f, 2x KSamplerAdvanced euler 20 steps CFG 4 split no 10, shift 8 ·
+14B + Lightning = 4 steps CFG 1 split no 2, shift 5.
+
+### 10c. Ranking de modelos pra I2V atmosférico (evidência, não achismo)
+
+Arena Elo da Artificial Analysis (votação cega, snapshot 22/08): a família
+**Hailuo/MiniMax é #2 do mundo** em I2V; **Kling** é tratado pela comunidade
+como "o diretor de arte" (atmosfera/câmera, nosso caso exato); Wan open fica
+um tier abaixo; **LTX descartado** (Elo ~200 pontos abaixo do Kling 3.0,
+apesar da fama de velocidade).
+
+Preço API (fal.ai, verificado): Hailuo 02 768p US$ 0,27/clipe ·
+Kling 2.5 Turbo Pro US$ 0,35 · Veo 3.1 Lite US$ 0,15 (não testado em cena
+sutil). **300 clipes tudo-API: US$ 81-105.** O Kling expõe "tail image"
+(= nosso loop perfeito).
+
+### 10d. Mercado (quem usa banco de clipes no formato @themindsetbrasil)
+
+- Os gigantes do formato usam **stock licenciado**, não IA: rede Motiversity
+  (13M+), Lion of Judah (3,5M), Grace for Purpose (3,8M) compram Filmpac
+  (~US$ 25/mês) e Artgrid. O mundo "sigma" usa scene packs piratas de filme
+  (inviável pra marca séria).
+- Onde IA confirmadamente venceu: **consistência de âncora**. Caso Yang Mun:
+  monge fictício, 2,5M seguidores em ~3 meses, 400M+ views, curso de
+  US$ 50/mês (ChatGPT + Nano Banana + ElevenLabs). Valida os ensaios
+  ilustrados dos pregadores (§8c).
+- **O nosso cruzamento está VAZIO em EN e PT-BR**: ninguém faz sermão
+  histórico real + banco de micro-clipes IA próprio + estética sóbria. Os
+  canais de Spurgeon existentes usam imagem estática; os cristãos de IA que
+  bombam são espetáculo épico (The AI Bible) ou humor Veo 3 (Vlog Bíblico,
+  46M views TikTok).
+- ⚠️ Precedente de risco: The Power of the Word (800k) desmonetizado em 2026
+  por "inauthentic content". Defesa nossa: texto real de domínio público,
+  curadoria editorial (mine_clips), rotação de famílias, IA declarada.
+
+### 10e. O plano de qualidade (aguardando ok do Gabriel)
+
+**Calibração por ~US$ 3, três vias com os MESMOS 5 stills:**
+1. 5B dentro da spec (1280x704, 121f, 50 steps): mede quanto era config.
+2. **14B fp8 + Lightning** na RunPod com a receita do §10b (o candidato a
+   cavalo de trabalho, ~US$ 0,01-0,03/clipe).
+3. Kling 2.5 TP + Hailuo 02 via fal.ai (o teto de qualidade, US$ 0,27-0,35).
+   ⚠️ Gate: conta fal.ai + ~US$ 5 (credencial + dinheiro do Gabriel).
+
+Gabriel escolhe no olho → volume no vencedor (US$ 3-10 local ou US$ 81-105
+API) → pós em lote (RIFE + grain + LUT) → biblioteca no R2.
+
+Canais pra acompanhar (nossos "professores"): Next Diffusion (loops FLF2V,
+tutorial escrito público), CaoCao2025 (settings na descrição), AI2Play
+(loops no Kling, exemplos do nosso nicho: lareira, templo), Olivio Sarikas,
+MDMZ, Curious Refuge, Tao Prompts (Hailuo), Preguiça Artificial (BR).
+
+---
+
 ## 9. Fontes
 
 **Consistência:** [Lights, Camera, Consistency (arXiv 2512.16954)](https://arxiv.org/html/2512.16954v1) ·
