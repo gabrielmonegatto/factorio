@@ -639,6 +639,47 @@ Custo total da investigação: **US$ 1,91** e umas 9 rodadas. Nenhum pod ficou
 ligado. O que ficou de trava permanente: o comando real do pod aparece no log
 (mina 9), o clipe é medido antes de subir, e a medida é RELATIVA à luminância.
 
+### ✅ A REGRA QUE FECHOU A FRENTE: anima claro, escurece na pós
+
+Depois de tudo acima o Gabriel ainda disse "ficou totalmente lixo, câmera
+tremida". As duas causas finais:
+
+**1. A entrada era preta demais.** O still do canal tem luminância 7/255 e até
+83% do quadro em preto absoluto. Um modelo i2v **só anima o que distingue**.
+Medido na mesma imagem, com os mesmos parâmetros do Wan:
+
+| entrada | luz final | tamanho | o que sobrou da cena |
+|---|---|---|---|
+| escura (como estava) | 21,6 | 0,31 MB | vidraça e caixilhos **sumiram** |
+| clara + graduada na pós | 17,4 | **1,15 MB** | cena inteira preservada |
+
+Mesmo tom final, quase 4x mais informação de imagem. Virou pipeline:
+`animar.py --clarear 0.30` na ida, `graduar.py --gama 2.0` na volta. Escurecer
+depois ainda ESCONDE artefato, porque o artefato mora na faixa que a pós apaga.
+
+**2. 121 quadros é o nativo.** 121 @ 24fps = 5,04s. Eu pedia 61 e 81 pra
+economizar GPU no teste, sem conferir. Quarto desvio de spec desta frente.
+
+### 🚫 A tremida NÃO era câmera (e por isso estabilizar não resolveu)
+
+Medi o deslocamento global entre quadros consecutivos alinhando miniaturas por
+correlação: **zero**. Não há translação pra estabilizar. O que treme é textura se
+reorganizando — artefato de modelo pequeno, sem correção em pós.
+`scripts/ancoras/estabilizar.py` fica no repo como instrumento de medida, mas
+**não entra no pipeline**: não havia o que corrigir.
+
+### 🔴 A régua de movimento me enganou TRÊS vezes
+
+1. Absoluta, favorecia cena clara (`mar_05` parecia 10x melhor; só era mais claro).
+2. Relativizada, confundia movimento com rampa de exposição (a âncora "ganhou"
+   em parte porque o modelo clareou a cena sozinho).
+3. Pior: **a variante que pontuou mais alto (3,3%) era a que tinha destruído a
+   cena.** Os 3,3% eram riscos rastejando num quadro vazio.
+
+**Número de movimento não vê se a imagem sobreviveu.** Conferir o quadro extraído
+é obrigatório antes de aprovar qualquer lote. Métrica entra como triagem, nunca
+como veredito.
+
 ### Erros meus de raciocínio nesta investigação (pra não repetir)
 
 1. **Comparei a coisa errada.** O primeiro banco de prova "provou" que reescrever
