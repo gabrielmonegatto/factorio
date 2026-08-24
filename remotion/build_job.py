@@ -105,10 +105,21 @@ def find_sermon_folder(s3, sermon_num):
 
 
 def pick_rotating(s3, subdir, pattern, n):
-    """Seleção determinística de asset rotativo por N (igual à lógica antiga do ffmpeg)."""
+    """Seleção determinística de asset rotativo por N (igual à lógica antiga do ffmpeg).
+
+    ⚠️ SÓ olha o nível de cima da pasta. O `list_keys` é recursivo, e eu tinha
+    arquivado os bustos velhos do Moody em `avatars/_cf_descartado/` — DENTRO
+    da pasta que o rodízio varre. Como `_` vem antes de `m` na ordenação, o
+    descarte ficava em primeiro lugar e o vídeo 0001 saiu com o busto genérico
+    que o Gabriel havia rejeitado. O CTA saiu certo porque busca a chave direta,
+    sem rodízio; foi essa diferença que denunciou o problema.
+
+    Arquivo de descarte é legítimo. Quem tinha que ser explícito era esta função.
+    """
+    base = f"{CHANNEL_PREFIX}/_assets/{subdir}/"
     keys = sorted(
-        k for k in list_keys(s3, f"{CHANNEL_PREFIX}/_assets/{subdir}/")
-        if re.search(pattern, k)
+        k for k in list_keys(s3, base)
+        if "/" not in k[len(base):] and re.search(pattern, k)
     )
     if not keys:
         raise SystemExit(f"❌ Nenhum asset em _assets/{subdir}/ casando {pattern}")
