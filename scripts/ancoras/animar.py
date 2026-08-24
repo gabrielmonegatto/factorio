@@ -209,7 +209,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stills", required=True, help="pasta local com os stills aprovados")
     ap.add_argument("--saida", default="scratch/ancoras/clipes")
-    ap.add_argument("--frames", type=int, default=61)
+    # 121 @ 24fps = 5,04s, o comprimento NATIVO do Wan 2.2 5B. Pedir menos
+    # entrega menos movimento e ainda foge do que o modelo treinou.
+    ap.add_argument("--frames", type=int, default=121)
     ap.add_argument("--steps", type=int, default=50)  # spec do Wan; 25 mata o movimento
     ap.add_argument("--lado", type=int, default=704)
     ap.add_argument("--teto", type=int, default=45, help="teto duro em minutos")
@@ -220,6 +222,10 @@ def main():
     ap.add_argument("--loop", action="store_true")
     ap.add_argument("--variantes", help="JSON de variantes de prompt: banco de prova "
                     "sobre o primeiro still, um setup de pod pra N tentativas")
+    ap.add_argument("--clarear", type=float, default=0.30,
+                    help="gama no still ANTES de animar (0.30 levanta muito a "
+                         "sombra). O preto do canal volta depois com graduar.py. "
+                         "1.0 desliga.")
     ap.add_argument("--sem-catalogo", action="store_true",
                     help="ignora o movimento próprio de cada cena e usa o prompt "
                          "genérico por família (só pra comparar)")
@@ -265,6 +271,23 @@ def main():
         if len(mapa) < len(stills):
             print(f"   ⚠️  {len(stills)-len(mapa)} still(s) sem cena no catálogo: "
                   "vão cair no prompt genérico da família")
+
+    # 🧨 ANIMA CLARO, ESCURECE DEPOIS. Medido em 23/08: o still do canal tem
+    # luminância 7/255 e até 83% de preto absoluto, e o modelo i2v só anima o que
+    # DISTINGUE — devolvia preto com riscos rastejando, que na tela vira "câmera
+    # tremida". Clareando a entrada a cena inteira sobrevive (1,15MB de detalhe
+    # contra 0,31MB); o preto volta na pós com graduar.py, e ainda esconde o
+    # artefato, porque o artefato mora justamente na faixa que a gente apaga.
+    pasta_stills = args.stills
+    if args.clarear and args.clarear != 1.0:
+        from PIL import Image
+        pasta_stills = os.path.join(RAIZ, "scratch", "ancoras", "_stills_claros")
+        os.makedirs(pasta_stills, exist_ok=True)
+        tabela = [min(255, int((i / 255.0) ** args.clarear * 255 + 0.5))
+                  for i in range(256)] * 3
+        for s_nome in stills:
+            Image.open(os.path.join(args.stills, s_nome)).convert("RGB")                  .point(tabela).save(os.path.join(pasta_stills, s_nome))
+        print(f"☀️  {len(stills)} stills clareados (gama {args.clarear})")
 
     if args.dry_run:
         print("(dry-run — nada criado)")
@@ -330,7 +353,7 @@ def main():
         if prompts_path:
             scp(ip, porta, prompts_path, f"root@{ip}:/work/prompts.json")
         for s in stills:
-            scp(ip, porta, os.path.join(args.stills, s), f"root@{ip}:/work/stills/")
+            scp(ip, porta, os.path.join(pasta_stills, s), f"root@{ip}:/work/stills/")
         print(f"📤 {len(stills)} stills enviados ({time.time()-t_inicio:.0f}s)")
 
         # 🧨 MINA (22/08): rodar a geração DENTRO da sessão ssh perde tudo se a

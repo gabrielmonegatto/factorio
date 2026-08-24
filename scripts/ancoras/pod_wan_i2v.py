@@ -61,7 +61,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--entrada", required=True)
     ap.add_argument("--saida", required=True)
-    ap.add_argument("--frames", type=int, default=61)   # 61 @ 24fps ~= 2.5s
+    ap.add_argument("--frames", type=int, default=121)  # 121 @ 24fps = 5,04s (nativo)
     # 50 é o recomendado pelo Wan. Com 25 o movimento cai MUITO (medido 23/08).
     ap.add_argument("--steps", type=int, default=50)
     ap.add_argument("--lado", type=int, default=704)
