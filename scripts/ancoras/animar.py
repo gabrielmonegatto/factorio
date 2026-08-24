@@ -391,19 +391,53 @@ def main():
                        "chmod +x /work/run.sh", timeout=60)
         ssh(ip, porta, "setsid /work/run.sh < /dev/null > /dev/null 2>&1 & echo LANCADO", timeout=60)
 
+        os.makedirs(args.saida, exist_ok=True)
         visto = 0
+        seguidas = 0
+        baixados_ate_agora = set()
         while True:
             sobra = args.teto * 60 - (time.time() - t_pod)
             if sobra <= 0:
                 print("⏹️  teto de tempo atingido, encerrando")
                 break
-            r = ssh(ip, porta, "cat /work/log.txt 2>/dev/null | tail -60; "
-                               "test -f /work/PRONTO && echo __FIM__", timeout=90)
-            saida = r.stdout or ""
+            # 🧨 UMA consulta que estoura NÃO pode derrubar a rodada. Em 23/08 um
+            # ssh de acompanhamento passou de 90s, a exceção subiu, o `finally`
+            # matou o pod e 6 clipes prontos morreram junto (US$0,57). Rede
+            # instável é normal; perder 8 horas de trabalho por causa dela não é.
+            try:
+                r = ssh(ip, porta, "cat /work/log.txt 2>/dev/null | tail -60; "
+                                   "test -f /work/PRONTO && echo __FIM__", timeout=120)
+                saida = r.stdout or ""
+                seguidas = 0
+            except Exception as e:
+                seguidas += 1
+                print(f"   ⚠️  consulta falhou ({str(e)[:60]}) — {seguidas}/10")
+                if seguidas >= 10:      # 10 seguidas = o pod caiu de verdade
+                    print("   ❌ pod não responde há 10 tentativas; encerrando")
+                    break
+                time.sleep(30)
+                continue
             linhas = [l for l in saida.splitlines() if l.startswith("[wan]")]
             for l in linhas[visto:]:
                 print("   " + l)
             visto = len(linhas)
+
+            # 🧨 BAIXA O QUE JÁ FICOU PRONTO, a cada volta. Numa rodada de 8 horas,
+            # esperar o fim pra buscar tudo é apostar 8 horas num único momento.
+            try:
+                rl = ssh(ip, porta, "ls /work/out/*.mp4 2>/dev/null", timeout=60)
+                prontos = [x.strip().rsplit("/", 1)[-1] for x in (rl.stdout or "").splitlines() if x.strip()]
+                novos = [x for x in prontos if x not in baixados_ate_agora]
+                # o último pode estar sendo escrito agora; deixa pra próxima volta
+                for nome in novos[:-1] if "__FIM__" not in saida else novos:
+                    if scp(ip, porta, f"root@{ip}:/work/out/{nome}",
+                           os.path.join(args.saida, nome)).returncode == 0:
+                        baixados_ate_agora.add(nome)
+                if novos[:-1] or ("__FIM__" in saida and novos):
+                    print(f"   ⬇️  {len(baixados_ate_agora)} clipes já salvos localmente")
+            except Exception as e:
+                print(f"   ⚠️  não deu pra baixar parcial: {str(e)[:60]}")
+
             if "__FIM__" in saida:
                 ultimo_log = saida
                 break

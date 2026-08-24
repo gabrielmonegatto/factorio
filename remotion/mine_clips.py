@@ -35,7 +35,15 @@ import canais
 
 BUCKET = "mananciall"
 CHANNEL_PREFIX = None      # preenchido em main() a partir de canais.get()
-MODEL = "google/gemini-2.5-flash"
+# 🥊 Escolhido por páreo medido em 23/08 (6 modelos × 3 sermões, script em
+# scripts/ancoras/pareo_mineradores.py). O gemini-2.5-flash que estava aqui foi
+# o PIOR dos seis: 11/15 de índice válido (devolvia faixa fora ou sobreposta) e
+# só 9/15 de hook fiel — inventava hook com palavra que não está no trecho.
+# O deepseek-v4-flash deu 13/13 de índice, 13/13 de hook fiel, foi o mais rápido
+# e é 12x mais barato (US$0,12 contra US$1,43 pra minerar o acervo inteiro).
+# No olho também ganhou: escolheu a anedota concreta onde os outros pegaram
+# doutrina abstrata, que é o que a nossa própria instrução manda evitar.
+MODEL = "deepseek/deepseek-v4-flash"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 MIN_S, MAX_S = 28.0, 62.0   # duração aceitável do clipe (com folga de 2s nas pontas)
@@ -222,7 +230,9 @@ def process(env, s3, system, nnnn, dry=False, force=False):
 def main():
     ap = argparse.ArgumentParser()
     canais.add_arg_canal(ap)
-    ap.add_argument("--sermon", required=True, help="número do sermão")
+    ap.add_argument("--sermon", help="número do sermão")
+    ap.add_argument("--todos", action="store_true",
+                    help="minera TODO sermão com transcrição e sem clips_meta")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
@@ -232,13 +242,59 @@ def main():
     CHANNEL_PREFIX = C["prefix"]
     if not C.get("pregador"):
         sys.exit(f"❌ canal {C['slug']!r} sem `pregador`: este minerador corta SERMÃO.")
-    system = SYSTEM_MOLDE.format(canal=C["nome"], pregador=C["pregador"])
+    # 🧨 NÃO usar .format() aqui: o molde é quase todo JSON, e o Python lê cada
+    # `{"clips"` como campo a substituir — estoura KeyError e o minerador MORRE
+    # em toda execução. Foi o que aconteceu quando o molde virou multi-canal: o
+    # script parou de rodar e ninguém viu, porque nada tenta minerar sozinho.
+    # Só 2 dos 212 sermões tinham clipes por causa disso (achado 23/08).
+    # Substituição literal não se importa com as chaves do JSON.
+    system = SYSTEM_MOLDE
+    for campo, valor in (("canal", C["nome"]), ("pregador", C["pregador"])):
+        system = system.replace("{" + campo + "}", valor)
     print(f"✂️  garimpando clipes de {C['nome']}")
 
     env = load_env()
     if not env.get("OPENROUTER_API_KEY"):
         sys.exit("❌ falta OPENROUTER_API_KEY")
     s3 = s3c(env)
+
+    if args.todos:
+        # 🧨 Idempotente por construção: pula quem já tem clips_meta. Uma queda no
+        # meio de 210 sermões é retomada rodando o mesmo comando de novo.
+        pag = s3.get_paginator("list_objects_v2")
+        tem_tr, tem_clips = set(), set()
+        for pg in pag.paginate(Bucket=BUCKET, Prefix=CHANNEL_PREFIX + "/"):
+            for o in pg.get("Contents", []):
+                partes = o["Key"].split("/")
+                if len(partes) < 5 or partes[3].startswith("_"):
+                    continue
+                if o["Key"].endswith("transcript.json"):
+                    tem_tr.add(partes[3])
+                elif o["Key"].endswith("clips_meta.json"):
+                    tem_clips.add(partes[3])
+        fila = sorted(p for p in tem_tr - tem_clips)
+        print(f"📚 {len(tem_tr)} com transcrição · {len(tem_clips)} já minerados · "
+              f"{len(fila)} na fila")
+        ok = erro = 0
+        for i, pasta in enumerate(fila, 1):
+            nnnn = pasta.split("_")[0]
+            try:
+                process(env, s3, system, nnnn, dry=args.dry_run, force=args.force)
+                ok += 1
+            except SystemExit as e:
+                print(f"  ⏭️  {nnnn}: {e}")
+                erro += 1
+            except Exception as e:
+                print(f"  ❌ {nnnn}: {str(e)[:120]}")
+                erro += 1
+            if i % 10 == 0:
+                print(f"  ── {i}/{len(fila)} · {ok} ok · {erro} com problema")
+        print("")
+        print(f"🏁 {ok} minerados · {erro} com problema")
+        return
+
+    if not args.sermon:
+        sys.exit("informe --sermon N ou --todos")
     nnnn = f"{int(args.sermon):04d}"
     process(env, s3, system, nnnn, dry=args.dry_run, force=args.force)
 
