@@ -59,9 +59,16 @@ def main():
 
     # A esteira é POR CANAL: cada canal tem seu produtor, sua fila e seu
     # estoque. Nada aqui olha pra dois canais ao mesmo tempo, de propósito.
-    C = canais.get(args.canal)
+    #
+    # ⚠️ `aplicar_canal()` e NÃO setar as globais na mão. Eu tinha setado só
+    # três (C, BUCKET, CHANNEL_PREFIX) e faltaram CTA_ASSET_KEYS e
+    # RENDERS_PREFIX. Com elas vazias, `assets_cutoff` devolvia None e
+    # `video_fresh` procurava "None/0001.mp4": TODO vídeo parecia velho e o
+    # produtor começou a refazer os 113 renders do Spurgeon do zero.
+    # Existe um inicializador; usar ele é o ponto.
     import schedule_channel as SC
-    SC.C, SC.BUCKET, SC.CHANNEL_PREFIX = C, C["bucket"], C["prefix"]
+    SC.aplicar_canal(args.canal)
+    C = SC.C
     canal = C["slug"]
 
     env = load_env()

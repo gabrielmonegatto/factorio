@@ -251,7 +251,21 @@ def fetch_image(url: str, cache_key: str, session: requests.Session | None = Non
 ACCOUNTS = [
     ("act_1363438474022368", "LF 1 - Bluue", "bluue"),
     ("act_3462187117241841", "LF 8 - BLUUE New", "bluue"),
+    ("act_731993897678273", "LF 10 - Bluue Test Safe", "bluue"),
     ("act_1276336571351856", "CA1 - Bluue $", "bluue"),
     ("act_2794654284238893", "CA2 - Bluue $", "bluue"),
     ("act_1261729839382630", "Tonaface", "tonaface"),
 ]
+
+# Duas contas faturam em dolar. Sem isso, somar `spend` de contas diferentes
+# mistura moeda e o total sai errado -- por isso a moeda vai gravada na linha,
+# e a conversao fica na leitura (BI), nao na carga.
+CURRENCY = {
+    "act_1363438474022368": "BRL",
+    "act_3462187117241841": "BRL",
+    "act_731993897678273": "BRL",
+    "act_1276336571351856": "USD",
+    "act_2794654284238893": "USD",
+    "act_1261729839382630": "USD",
+}
+ACCOUNT_NAME = {a[0]: a[1] for a in ACCOUNTS}

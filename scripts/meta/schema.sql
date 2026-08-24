@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS meta_insights (
   ad_id       TEXT NOT NULL,
   date        TEXT NOT NULL,
   account_id  TEXT,
+  currency    TEXT,               -- BRL ou USD: duas contas faturam em dolar
   spend       REAL DEFAULT 0,
   impressions INTEGER DEFAULT 0,
   clicks      INTEGER DEFAULT 0,
@@ -50,3 +51,22 @@ CREATE TABLE IF NOT EXISTS meta_insights (
   PRIMARY KEY (ad_id, date)
 );
 CREATE INDEX IF NOT EXISTS idx_meta_insights_date ON meta_insights(date);
+CREATE INDEX IF NOT EXISTS idx_meta_insights_acct_date ON meta_insights(account_id, date);
+
+-- 1 linha por ad por hora do dia corrente. Serve para acompanhar o dia andando;
+-- o fechamento definitivo continua em meta_insights (o Meta reatribui por ~72h).
+CREATE TABLE IF NOT EXISTS meta_insights_hourly (
+  ad_id       TEXT NOT NULL,
+  date        TEXT NOT NULL,     -- YYYY-MM-DD no fuso da conta
+  hora        INTEGER NOT NULL,  -- 0 a 23
+  account_id  TEXT,
+  currency    TEXT,
+  spend       REAL    DEFAULT 0,
+  impressions INTEGER DEFAULT 0,
+  clicks      INTEGER DEFAULT 0,
+  purchases   INTEGER DEFAULT 0,
+  revenue     REAL    DEFAULT 0,
+  updated_at  TEXT,
+  PRIMARY KEY (ad_id, date, hora)
+);
+CREATE INDEX IF NOT EXISTS idx_meta_hourly_date ON meta_insights_hourly(date, hora);

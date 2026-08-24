@@ -15,7 +15,7 @@ import datetime as dt
 import json
 import time
 
-from _common import ACCOUNTS, D1, Graph, lit, log
+from _common import ACCOUNTS, CURRENCY, D1, Graph, lit, log
 
 FIELDS = ("ad_id,spend,impressions,clicks,ctr,actions,action_values,"
           "conversions,conversion_values,date_start")
@@ -124,6 +124,7 @@ def main() -> None:
                     "ad_id": row.get("ad_id"),
                     "date": row.get("date_start"),
                     "account_id": acct_id,
+                    "currency": CURRENCY.get(acct_id, "BRL"),
                     "spend": float(row.get("spend") or 0),
                     "impressions": int(row.get("impressions") or 0),
                     "clicks": int(row.get("clicks") or 0),

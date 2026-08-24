@@ -21,6 +21,8 @@ import re
 import sys
 import json
 import argparse
+import time
+import urllib.error
 import urllib.request
 
 import boto3
@@ -128,14 +130,31 @@ def montar_system(c):
 
 
 def llm(env, system, sermon_title, transcript_text):
+    """Tenta os provedores em ordem, com espera no 429.
+
+    429 é limite de RITMO, não erro: o provedor está dizendo "volta daqui a
+    pouco". Tratar isso como falha fazia o lote inteiro morrer no 3º sermão,
+    que foi o que aconteceu no 1º lote do Moody (23/08). Quota esgotada (402)
+    não tem espera que resolva: pula direto pro próximo provedor.
+    """
     erros = []
     for nome, url, chave, modelo in PROVEDORES:
         if not env.get(chave):
             continue
-        try:
-            return _pedir(env[chave], url, modelo, system, sermon_title, transcript_text)
-        except Exception as e:
-            erros.append(f"{nome}: {str(e)[:90]}")
+        for tentativa in range(1, 5):
+            try:
+                return _pedir(env[chave], url, modelo, system, sermon_title, transcript_text)
+            except urllib.error.HTTPError as e:
+                if e.code == 429 and tentativa < 4:
+                    espera = 20 * tentativa
+                    print(f"   ⏳ {nome} pediu calma (429); esperando {espera}s", flush=True)
+                    time.sleep(espera)
+                    continue
+                erros.append(f"{nome}: HTTP {e.code}")
+                break
+            except Exception as e:
+                erros.append(f"{nome}: {str(e)[:70]}")
+                break
     raise RuntimeError("nenhum provedor de copy respondeu -> " + " | ".join(erros or ["sem chave"]))
 
 

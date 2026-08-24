@@ -45,17 +45,33 @@ done
 # `public/` e `_hybrid/` NÃO entram: são dados de produção (assets baixados e
 # renders em andamento). Apagar isso obrigaria a rebaixar tudo do R2.
 if [ "$so_imagem" = 0 ]; then
+  # `tar | ssh` e não rsync: o Git Bash do Windows não traz rsync, e a máquina
+  # do Gabriel É o ponto de partida do deploy. Ferramenta que só existe em
+  # metade dos lugares não serve pra deploy.
   echo "── sincronizando código → $DESTINO"
-  rsync -az --delete -e "ssh -i $CHAVE -o StrictHostKeyChecking=no" \
-    --exclude 'public/' --exclude '_hybrid/' --exclude '_narrate/' \
-    --exclude '_narrar/' --exclude '_ctas/' --exclude 'node_modules/' \
-    --exclude '__pycache__/' --exclude 'out/' --exclude '.remotion/' \
-    "$AQUI/remotion/" "$VPS:$DESTINO/remotion/"
-  rsync -az --delete -e "ssh -i $CHAVE -o StrictHostKeyChecking=no" \
-    "$AQUI/docker/" "$VPS:$DESTINO/docker/"
-  rsync -az -e "ssh -i $CHAVE -o StrictHostKeyChecking=no" \
-    "$AQUI/scripts/" "$VPS:$DESTINO/scripts/"
+  tar -cz -C "$AQUI" \
+    --exclude='remotion/public' --exclude='remotion/_hybrid' \
+    --exclude='remotion/_narrate' --exclude='remotion/_narrar' \
+    --exclude='remotion/_ctas' --exclude='remotion/node_modules' \
+    --exclude='remotion/out' --exclude='remotion/.remotion' \
+    --exclude='*/__pycache__' --exclude='*.pyc' \
+    remotion docker scripts \
+    | $SSH "mkdir -p $DESTINO && tar -xz -C $DESTINO"
   $SSH "chmod +x $DESTINO/docker/*.sh $DESTINO/scripts/*.sh 2>/dev/null || true"
+
+  # O tar SOBRESCREVE mas não apaga. Arquivo que sumiu do repo e ficou pra trás
+  # na produção é exatamente o tipo de fantasma que causou esta bagunça, então
+  # ele é DENUNCIADO em vez de removido em silêncio (apagar dado é gate humano).
+  echo "── procurando arquivo orfão na produção"
+  loc=$(cd "$AQUI/remotion" && ls *.py 2>/dev/null | sort)
+  rem=$($SSH "cd $DESTINO/remotion && ls *.py 2>/dev/null | sort")
+  orfaos=$(comm -13 <(echo "$loc") <(echo "$rem") || true)
+  if [ -n "$orfaos" ]; then
+    echo "   ⚠️  existe na VPS e NÃO no repo (confira se ainda deve existir):"
+    echo "$orfaos" | sed 's/^/      /'
+  else
+    echo "   ✅ nenhum órfão"
+  fi
 fi
 
 # ── 2. imagem ──────────────────────────────────────────────────────────────
