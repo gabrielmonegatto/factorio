@@ -57,6 +57,10 @@ MINING_DB = "b08c9fae-3692-409a-aebd-e9630ca66f1d"
 TTS_IMAGE = os.environ.get("TTS_IMAGE", "factorio-tts")
 HERE = os.path.dirname(os.path.abspath(__file__))
 WORK = "/srv/factorio/data/narrar" if os.path.isdir("/srv/factorio/data") else os.path.join(HERE, "_narrar")
+# Teto de CPU: a narração divide a máquina com o produtor de render (que roda
+# 24/7 com --cpus 8). Sem teto, um lote de narração faz o render de OUTRO canal
+# rastejar, e a promessa de esteiras isoladas vira mentira na prática.
+CPUS = os.environ.get("NARRAR_CPUS", "8")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS sermons (
@@ -271,7 +275,7 @@ def narrar(c, texto, wav):
     open(txt, "w", encoding="utf-8").write(texto)
     d = os.path.dirname(os.path.abspath(wav))
     subprocess.run([
-        "docker", "run", "--rm", "--memory=8g",
+        "docker", "run", "--rm", "--memory=8g", f"--cpus={CPUS}",
         "-v", f"{d}:/data", "-v", "/srv/factorio/hfcache:/cache", TTS_IMAGE,
         "--input", f"/data/{os.path.basename(txt)}",
         "--output", f"/data/{os.path.basename(wav)}",
@@ -314,7 +318,7 @@ def transcrever_local(caminho, modelo="small.en", idioma="en"):
     saida = os.path.splitext(caminho)[0] + ".words.json"
     d = os.path.dirname(os.path.abspath(caminho))
     subprocess.run([
-        "docker", "run", "--rm", "--memory=12g",
+        "docker", "run", "--rm", "--memory=12g", f"--cpus={CPUS}",
         "-v", f"{d}:/data", "-v", "/srv/factorio/hfcache:/cache", ASR_IMAGE,
         "--audio", f"/data/{os.path.basename(caminho)}",
         "--out", f"/data/{os.path.basename(saida)}",
@@ -525,7 +529,12 @@ def main():
     ap.add_argument("--limite", type=int, default=1)
     ap.add_argument("--so", type=int, help="processa apenas este número de sermão")
     ap.add_argument("--forcar", action="store_true", help="refaz mesmo se já existe no R2")
+    ap.add_argument("--cpus", default=None, help="teto de CPU dos containers (padrão 8)")
     args = ap.parse_args()
+
+    global CPUS
+    if args.cpus:
+        CPUS = args.cpus
 
     c = canais.get(args.canal)
     if not c.get("autor_mineracao"):

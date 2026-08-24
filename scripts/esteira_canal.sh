@@ -67,6 +67,13 @@ cron_do_canal() {
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 SHELL=/bin/bash
 
+# ── NARRAR: capítulo minerado -> sermão narrado ────────────────────────────
+# ⚠️ ESTA ETAPA FALTAVA e é o motivo do Spurgeon ter travado em 113 vídeos
+# tendo 3.541 capítulos minerados no D1: a narração era um comando MANUAL,
+# fora da esteira. Acervo grande não vale nada se ninguém puxa dele.
+# A cada 4h, 2 por vez: mantém o estoque crescendo sem monopolizar a máquina.
+0 */4 * * * root cd $APP/remotion && flock -n /tmp/narrar_$canal.lock python3 narrar_sermao.py --canal $canal --limite 2 --cpus 8 >> /var/log/factory_narrar_$canal.log 2>&1
+
 # ── PREPARO: sermão narrado -> sermão PRONTO PRA RENDER ────────────────────
 # Sem esta etapa o produtor fica dormindo com a fila cheia: o narrado não é
 # "pronto" enquanto não tiver copy e hook. Foi o que aconteceu com o Moody,
