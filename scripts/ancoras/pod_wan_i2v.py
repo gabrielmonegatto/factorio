@@ -44,9 +44,13 @@ MOVIMENTO = {
 }
 PADRAO = "very slow subtle motion, static camera, cinematic"
 
-NEGATIVO = ("bright colors, overexposed, static, blurred details, subtitles, text, watermark, "
-            "people, faces, hands, figures, walking, fast motion, camera shake, jump cut, "
-            "cartoon, low quality, jpeg artifacts, deformed")
+# 🧨 NEGATIVO OFICIAL DO WAN, em chinês, NÃO traduzir. É o que o repo do
+# modelo usa nos próprios exemplos, e o modelo foi treinado com legendas em
+# chinês: traduzir muda o vetor. Até 23/08 eu usava um em inglês que escrevi,
+# e o teste de 4 variantes mediu 0,4% de movimento contra 3,3% com os ajustes
+# oficiais (negativo + 50 passos + flow_shift 5.0). Já estava na bíblia visual
+# em `negative_zh_video` desde sempre; eu só nunca liguei.
+NEGATIVO = ("色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走")
 
 
 def familia_de(nome):
@@ -58,10 +62,14 @@ def main():
     ap.add_argument("--entrada", required=True)
     ap.add_argument("--saida", required=True)
     ap.add_argument("--frames", type=int, default=61)   # 61 @ 24fps ~= 2.5s
-    ap.add_argument("--steps", type=int, default=25)
+    # 50 é o recomendado pelo Wan. Com 25 o movimento cai MUITO (medido 23/08).
+    ap.add_argument("--steps", type=int, default=50)
     ap.add_argument("--lado", type=int, default=704)
     ap.add_argument("--fps", type=int, default=24)
     ap.add_argument("--guidance", type=float, default=5.0)
+    ap.add_argument("--flow-shift", type=float, default=5.0,
+                    help="escalonamento do ruído; o Wan recomenda 5.0 pra 720p. "
+                         "0 = deixa o default do config do modelo")
     ap.add_argument("--loop", action="store_true",
                     help="primeiro frame = ultimo frame: o clipe fecha sem emenda")
     ap.add_argument("--modelo", choices=["5b", "14b"], default="14b")
@@ -108,6 +116,19 @@ def main():
     #      .to("cuda") — o offload já cuida do device, e chamar os dois quebra.
     #   2. tiling no VAE: decodifica o quadro em pedaços (é aqui que estoura).
     #   3. slicing: uma imagem por vez no decode.
+    # 🧨 O Wan recomenda flow_shift ~5.0 pra 720p e a gente NUNCA setou: ficava no
+    # default do config, que é calibrado pra outra resolução. Trocar o shift muda
+    # o escalonamento do ruído e é um dos poucos parâmetros que mexe de verdade em
+    # QUANTO movimento sai. Só reconfigura quando pedido, pra não mudar sem querer.
+    def por_shift(valor):
+        if not valor:
+            return
+        from diffusers import UniPCMultistepScheduler
+        pipe.scheduler = UniPCMultistepScheduler.from_config(
+            pipe.scheduler.config, flow_shift=valor)
+        print(f"[wan] flow_shift = {valor}", flush=True)
+
+    por_shift(args.flow_shift)
     pipe.enable_model_cpu_offload()
     pipe.vae.enable_tiling()
     pipe.vae.enable_slicing()
@@ -124,7 +145,9 @@ def main():
     if args.variantes:
         with open(args.variantes, encoding="utf-8") as fh:
             variantes = json.load(fh)
-        stills = [stills[0]] * len(variantes)
+        # variante pode apontar o próprio still: é assim que se compara entrada
+        # clara contra entrada escura sem pagar dois pods
+        stills = [(v.get("still") or stills[0]) for v in variantes]
         print(f"[wan] banco de prova: {len(variantes)} variantes sobre {stills[0]}", flush=True)
 
     medidas = []
@@ -145,6 +168,9 @@ def main():
         img = im.resize((larg, alt), Image.LANCZOS)
         prompt = (var["prompt"] if var
                   else por_cena.get(base) or MOVIMENTO.get(fam, PADRAO))
+        passos = (var.get("steps") if var else None) or args.steps
+        if var and var.get("flow_shift"):
+            por_shift(var["flow_shift"])
         negativo = (var.get("negativo") if var else None) or NEGATIVO
 
         t = time.time()
@@ -157,7 +183,7 @@ def main():
             width=larg,
             num_frames=args.frames,
             guidance_scale=args.guidance,
-            num_inference_steps=args.steps,
+            num_inference_steps=passos,
             **extra,
         ).frames[0]
         dur = time.time() - t

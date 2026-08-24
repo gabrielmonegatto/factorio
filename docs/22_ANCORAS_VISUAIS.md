@@ -586,6 +586,73 @@ Fontes densas pra clonar: [ai-shortfilm-prompts](https://github.com/jnMetaCode/a
 
 ---
 
+## 12. 🔴 A autópsia do "ficou lixo" (23/08) — era operação, não ferramenta
+
+O Gabriel viu o short com clipes animados e a sentença foi "está todo travado,
+ficou totalmente lixo", com a pergunta certa junto: *é a ferramenta certa mesmo,
+você está usando do jeito certo?*
+
+Resposta medida: **a ferramenta estava certa e eu estava operando errado.** Três
+desvios da própria recomendação do Wan, todos conferíveis na documentação desde
+o primeiro dia:
+
+| | o Wan recomenda | eu usava |
+|---|---|---|
+| passos de inferência | 50 | 20 a 25 |
+| `flow_shift` (720p) | 5.0 | nunca setei, ficava no default do config |
+| prompt negativo | o oficial, em chinês | um que escrevi em inglês |
+
+O negativo oficial **já estava** no nosso `biblia_visual.json`, no campo
+`negative_zh_video`. Nunca foi ligado no gerador.
+
+### O teste de 4 variantes (mesma imagem, um pod, US$ 0,13)
+
+| | o que mudou | movimento relativo |
+|---|---|---|
+| 1 | nada (produção de então) | 0,4% |
+| 2 | só a entrada clareada | 1,3% |
+| 3 | **só os parâmetros oficiais** | **3,3%** |
+| 4 | os dois juntos | 2,4% |
+
+**8x** de ganho só por usar o modelo como manda o fabricante. Virou default.
+Somar clareamento aos parâmetros oficiais NÃO somou (4 < 3): com passos
+suficientes o modelo extrai textura do escuro sozinho, e clarear parece só
+adicionar ruído pra ele animar.
+
+### A mina da entrada preta (verdadeira, mas menor que a de operação)
+
+Medida das imagens de origem: `rain_on_dark_glass` tem luminância 7,2/255 com
+**83% do quadro em preto absoluto**; `anchor_on_stone`, 6,5 com 68%. O modelo
+i2v só anima o que distingue. A ordem de brilho previu a ordem de movimento: a
+única imagem sem preto chapado (`wave_on_rock`, 20,9) foi a que mais se mexeu em
+todas as rodadas, e `anchor_on_stone` só "acordou" na rodada em que o próprio
+modelo decidiu clarear a cena.
+
+A origem do erro é minha: a bíblia visual manda 53% de preto puro, e eu apliquei
+isso na ENTRADA do animador em vez de na saída. O ofício anima claro e escurece
+na pós. Com os parâmetros oficiais o problema fica menos agudo, mas a regra vale
+pra qualquer still novo.
+
+### O que isso custou e o que impede de repetir
+
+Custo total da investigação: **US$ 1,91** e umas 9 rodadas. Nenhum pod ficou
+ligado. O que ficou de trava permanente: o comando real do pod aparece no log
+(mina 9), o clipe é medido antes de subir, e a medida é RELATIVA à luminância.
+
+### Erros meus de raciocínio nesta investigação (pra não repetir)
+
+1. **Comparei a coisa errada.** O primeiro banco de prova "provou" que reescrever
+   o prompt rendia 4x. Não provou: comparava prompt genérico-de-família contra
+   específico-de-cena. O ganho era de ter prompt próprio. Reescrevi 42 textos em
+   cima disso e tive que reverter 41 quando o teste real mediu 4 de 5 piorando.
+2. **Tirei conclusão de amostra única, duas vezes.** Ruído entre rodadas do MESMO
+   prompt: 0,6% a 1,3%. Qualquer teste de prompt precisa de 3 sementes.
+3. **Confiei numa régua que mentia.** Movimento absoluto favorece cena clara, e
+   este canal é escuro de propósito. Relativizado, ainda confunde movimento com
+   rampa de exposição.
+4. **Culpei o modelo antes de conferir a documentação.** Cheguei a propor gastar
+   em API paga (Kling/Hailuo) quando o problema era passo e escalonamento.
+
 ## 9. Fontes
 
 **Consistência:** [Lights, Camera, Consistency (arXiv 2512.16954)](https://arxiv.org/html/2512.16954v1) ·

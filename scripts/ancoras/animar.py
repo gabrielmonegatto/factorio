@@ -210,7 +210,7 @@ def main():
     ap.add_argument("--stills", required=True, help="pasta local com os stills aprovados")
     ap.add_argument("--saida", default="scratch/ancoras/clipes")
     ap.add_argument("--frames", type=int, default=61)
-    ap.add_argument("--steps", type=int, default=25)
+    ap.add_argument("--steps", type=int, default=50)  # spec do Wan; 25 mata o movimento
     ap.add_argument("--lado", type=int, default=704)
     ap.add_argument("--teto", type=int, default=45, help="teto duro em minutos")
     ap.add_argument("--gpu", choices=list(GPUS), default="a6000")
