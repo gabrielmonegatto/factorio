@@ -5,7 +5,7 @@
 #
 # Uso:
 #   ./factory.sh narrate --input /data/texto.txt --output /data/audio.wav
-#   ./factory.sh render 3          # renderiza o sermão 0003 (híbrido)
+#   ./factory.sh render 3 moody    # renderiza o sermão 0003 do canal moody
 #   ./factory.sh shell             # abre um shell no container de render (debug)
 set -euo pipefail
 
@@ -33,17 +33,20 @@ case "${1:-}" in
     ;;
   render)
     SERMON=${2:?informe o número do sermão, ex: ./factory.sh render 3}
+    # ⚠️ O CANAL É OBRIGATÓRIO passar. Sem ele o hybrid_render cai no default
+    # (spurgeon) e renderiza o vídeo do canal errado, sem erro nenhum.
+    CANAL=${3:?informe o canal, ex: ./factory.sh render 3 moody}
     docker run --rm "${LIMITS[@]}" \
       --env-file "$ENVFILE" \
       -v "$DATA/public":/app/public \
       -v "$DATA/hybrid":/app/_hybrid \
-      "$RENDER_IMAGE" python3 -u hybrid_render.py --sermon "$SERMON"
+      "$RENDER_IMAGE" python3 -u hybrid_render.py --canal "$CANAL" --sermon "$SERMON"
     ;;
   shell)
     docker run --rm -it "${LIMITS[@]}" --env-file "$ENVFILE" \
       -v "$DATA/public":/app/public "$RENDER_IMAGE" bash
     ;;
   *)
-    echo "uso: $0 {narrate|render <N>|shell}"; exit 1
+    echo "uso: $0 {narrate|render <N> <canal>|shell}"; exit 1
     ;;
 esac

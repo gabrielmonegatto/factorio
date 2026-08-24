@@ -42,11 +42,14 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Copia o restante do código do Remotion
-COPY . .
-
-# Garante o navegador do Remotion (Chrome Headless Shell) — mais confiável que o chromium do sistema
+# ⚠️ ORDEM IMPORTA. O `browser ensure` vem ANTES do COPY do código porque é um
+# download de ~150MB: se ele ficasse depois, toda mudança de .py ou .tsx
+# invalidaria a camada e o deploy baixaria o Chrome de novo. Como agora existe
+# deploy de verdade (scripts/deploy_vps.sh) isso deixou de ser raro.
 RUN npx remotion browser ensure
+
+# Código por último: é a camada que muda a cada deploy.
+COPY . .
 
 # Comando de boot do container: inicia o handler do RunPod
 CMD ["python3", "-u", "rp_handler.py"]
