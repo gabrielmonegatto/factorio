@@ -27,6 +27,12 @@
 ## VIVAS (rodando sozinhas)
 
 ### intel-canais
+- **projeto:** Spurgeon (shorts) · **gatilho:** cron VPS `30 6 * * *` · **roda em:** VPS `/srv/factorio/remotion/schedule_shorts.py --confirm` · **log:** `/var/log/shorts_agenda.log`
+  Agenda 1 short/dia às 15:00 UTC no canal existente. Fila de 673 clipes já minerados
+  (160 sermões), ordenada por sermão e, dentro dele, pela nota do minerador. Renderiza
+  só o que vai publicar e guarda no R2. Teto de 3 uploads por execução (cota do YouTube).
+  Estado: `schedule/spurgeon_shorts_schedule.json` no R2.
+
 - **projeto:** fábrica (intel) · **gatilho:** cron VPS `50 5 * * *` · **roda em:** VPS `/srv/factorio/intel/atualiza_canais.mjs` · **log:** `/var/log/intel_canais.log`
 - **etapas:**
   1. Lê canais com `youtube_channel_id` no D1 `eternall-intel`
