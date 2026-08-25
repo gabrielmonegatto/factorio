@@ -124,3 +124,16 @@
 ## APOSENTADAS
 
 n8n (era 1) · Prefect (era 2, nunca rodou) · trigger.dev (era 3, 25+ scripts) · Hermes/agents (era 4) · Teable/Baserow + mcp_universal (era 5, containers somem 27/08/2026). Carcaças completas em `C:\Users\Monegatto\Desktop\_archives\factorio-legado-20260822\`.
+
+## Espelho no Notion
+
+Tabela **Workflows ativos** (dentro da página Business System), gerada por
+`scripts/notion_workflows.py --aplicar`.
+
+O caminho do dado é sempre o mesmo, e só nesta direção:
+
+    18_AUTOMACOES.md  →  seed-automacoes.mjs  →  D1 `automacoes`  →  Notion
+
+Nenhum dos dois scripts tem lista própria, de propósito. Editar direto no Notion
+é perda de tempo: some no próximo espelhamento. Mudou automação? Muda AQUI, roda
+o seeder do BI, roda o do Notion. Quem sumir daqui é arquivado lá.
