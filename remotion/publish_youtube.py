@@ -21,6 +21,7 @@ import os
 import sys
 import json
 import argparse
+import urllib.error
 import urllib.request
 
 import canais
@@ -128,12 +129,66 @@ def post_comment(video_id, text, token):
 
 
 def set_thumbnail(video_id, thumb_path, token):
-    data = open(thumb_path, "rb").read()
-    req = urllib.request.Request(
-        f"{THUMB_URL}?videoId={video_id}", data=data, method="POST",
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "image/png"})
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())
+    """Põe a capa. Falhar aqui NÃO pode derrubar a publicação.
+
+    ⚠️ A capa é ESSENCIAL: é ela que decide o clique. Isto aqui não é permissão
+    pra publicar sem capa — é a garantia de que uma falha na capa não vire uma
+    falha PIOR.
+
+    Foi o que aconteceu na inauguração do Moody em 24/08: canal novo não pode
+    subir capa própria (o YouTube exige verificação por telefone e devolve 403).
+    O vídeo SUBIA, o set_thumbnail estourava logo depois e o script morria antes
+    de registrar o videoId. O agendador concluía que nada tinha sido publicado e
+    tentava de novo. Sete uploads perdidos por causa de uma capa.
+
+    Quando falha, o vídeo fica anotado em `_capas_pendentes.json` pra receber a
+    capa depois (ver `aplicar_capas_pendentes.py`). Publicar sem capa é estado
+    TEMPORÁRIO e rastreado, nunca o normal.
+    """
+    try:
+        data = open(thumb_path, "rb").read()
+        req = urllib.request.Request(
+            f"{THUMB_URL}?videoId={video_id}", data=data, method="POST",
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "image/png"})
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        motivo = ("canal ainda NÃO VERIFICADO por telefone (youtube.com/verify)"
+                  if e.code == 403 else f"HTTP {e.code}")
+        _anotar_capa_pendente(video_id, thumb_path, motivo)
+    except Exception as e:
+        _anotar_capa_pendente(video_id, thumb_path, str(e)[:90])
+    return None
+
+
+def _fila_capas():
+    """Onde mora a fila de capas pendentes.
+
+    ⚠️ Este script roda DENTRO de um `docker run --rm`, montado como
+    /app/publish_youtube.py. Gravar ao lado dele grava num filesystem efêmero:
+    o container morre e leva a anotação junto. Fila que evapora não é fila, é
+    a mesma cegueira que o arquivo deveria curar.
+    `public/` é volume montado do host (/srv/factorio/data/public), então
+    persiste. Rodando no host direto, `remotion/public` também existe.
+    """
+    base = os.path.dirname(os.path.abspath(__file__))
+    montado = os.path.join(base, "public")
+    return os.path.join(montado if os.path.isdir(montado) else base,
+                        "_capas_pendentes.json")
+
+
+def _anotar_capa_pendente(video_id, thumb_path, motivo):
+    """Fila de capas que faltam. Sem isso, "publicou sem capa" vira invisível."""
+    caminho = _fila_capas()
+    try:
+        fila = json.load(open(caminho, encoding="utf-8")) if os.path.exists(caminho) else []
+    except Exception:
+        fila = []
+    if not any(x.get("video_id") == video_id for x in fila):
+        fila.append({"video_id": video_id, "thumb": thumb_path, "motivo": motivo})
+        json.dump(fila, open(caminho, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    print(f"   ⚠️  CAPA NÃO APLICADA em {video_id}: {motivo}", flush=True)
+    print(f"      anotado em _capas_pendentes.json ({len(fila)} na fila)", flush=True)
 
 
 def main():

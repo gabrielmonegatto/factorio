@@ -42,19 +42,7 @@
   2. Baixa caption via yt-dlp pelo proxy (1 idioma por vídeo; multi = 429 na hora)
   3. Grava em `transcricoes`, marca `transcrito=1` (ou `-1` se não tem caption)
 
-### spurgeon-render
-- **projeto:** canal Spurgeon · **gatilho:** serviço contínuo `factory-producer.service` · **roda em:** VPS (container `factorio-render:v5`) · **log:** `journalctl -u factory-producer`
-- **etapas:**
-  1. Lê fila de sermões pendentes
-  2. Narra (TTS) e renderiza o vídeo (Remotion no container, CPU limitada)
-  3. Mantém buffer de vídeos prontos cheio
 
-### spurgeon-agendamento
-- **projeto:** canal Spurgeon · **gatilho:** cron VPS `0 6 * * *` · **roda em:** VPS `/app/_factorio/remotion/schedule_channel.py` · **log:** `/var/log/factory_schedule.log`
-- **etapas:**
-  1. Lê buffer de vídeos renderizados
-  2. Agenda no YouTube 1/dia no slot 12:00
-  3. Reporta total agendado
 
 ### bi-snapshot
 - **projeto:** fábrica (indicadores) · **gatilho:** cron VPS `20 6 * * *` · **roda em:** VPS `/srv/factorio/org/snapshot.mjs` · **log:** `/var/log/bi_snapshot.log`
@@ -89,6 +77,31 @@
   1. Recebe webhook de venda do GoHighLevel
   2. Adapter normaliza o evento
   3. Grava no D1 + dispara pixel/CAPI
+
+### esteira-canal (MOLDE — vale pra TODO canal)
+
+- **projeto:** fábrica (canais) · **gatilho:** ver as 3 etapas abaixo · **roda em:** VPS · **log:** `/var/log/factory_*_<canal>.log`
+- **como nasce um canal novo:** entrada no `remotion/canais.py` + `scripts/esteira_canal.sh ligar <slug>`. Não se copia arquivo: a unidade do systemd é `factory-producer@<slug>` (template `@`), e o cron é gerado pelo mesmo script.
+- **isolamento:** cada canal tem fila própria (`sermons.canal` no D1 `mananciall-mining`), estoque próprio (`renders/<canal>/` no R2), lock próprio (`/tmp/*_<canal>.lock`) e log próprio. Canal parado não trava outro; canal quebrado não contamina outro.
+- **etapas:**
+  1. **NARRAR** (cron `0 */4 * * *`, lote de 2) — capítulo minerado no D1 → `sermon_NNNN.mp3` + `transcript.json` no R2. Kokoro + faster-whisper, ambos em container com teto de 8 CPUs.
+  2. **PREPARO** (cron de hora em hora, lote de 6) — narrado → PRONTO. Gera a copy (LLM) e narra hook/outro.
+  3. **RENDER** (`factory-producer@<canal>.service`, 24/7) — pronto → `renders/<canal>/NNNN.mp4`. Mantém estoque à frente do calendário.
+  4. **AGENDA** (cron 1x/dia, minuto próprio por canal) — mp4 → calendário do YouTube.
+- **por que 4 etapas separadas e não um script só:** cada uma é idempotente e olha o estado real (D1 e R2) pra decidir o que falta. Nenhuma depende da anterior ter rodado agora. Matar qualquer uma no meio e rodar de novo continua de onde parou.
+
+### esteira-spurgeon
+- **projeto:** canal Charles Spurgeon Treasures · **gatilho:** narrar `0 */4`, preparo `5 * * * *`, agenda `0 6 * * *` · **roda em:** VPS · **log:** `/var/log/factory_{narrar,prep,schedule,producer}_spurgeon.log`
+- **acervo:** 3.541 capítulos minerados (63 volumes do CCEL), fila cobrindo todos.
+- ⚠️ **Ficou travado em 113 vídeos até 24/08** porque a narração era comando MANUAL, fora da esteira. Acervo grande não vale nada se nenhuma etapa puxa dele.
+
+### esteira-moody
+- **projeto:** canal Dwight Lyman Moody Treasures · **gatilho:** narrar `0 */4`, preparo `25 * * * *`, agenda `20 6 * * *` · **roda em:** VPS · **log:** `/var/log/factory_*_moody.log`
+- **acervo:** 77 capítulos (14 obras do Gutenberg), todos narrados.
+- **cadência:** 14 dias de warmup 1/dia, depois 1 a cada 2 dias (`videos_por_dia: 0.5` no `canais.py`). Com 77 capítulos dá ~4,6 meses de calendário.
+- ✅ **INAUGURADO 25/08/2026** pelo próprio cron: 5 vídeos agendados (26 a 30/08), privados com `publishAt` e capa própria.
+
+---
 
 ## MANUAIS (prontas, rodam sob comando)
 

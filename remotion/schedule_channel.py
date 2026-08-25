@@ -40,7 +40,7 @@ CTA_ASSET_KEYS = []
 def aplicar_canal(slug=None):
     """Carrega a config do canal e publica nas globais que a esteira usa."""
     global C, BUCKET, STATE_KEY, CHANNEL_PREFIX, RENDERS_PREFIX
-    global EXPECTED_CHANNEL_ID, CTA_ASSET_KEYS, UM_POR_DIA, WARMUP_DAYS
+    global EXPECTED_CHANNEL_ID, CTA_ASSET_KEYS, VIDEOS_POR_DIA, WARMUP_DAYS
     global MORNING_UTC, EVENING_UTC, BUFFER_DAYS, MAX_UPLOADS_PER_RUN
     C = canais.get(slug)
     BUCKET = C["bucket"]
@@ -49,7 +49,7 @@ def aplicar_canal(slug=None):
     RENDERS_PREFIX = C["renders_prefix"]
     EXPECTED_CHANNEL_ID = C["youtube_channel_id"]
     CTA_ASSET_KEYS = [f"{CHANNEL_PREFIX}/{k}" for k in C["cta_assets"]]
-    UM_POR_DIA = C["um_por_dia"]
+    VIDEOS_POR_DIA = C["videos_por_dia"]
     WARMUP_DAYS = C["warmup_days"]
     MORNING_UTC = C["morning_utc"]
     EVENING_UTC = C["evening_utc"]
@@ -57,9 +57,10 @@ def aplicar_canal(slug=None):
     MAX_UPLOADS_PER_RUN = C["max_uploads_per_run"]
     return C
 
-# Cadência (1/dia, horários, buffer, cota por run) vem de canais.py via
-# aplicar_canal(). Decisão do Gabriel em 04/08: "um por dia, sem desespero".
-# O modo 2/dia continua vivo: é só pôr "um_por_dia": False na config do canal.
+# Cadência (horários, buffer, cota por run) vem de canais.py via aplicar_canal().
+# Decisão do Gabriel em 04/08: "um por dia, sem desespero".
+# A cadência é o campo `videos_por_dia`: 0.5, 1 ou 2. Era um booleano até 24/08,
+# e o booleano mentia — ver _normalizar_cadencia() em canais.py.
 
 # vídeos já subidos manualmente (privados) — o agendador só define o publishAt deles.
 # Vazio: os antigos foram deletados (troca de CTA em 28/07); tudo re-sobe fresco via publish_sermon.
@@ -132,14 +133,25 @@ def assert_canal_certo(token):
 
 
 def slot_datetime(i, channel_start):
-    """publishAt (UTC) do i-ésimo vídeo (0-indexed) segundo o calendário."""
-    if UM_POR_DIA:
-        day, hour = i, MORNING_UTC
-    elif i < WARMUP_DAYS:
+    """publishAt (UTC) do i-ésimo vídeo (0-indexed) segundo o calendário.
+
+    O WARMUP é sempre 1/dia, em qualquer cadência: canal recém-nascido precisa
+    de dias seguidos de sinal, e é justamente aí que a cadência final não vale.
+    Passado o warmup manda o `videos_por_dia` do canal:
+        2.0 → dois por dia (manhã e noite)
+        1.0 → um por dia
+        0.5 → um a cada dois dias (acervo pequeno, esticado pra durar)
+    """
+    if i < WARMUP_DAYS:
         day, hour = i, MORNING_UTC
     else:
         j = i - WARMUP_DAYS
-        day, hour = WARMUP_DAYS + j // 2, (MORNING_UTC if j % 2 == 0 else EVENING_UTC)
+        if VIDEOS_POR_DIA == 2.0:
+            day, hour = WARMUP_DAYS + j // 2, (MORNING_UTC if j % 2 == 0 else EVENING_UTC)
+        elif VIDEOS_POR_DIA == 0.5:
+            day, hour = WARMUP_DAYS + j * 2, MORNING_UTC
+        else:
+            day, hour = WARMUP_DAYS + j, MORNING_UTC
     d = channel_start + dt.timedelta(days=day)
     return dt.datetime(d.year, d.month, d.day, hour, 0, 0, tzinfo=dt.timezone.utc)
 
@@ -252,7 +264,8 @@ def main():
 
     cutoff = assets_cutoff(s3)   # renders mais antigos que os CTAs fixos = velhos, não sobem
     token = None if args.dry_run else yt_token(env)
-    uploads = 0
+    uploads = 0   # TENTATIVAS de upload (é isso que gasta cota e é isso que o teto corta)
+    ok = 0        # tentativas que terminaram com videoId e estado salvo
     to_render = []
 
     # ── REBASE DO CALENDÁRIO ────────────────────────────────────────────────
@@ -315,6 +328,15 @@ def main():
             print(f"  ⛔ {nnnn} → {pa} (cota do run atingida, fica pro próximo)")
             continue
 
+        # ⚠️ Conta TENTATIVA, não sucesso (corrigido 24/08).
+        # A cota do YouTube (1600 unidades por upload) é gasta na TENTATIVA, e o
+        # vídeo pode ter subido mesmo quando o script devolve erro — era o caso
+        # da capa: o upload ia, o set_thumbnail estourava, o script morria.
+        # Como `uploads` só crescia no sucesso, o teto do run NUNCA chegava: o
+        # laço seguia pro próximo sermão e repetia. Foi assim que a inauguração
+        # do Moody deixou 7 uploads órfãos numa tacada.
+        # Teto de segurança que só conta acerto não é teto de segurança.
+        uploads += 1
         print(f"  ⬆️  {nnnn} → agenda pra {pa}")
         if not args.dry_run:
             r = subprocess.run(
@@ -338,16 +360,27 @@ def main():
                 vid = m.group(1)
             if r.returncode == 0 and vid:
                 state["scheduled"][nnnn] = {"videoId": vid, "publishAt": pa}
-                uploads += 1
+                ok += 1
                 print(f"     ✅ https://youtu.be/{vid}")
             else:
+                # Se saiu um videoId, o vídeo SUBIU mesmo com o script quebrando
+                # depois. Registrar aqui é o que impede o próximo run de subir
+                # de novo o mesmo sermão (o órfão que ninguém vê).
+                if vid:
+                    state["scheduled"][nnnn] = {"videoId": vid, "publishAt": pa,
+                                                "parcial": True}
+                    print(f"     ⚠️  subiu ({vid}) mas o script falhou DEPOIS — "
+                          f"registrado como parcial pra não re-subir")
                 print(f"     ❌ falhou: {out[-300:]}")
 
     if not args.dry_run:
         s3.put_object(Bucket=BUCKET, Key=STATE_KEY,
                       Body=json.dumps(state, indent=2).encode(), ContentType="application/json")
 
-    print(f"\n🏁 agendados neste run: {uploads} | total agendado: {len(state['scheduled'])}")
+    falhas = uploads - ok if not args.dry_run else 0
+    print(f"\n🏁 agendados neste run: {ok}"
+          + (f" | ❌ FALHARAM: {falhas}" if falhas else "")
+          + f" | total agendado: {len(state['scheduled'])}")
     if to_render:
         print(f"⚠️  precisam renderizar (rode o batch render): {' '.join(to_render[:20])}")
 

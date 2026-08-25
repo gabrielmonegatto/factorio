@@ -178,7 +178,7 @@ CANAIS = {
         # ✅ TRAVADA 20/08 em 0.84, depois de ouvir 0.80/0.84/0.88/0.92.
         # Fica um clique abaixo do Spurgeon (0.9): o Moody é mais conversado.
         "voz_speed": "0.84",
-        "um_por_dia": False,               # acervo 90-120: 1 a cada 2 dias (doc 19)
+        "videos_por_dia": 0.5,             # acervo 77: 1 a cada 2 dias, pra durar (doc 19)
         "morning_utc": 12,
         "evening_utc": 23,
         "warmup_days": 14,
@@ -238,6 +238,41 @@ def get(slug=None):
             f"❌ canal desconhecido: {slug!r}. Conhecidos: {', '.join(sorted(CANAIS))}")
     c = dict(CANAIS[slug])
     c["slug"] = slug
+    _normalizar_cadencia(c)
+    return c
+
+
+CADENCIAS_OK = (0.5, 1.0, 2.0)
+
+
+def _normalizar_cadencia(c):
+    """Resolve a cadência do canal pra UM campo: `videos_por_dia`.
+
+    ⚠️ MINA ENCONTRADA EM 24/08, antes de inaugurar o Moody.
+    O campo antigo era o booleano `um_por_dia`, e `False` significava
+    **2 vídeos POR DIA** (manhã e noite). A config do Moody trazia
+    `um_por_dia: False` com o comentário "1 a cada 2 dias" ao lado: o
+    comentário dizia o CONTRÁRIO do que o código fazia, e "1 a cada 2 dias"
+    nem existia como opção.
+
+    E não estourava na inauguração: o warmup é 1/dia pra todo mundo, então o
+    erro só apareceria no 15º vídeo, dobrando a cadência de um canal com 77
+    capítulos. Bug com data marcada é pior que bug barulhento.
+
+    Booleano que carrega três significados possíveis é o defeito de raiz.
+    Agora a cadência é um NÚMERO e diz o que é: 0.5 = um a cada dois dias,
+    1 = um por dia, 2 = dois por dia. `um_por_dia` continua aceito pros canais
+    antigos, e vira número aqui.
+    """
+    if "videos_por_dia" not in c:
+        c["videos_por_dia"] = 1.0 if c.get("um_por_dia", True) else 2.0
+    v = float(c["videos_por_dia"])
+    if v not in CADENCIAS_OK:
+        raise SystemExit(
+            f"❌ canal {c['slug']}: videos_por_dia={v} não existe no calendário.\n"
+            f"   Valores aceitos: {CADENCIAS_OK} (0.5=a cada 2 dias, 1=diário, 2=manhã+noite).")
+    c["videos_por_dia"] = v
+    c["um_por_dia"] = (v == 1.0)   # só pra quem ainda lê o campo velho
     return c
 
 
