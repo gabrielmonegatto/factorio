@@ -23,15 +23,31 @@ import subprocess
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import canais
+import vaga_cpu
+import docker_nomeado
 from schedule_channel import load_env, s3c, list_ready_sermons, assets_cutoff, video_fresh
 
 FACTORY = os.path.join(HERE, "..", "docker", "factory.sh")
 
 
 def render_one(canal, nnnn, cpus):
-    print(f"🎬 [{canal}] renderizando {nnnn}...", flush=True)
-    env2 = {**os.environ, "FACTORY_CPUS": cpus, "FACTORY_MEM": "24g"}
-    r = subprocess.run(["bash", FACTORY, "render", str(int(nnnn)), canal], env=env2)
+    # Pega uma VAGA de CPU da máquina antes de gastar CPU (ver vaga_cpu.py).
+    # Este produtor roda 24/7 e há UM por canal: sem o semáforo, dois canais já
+    # reservavam a máquina inteira e a narração ia junto por cima. Esperar aqui
+    # é barato, porque o laço já dorme quando a fila está vazia.
+    try:
+        with vaga_cpu.vaga(f"render {canal} {nnnn}", espera_max_s=3600) as cpus_da_vaga:
+            print(f"🎬 [{canal}] renderizando {nnnn}...", flush=True)
+            env2 = {**os.environ, "FACTORY_CPUS": cpus or cpus_da_vaga,
+                    "FACTORY_MEM": "24g"}
+            r = subprocess.run(["bash", FACTORY, "render", str(int(nnnn)), canal],
+                               env=env2)
+    except TimeoutError as e:
+        # None e não False: máquina cheia NÃO é defeito do sermão. Devolver False
+        # aqui somaria no fail_streak e, em 3 adiamentos, o sermão seria
+        # descartado pra sempre por um problema que não é dele.
+        print(f"   ⏭️  [{canal}] {nnnn} adiado: {e}", flush=True)
+        return None
     ok = r.returncode == 0
     print(f"   {'✅' if ok else '❌ rc='+str(r.returncode)} {nnnn}", flush=True)
     return ok
@@ -50,7 +66,9 @@ def main():
     ap = argparse.ArgumentParser()
     canais.add_arg_canal(ap)
     ap.add_argument("--count", type=int, default=1)
-    ap.add_argument("--cpus", default="12")
+    ap.add_argument("--cpus", default=None,
+                    help="teto de CPU do container. Padrão: o tamanho da vaga "
+                         "(vaga_cpu.py), que é quem conhece a máquina inteira")
     ap.add_argument("--loop", action="store_true",
                     help="produtor 24/7: renderiza sem parar; fila vazia dorme e recheca")
     ap.add_argument("--sleep", type=int, default=1800,
@@ -74,6 +92,10 @@ def main():
     env = load_env()
     s3 = s3c(env)
 
+    # Sobra de um restart anterior: o produtor é reiniciado por systemd, e o
+    # container do render NÃO morre junto com o processo Python.
+    docker_nomeado.varrer("render", canal)
+
     if args.loop:
         print(f"♾️  PRODUTOR 24/7 de {C['nome']} (cpus={args.cpus}, recheca a cada {args.sleep}s quando vazio)", flush=True)
         # falhas consecutivas de UM mesmo sermão não travam a fábrica: pula pro próximo
@@ -87,10 +109,13 @@ def main():
                 continue
             nnnn = pend[0]
             print(f"📦 [{canal}] prontos={len(ready)} | sem render={len(pend)} | próximo: {nnnn}", flush=True)
-            if not render_one(canal, nnnn, args.cpus):
-                fail_streak[nnnn] = fail_streak.get(nnnn, 0) + 1
-            else:
+            r = render_one(canal, nnnn, args.cpus)
+            if r is None:
+                continue                       # adiado por CPU: nem culpa nem crédito
+            if r:
                 fail_streak.pop(nnnn, None)
+            else:
+                fail_streak[nnnn] = fail_streak.get(nnnn, 0) + 1
         return
 
     ready, pend = next_pending(s3)

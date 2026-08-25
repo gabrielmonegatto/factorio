@@ -47,9 +47,11 @@ Wants=docker.service
 [Service]
 Type=simple
 WorkingDirectory=/app/_factorio/remotion
-# --cpus 8 e não 16: o narrador (factorio-tts) e o ASR dividem a mesma máquina.
-# Render sozinho comendo tudo faz a narração de outro canal rastejar.
-ExecStart=/usr/bin/python3 -u render_buffer.py --canal %i --loop --cpus 8 --sleep 1800
+# Sem --cpus: quem decide é o vaga_cpu, que conhece a MÁQUINA INTEIRA.
+# Antes cada etapa tinha teto próprio (render 8, narração 8) e ninguém somava:
+# com dois canais ligados a conta dava 32 numa VPS de 16 vCPU. O sistema não
+# recusa, engasga — em 25/08 um sermão de 1.400s levou 9.700s com load 20.
+ExecStart=/usr/bin/python3 -u render_buffer.py --canal %i --loop --sleep 1800
 Restart=always
 RestartSec=30
 StandardOutput=append:/var/log/factory_producer_%i.log
@@ -80,7 +82,7 @@ SHELL=/bin/bash
 # 294 DIAS pra vencer 3.533 capítulos que já estavam minerados e parados.
 # Agora a janela é usada de verdade: narra até 200 min (sobra folga pro último
 # terminar dentro das 4h) e nunca corta um sermão no meio. ~48/dia, 4x mais.
-0 */4 * * * root cd $APP/remotion && flock -n /tmp/narrar_$canal.lock python3 narrar_sermao.py --canal $canal --limite 20 --minutos 200 --cpus 8 >> /var/log/factory_narrar_$canal.log 2>&1
+0 */4 * * * root cd $APP/remotion && flock -n /tmp/narrar_$canal.lock python3 narrar_sermao.py --canal $canal --limite 20 --minutos 200 >> /var/log/factory_narrar_$canal.log 2>&1
 
 # ── PREPARO: sermão narrado -> sermão PRONTO PRA RENDER ────────────────────
 # Sem esta etapa o produtor fica dormindo com a fila cheia: o narrado não é

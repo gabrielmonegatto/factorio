@@ -51,16 +51,24 @@ import boto3
 from botocore.config import Config
 
 import canais
+import vaga_cpu
+import docker_nomeado
 
 ACCOUNT = "dca6b1af1352f500d6eabe544b9222a3"
 MINING_DB = "b08c9fae-3692-409a-aebd-e9630ca66f1d"
 TTS_IMAGE = os.environ.get("TTS_IMAGE", "factorio-tts")
 HERE = os.path.dirname(os.path.abspath(__file__))
 WORK = "/srv/factorio/data/narrar" if os.path.isdir("/srv/factorio/data") else os.path.join(HERE, "_narrar")
-# Teto de CPU: a narração divide a máquina com o produtor de render (que roda
-# 24/7 com --cpus 8). Sem teto, um lote de narração faz o render de OUTRO canal
-# rastejar, e a promessa de esteiras isoladas vira mentira na prática.
-CPUS = os.environ.get("NARRAR_CPUS", "8")
+# Teto de CPU: a narração divide a máquina com os produtores de render.
+#
+# ⚠️ Teto por processo NÃO É teto de máquina, e essa confusão custou caro.
+# Aqui pedia 8 e cada produtor pedia 8; com dois canais ligados a conta dava 32
+# numa VPS de 16 vCPU. O sistema não recusa, ele engasga: em 25/08, com load 20,
+# um sermão que levava 1.400s levou 9.700s.
+# Agora quem decide o número é o `vaga_cpu`, que olha a máquina inteira.
+CPUS = os.environ.get("NARRAR_CPUS") or vaga_cpu.CPUS
+# Só pra nomear o container do ASR (transcrever_local não recebe o canal).
+CANAL_ATUAL = "?"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS sermons (
@@ -274,15 +282,16 @@ def narrar(c, texto, wav):
     txt = wav.replace(".wav", ".txt")
     open(txt, "w", encoding="utf-8").write(texto)
     d = os.path.dirname(os.path.abspath(wav))
-    subprocess.run([
-        "docker", "run", "--rm", "--memory=8g", f"--cpus={CPUS}",
-        "-v", f"{d}:/data", "-v", "/srv/factorio/hfcache:/cache", TTS_IMAGE,
-        "--input", f"/data/{os.path.basename(txt)}",
-        "--output", f"/data/{os.path.basename(wav)}",
-        "--voice", c["voz"], "--speed", str(c["voz_speed"]),
-        "--split", "sentence", "--silence", str(c.get("pausa_frase_s", 0.75)),
-        "--trim", "--progresso", "200",
-    ], check=True)
+    docker_nomeado.rodar(
+        "tts", c["slug"], os.path.basename(wav).replace(".wav", ""),
+        ["--memory=8g", f"--cpus={CPUS}",
+         "-v", f"{d}:/data", "-v", "/srv/factorio/hfcache:/cache"],
+        TTS_IMAGE,
+        ["--input", f"/data/{os.path.basename(txt)}",
+         "--output", f"/data/{os.path.basename(wav)}",
+         "--voice", c["voz"], "--speed", str(c["voz_speed"]),
+         "--split", "sentence", "--silence", str(c.get("pausa_frase_s", 0.75)),
+         "--trim", "--progresso", "200"])
     os.remove(txt)
 
 
@@ -317,13 +326,14 @@ def transcrever_local(caminho, modelo="small.en", idioma="en"):
     # escrevia o JSON por cima do áudio e o os.remove no fim apagava o áudio.
     saida = os.path.splitext(caminho)[0] + ".words.json"
     d = os.path.dirname(os.path.abspath(caminho))
-    subprocess.run([
-        "docker", "run", "--rm", "--memory=12g", f"--cpus={CPUS}",
-        "-v", f"{d}:/data", "-v", "/srv/factorio/hfcache:/cache", ASR_IMAGE,
-        "--audio", f"/data/{os.path.basename(caminho)}",
-        "--out", f"/data/{os.path.basename(saida)}",
-        "--modelo", modelo, "--idioma", idioma,
-    ], check=True)
+    docker_nomeado.rodar(
+        "asr", CANAL_ATUAL, os.path.basename(caminho).rsplit(".", 1)[0],
+        ["--memory=12g", f"--cpus={CPUS}",
+         "-v", f"{d}:/data", "-v", "/srv/factorio/hfcache:/cache"],
+        ASR_IMAGE,
+        ["--audio", f"/data/{os.path.basename(caminho)}",
+         "--out", f"/data/{os.path.basename(saida)}",
+         "--modelo", modelo, "--idioma", idioma])
     tr = json.load(open(saida, encoding="utf-8"))
     os.remove(saida)
     return tr
@@ -535,7 +545,8 @@ def main():
     ap.add_argument("--cpus", default=None, help="teto de CPU dos containers (padrão 8)")
     args = ap.parse_args()
 
-    global CPUS
+    global CPUS, CANAL_ATUAL
+    CANAL_ATUAL = args.canal or "?"
     if args.cpus:
         CPUS = args.cpus
 
@@ -557,6 +568,9 @@ def main():
         return
 
     s3 = s3c(env)
+    # Idem: um run morto por pkill/timeout deixa o Kokoro e o Whisper vivos.
+    for etapa in ("tts", "asr"):
+        docker_nomeado.varrer(etapa, c["slug"])
     onde = "AND numero = ?" if args.so else "AND status NOT IN ('narrado','descartado')"
     par = [c["slug"]] + ([args.so] if args.so else [])
     fila = d1(env, f"""SELECT numero, chapter_id, titulo, slug, obra, cap_n FROM sermons
@@ -583,14 +597,36 @@ def main():
     ok = falha = pulado = 0
     for s in fila:
         gasto = (time.monotonic() - t0) / 60
-        if args.minutos and gasto >= args.minutos:
-            print(f"⏳ orçamento de {args.minutos} min esgotado ({gasto:.0f} min "
-                  f"gastos) — o resto fica pro próximo run")
-            break
+        feitos = ok + falha + pulado
+        # ⚠️ Olhar só o gasto PASSADO não segura nada: o corte é feito antes de
+        # começar, e o sermão começado vai até o fim. Em 25/08 isso deixou um run
+        # de orçamento 200 terminar em 341 min, porque a máquina engasgou e cada
+        # sermão passou de 23 min pra 160. Agora o teste é "o PRÓXIMO cabe?",
+        # usando a média MEDIDA neste run e não uma expectativa fixa.
+        if args.minutos:
+            media = gasto / feitos if feitos else 0
+            if gasto >= args.minutos:
+                print(f"⏳ orçamento de {args.minutos} min esgotado ({gasto:.0f} min) "
+                      f"— o resto fica pro próximo run")
+                break
+            if media and gasto + media > args.minutos:
+                print(f"⏳ o próximo sermão não cabe ({gasto:.0f} min gastos + "
+                      f"~{media:.0f} min de média > {args.minutos}) — parando inteiro")
+                break
         try:
-            r = processar(env, s3, c, s, args.forcar)
+            # A vaga é por SERMÃO, não pelo run inteiro: segurar a vaga durante
+            # as consultas ao D1 e os uploads (que não gastam CPU) desperdiçaria
+            # a máquina, e é justamente ela que estamos tentando não desperdiçar.
+            with vaga_cpu.vaga(f"narrar {c['slug']} {s['numero']:04d}",
+                               espera_max_s=1200):
+                r = processar(env, s3, c, s, args.forcar)
             ok += r == "ok"
             pulado += r in ("pulado", "descartado")
+        except TimeoutError as e:
+            # Máquina cheia não é falha do sermão: nada de marcar 'falhou' no D1,
+            # senão a fila se envenena sozinha num dia de pico.
+            print(f"⏸️  {e} — encerrando o run, o cron volta em 4h")
+            break
         except Exception as e:
             falha += 1
             msg = str(e)[:400]

@@ -24,10 +24,32 @@ MEM=${FACTORY_MEM:-4g}
 
 LIMITS=(--cpus="$CPUS" --memory="$MEM" --memory-swap="$MEM")
 
+# ── Container com NOME e morte garantida ───────────────────────────────────
+#
+# `docker run` é CLIENTE. Matar o cliente não mata o container: o daemon segue
+# rodando aquilo. Em 25/08, um `systemctl restart factory-producer@moody`
+# deixou um `factorio-render` a 401% de CPU vivo, e o produtor novo subiu OUTRO
+# por cima. Nome aleatório do Docker (`confident_margulis`), impossível saber
+# olhando o que era trabalho e o que era lixo.
+#
+# Pior: o semáforo de CPU (`remotion/vaga_cpu.py`) fica CEGO, porque zumbi não
+# pede vaga. A máquina enche e o painel jura que está livre.
+#
+# `--rm` não resolve: ele limpa depois que o container PARA, e o problema é
+# justamente o container que não para.
+matar_container() { docker rm -f "$1" >/dev/null 2>&1 || true; }
+
+rodar_nomeado() {
+  local nome=$1; shift
+  matar_container "$nome"                       # sobra de execução morta
+  trap 'matar_container '"$nome"'' EXIT INT TERM
+  docker run --rm --name "$nome" "$@"
+}
+
 case "${1:-}" in
   narrate)
     shift
-    docker run --rm "${LIMITS[@]}" \
+    rodar_nomeado "factorio_narrate_$$" "${LIMITS[@]}" \
       -v "$DATA":/data -v "$ROOT/hfcache":/cache \
       "$TTS_IMAGE" "$@"
     ;;
@@ -36,7 +58,7 @@ case "${1:-}" in
     # ⚠️ O CANAL É OBRIGATÓRIO passar. Sem ele o hybrid_render cai no default
     # (spurgeon) e renderiza o vídeo do canal errado, sem erro nenhum.
     CANAL=${3:?informe o canal, ex: ./factory.sh render 3 moody}
-    docker run --rm "${LIMITS[@]}" \
+    rodar_nomeado "factorio_render_${CANAL}_${SERMON}" "${LIMITS[@]}" \
       --env-file "$ENVFILE" \
       -v "$DATA/public":/app/public \
       -v "$DATA/hybrid":/app/_hybrid \
