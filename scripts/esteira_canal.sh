@@ -71,8 +71,16 @@ SHELL=/bin/bash
 # ⚠️ ESTA ETAPA FALTAVA e é o motivo do Spurgeon ter travado em 113 vídeos
 # tendo 3.541 capítulos minerados no D1: a narração era um comando MANUAL,
 # fora da esteira. Acervo grande não vale nada se ninguém puxa dele.
-# A cada 4h, 2 por vez: mantém o estoque crescendo sem monopolizar a máquina.
-0 */4 * * * root cd $APP/remotion && flock -n /tmp/narrar_$canal.lock python3 narrar_sermao.py --canal $canal --limite 2 --cpus 8 >> /var/log/factory_narrar_$canal.log 2>&1
+# ORÇAMENTO, não lote fixo (corrigido 25/08 depois de MEDIR).
+# ⚠️ Sem crases aqui dentro: o heredoc CRON é NÃO-quotado (precisa expandir
+# \$canal e \$APP), então crase vira substituição de comando e o bash TENTA
+# EXECUTAR o texto do comentário. Foi o "--limite: command not found" de 25/08.
+# Era --limite 2: 2 sermões x ~23 min = 47 min de trabalho numa janela de
+# 240 min. A VPS (16 vCPU) ficava com load 0.03 e o Spurgeon precisaria de
+# 294 DIAS pra vencer 3.533 capítulos que já estavam minerados e parados.
+# Agora a janela é usada de verdade: narra até 200 min (sobra folga pro último
+# terminar dentro das 4h) e nunca corta um sermão no meio. ~48/dia, 4x mais.
+0 */4 * * * root cd $APP/remotion && flock -n /tmp/narrar_$canal.lock python3 narrar_sermao.py --canal $canal --limite 20 --minutos 200 --cpus 8 >> /var/log/factory_narrar_$canal.log 2>&1
 
 # ── PREPARO: sermão narrado -> sermão PRONTO PRA RENDER ────────────────────
 # Sem esta etapa o produtor fica dormindo com a fila cheia: o narrado não é

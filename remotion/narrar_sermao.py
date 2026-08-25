@@ -527,6 +527,9 @@ def main():
     canais.add_arg_canal(ap)
     ap.add_argument("--enfileirar", action="store_true", help="monta a fila e para")
     ap.add_argument("--limite", type=int, default=1)
+    ap.add_argument("--minutos", type=int, default=0,
+                    help="orçamento de tempo: para de PEGAR sermão novo depois disso "
+                         "(0 = sem orçamento, só o --limite manda)")
     ap.add_argument("--so", type=int, help="processa apenas este número de sermão")
     ap.add_argument("--forcar", action="store_true", help="refaz mesmo se já existe no R2")
     ap.add_argument("--cpus", default=None, help="teto de CPU dos containers (padrão 8)")
@@ -563,9 +566,27 @@ def main():
         print("nada na fila.")
         return
 
-    print(f"🎬 processando {len(fila)}\n")
+    # ORÇAMENTO DE TEMPO em vez de número mágico.
+    #
+    # Até 25/08 o cron era `--limite 2` a cada 4h. Medido: cada sermão leva
+    # ~1400s com 8 CPUs, ou seja 47 min de trabalho num intervalo de 240 min.
+    # A VPS (16 vCPU) ficava com load 0.03 e o Spurgeon levaria 294 DIAS pra
+    # vencer os 3.533 capítulos que já estavam minerados.
+    #
+    # Lote fixo é chute: sermão de 20 min e de 45 min contam igual, e o número
+    # certo muda se a máquina mudar. O orçamento não chuta — só começa um
+    # sermão novo se ainda houver tempo na janela, e nunca corta um pela metade
+    # (interromper no meio deixaria áudio parcial no R2).
+    print(f"🎬 processando até {len(fila)}"
+          + (f" ou {args.minutos} min, o que vier primeiro" if args.minutos else "") + "\n")
+    t0 = time.monotonic()
     ok = falha = pulado = 0
     for s in fila:
+        gasto = (time.monotonic() - t0) / 60
+        if args.minutos and gasto >= args.minutos:
+            print(f"⏳ orçamento de {args.minutos} min esgotado ({gasto:.0f} min "
+                  f"gastos) — o resto fica pro próximo run")
+            break
         try:
             r = processar(env, s3, c, s, args.forcar)
             ok += r == "ok"

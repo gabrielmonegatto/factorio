@@ -197,12 +197,25 @@ def list_pending(s3):
         if m:
             folders.setdefault(m.group(1), set()).add(m.group(2))
 
-    pending = []
+    # ⚠️ MINA ENCONTRADA EM 25/08 — o Moody travou em 6 vídeos por causa disto.
+    #
+    # Esta função devolvia TUDO que tinha transcrição, e quem já tinha copy só
+    # era descartado lá dentro do process(). Com `--limit 6` (o lote do cron),
+    # o corte pegava sempre os MESMOS seis primeiros da lista ordenada — os seis
+    # que já estavam prontos. Resultado: o cron rodava de hora em hora, imprimia
+    # "pulados=6", e o canal ficava parado pra sempre com 71 sermões esperando.
+    #
+    # Limite que corta ANTES de filtrar não é limite, é uma fila que nunca anda.
+    # Agora quem falta vem primeiro; quem já tem copy vai pro fim (ainda entra,
+    # porque copy antiga sem `thumbnailText` precisa ser refeita, mas só depois
+    # que a fila de verdade esvaziar).
+    faltando, talvez_velhos = [], []
     for num, files in sorted(folders.items()):
         if "transcript.json" not in files:
             continue  # sem transcrição não dá pra gerar copy
-        pending.append(num[:4])
-    return pending
+        alvo = talvez_velhos if "marketing_meta.json" in files else faltando
+        alvo.append(num[:4])
+    return faltando + talvez_velhos
 
 
 def process(env, s3, system, nnnn, dry, force):
