@@ -77,6 +77,13 @@ compilação assumida é formato; texto de um na boca de outro é fraude.
 3. **Volume de material** minerável e já digitalizado (CCEL, Gutenberg, Monergism)
 4. **Modelabilidade** (prosa que vira narração de 30min sem reescrita pesada)
 5. **Oferta atrelável** (livraria Mananciall: "The Best of X" por pregador)
+6. **Filtro doutrinário do dono** (Gabriel, 26/08): fora o predeterminismo
+   decretal. A régua é o PÚLPITO, não o rótulo: calvinista que na prática prega
+   oferta livre a qualquer pecador passa (Spurgeon, Ryle, Maclaren); pregação
+   decretal não passa. Por essa régua saíram da lista: **Agostinho** (fonte do
+   predestinacionismo), **Calvino** (epônimo; e o inglês PD dos sermões é de
+   1580), **Edwards** (decretal até no púlpito). Ficam utilizáveis no máximo
+   como trecho creditado em Vault temático, nunca como canal-mãe.
 
 ---
 
@@ -89,7 +96,7 @@ compilação assumida é formato; texto de um na boca de outro é fraude.
 | **C.H. Spurgeon** ✅ | 1892 | JÁ NO AR (113 sermões minerados) | canal-mãe da rede |
 | **D.L. Moody** | 1899 | evangelista mais famoso dos EUA; prosa SIMPLES, modela fácil | busca alta, americano |
 | **J.C. Ryle** | 1900 | anglicano reformado, prosa cristalina, público reformado atual ama | modelagem fácil |
-| **Jonathan Edwards** | 1758 | "Sinners in the Hands of an Angry God" é o sermão mais famoso da história americana | busca acadêmica + cristã |
+| ~~Jonathan Edwards~~ | 1758 | ❌ REMOVIDO 26/08 pelo filtro doutrinário (critério 6): decretal até no púlpito | |
 | **John Wesley** | 1791 | fundador do metodismo; 44 sermões-padrão prontos | denominação inteira busca |
 | **George Whitefield** | 1770 | par histórico de Edwards/Wesley, voz do Grande Avivamento | fecha o trio do Awakening |
 | **Andrew Murray** | 1917 | devocional de oração/santidade ("Abide in Christ") | nicho de oração é fortíssimo |
@@ -102,22 +109,33 @@ compilação assumida é formato; texto de um na boca de outro é fraude.
 | **T. De Witt Talmage** | 1902 | 500+ sermões publicados; o "mais lido do mundo" na época (sindicado em 3.000 jornais) | volume + prosa vívida |
 | **Charles Finney** | 1875 | avivamentos; *Lectures on Revivals* | busca "revival" |
 
-### 📊 Ranking de volume (a pergunta "quem mais produziu?", 26/08)
+### 📊 LISTA FINAL 1.0 do Treasures (batida pelo Gabriel em 26/08)
 
-Ninguém alcança o Spurgeon, mas a prateleira logo abaixo dele sustenta canal
-diário por ANOS. Volume estimado de matéria-prima PD digitalizada:
+Critério de corte: 365+ peças distintas em PD inglês (1 ano a 1/dia) OU 180+
+(1 ano a 0.5/dia), passando no filtro doutrinário (critério 6). Agostinho,
+Calvino e Edwards foram REMOVIDOS pelo filtro; entraram Matthew Henry, F.B.
+Meyer (promovido) e Alexander Whyte.
 
-| # | Pregador | Volume | Fonte |
-|---|---|---|---|
-| 1 | **Spurgeon** | 3.541 caps já minerados (63 vols) e não é tudo | CCEL ✅ |
-| 2 | **Alexander Maclaren** | 32 volumes de exposições ≈ 1.500+ sermões | CCEL/Archive |
-| 3 | **João Crisóstomo** | ~800 homilias preservadas (tradução NPNF, PD) | CCEL |
-| 4 | **Agostinho** | ~800 sermões + cartas + tratados (NPNF) | CCEL |
-| 5 | **T. De Witt Talmage** | 500+ sermões publicados em coletâneas | Archive |
-| 6 | **Calvino** | milhares pregados; centenas traduzidas EN no séc. XIX | Monergism/Archive |
-| 7 | **Jonathan Edwards** | ~1.200 manuscritos, centenas publicados | CCEL/Yale (conferir edição) |
-| 8 | **Wesley** | 150 sermões-padrão + diários enormes | Gutenberg |
-| 9 | **Lutero** | milhares (Weimar); em EN a ed. Lenker (PD) cobre centenas | Archive |
+| # | Canal | Volume PD | Cadência | Púlpito na prática | Fonte |
+|---|---|---|---|---|---|
+| ✅ | **Spurgeon** | 3.541 minerados (63 vols) | 1/dia, NO AR | oferta livre (o modelo) | CCEL |
+| ✅ | **Moody** | 77 minerados + escada §1 | 0.5/dia, NO AR | evangelista "whosoever" | Gutenberg |
+| 1 | **Alexander Maclaren** | 32 vols ≈ 1.500 sermões | 1/dia | expositor devocional, zero decreto | CCEL/Archive |
+| 2 | **Joseph Parker** | *The People's Bible*, 25+ vols ≈ 1.000 | 1/dia | dramático, imaginativo, oferta livre | Archive |
+| 3 | **Matthew Henry** | comentário da Bíblia inteira ≈ 1.000+ caps | 1/dia | devocional prático amado por todas as tradições | CCEL (⚠️ inglês de 1706, modernização leve) |
+| 4 | **João Crisóstomo** | ~600-800 homilias (NPNF) | 1/dia | sinergista pré-Agostinho, o melhor encaixe do filtro | CCEL (⚠️ notas acadêmicas; excluir Adversus Judaeos) |
+| 5 | **T. De Witt Talmage** | 500+ sermões | 1/dia | revivalista vívido, o mais "YouTube" | Archive |
+| 6 | **F.B. Meyer** | ~40 livros ≈ 400-600 caps | 0.5/dia | Keswick; biografias bíblicas = episódio pronto | Gutenberg/Archive |
+| 7 | **Andrew Murray** | ~400-500 caps | 0.5/dia | oração/entrega, "whosoever" | Gutenberg |
+| 8 | **J.C. Ryle** | ~300-500 | 0.5/dia | prático, oferta quentíssima | Gutenberg/Archive |
+| 9 | **Alexander Whyte** | *Bible Characters* + Bunyan ≈ 300-400 | 0.5/dia | retratos de alma; o "canal dos personagens" | Archive |
+| 10 | **John Wesley** | ~150 sermões + diários | 0.5/dia | o anti-predestinação original | Gutenberg |
+
+Banco de reservas (decisão futura do Gabriel): **G. Campbell Morgan** (~250 do
+*Westminster Pulpit* pré-1930, mas morte em 1945 = conferir obra a obra),
+**Finney** (anti-calvinista declarado, mas perfeccionismo/governo moral são
+flag doutrinária), **Whitefield** (só ~60-80 sermões sobrevivem: vira Vault,
+não canal-mãe), **Lutero** (ed. Lenker PD, curadoria pesada de polêmicas).
 
 ### 🕰️ Idade Média (o buraco entre patrística e Reforma)
 
@@ -147,7 +165,7 @@ diário por ANOS. Volume estimado de matéria-prima PD digitalizada:
 | Pregador | Nota |
 |---|---|
 | **Martin Luther** | busca enorme; usar traduções EN do séc. XIX (PD). Curadoria: tem textos polêmicos que NÃO entram |
-| **John Calvin** | sermões + Institutas; público reformado devora |
+| ~~John Calvin~~ | ❌ REMOVIDO 26/08 pelo filtro doutrinário (critério 6); e o inglês PD dos sermões é de 1580 |
 | **John Knox** | fecha a tríade; menor busca, entra por completude do agregador |
 
 ### 🏛️ Onda 4 — Patrística (alimenta o agregador "Patristic Faith")
@@ -159,7 +177,7 @@ MAIOR mina de patrística em inglês que existe, e é livre.
 | Nome | Por que entra |
 |---|---|
 | **John Chrysostom** | literalmente "boca de ouro": o maior pregador da igreja antiga, centenas de homilias PRONTAS |
-| **Augustine** | busca máxima do cristianismo histórico; Confissões + sermões |
+| ~~Augustine~~ | ❌ REMOVIDO 26/08 pelo filtro doutrinário (critério 6): fonte do predestinacionismo |
 | **Athanasius** | "On the Incarnation" tem público jovem reformado/ortodoxo. ⚠️ o prefácio famoso de C.S. Lewis é PROTEGIDO, nunca usar |
 | **Basílio / Gregório Nazianzo** | completam o agregador |
 | **Inácio / Policarpo** | cartas curtas = formato curto pronto |
