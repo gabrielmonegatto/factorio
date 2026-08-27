@@ -26,16 +26,31 @@ export function extrair(xml) {
 
   // Escolhe o nível de divisão que corresponde a CAPÍTULO nesta obra.
   // Em obra simples o div1 já é o capítulo; em tomo com partes o div1 é "Livro I"
-  // e o capítulo mora um ou dois níveis abaixo. Sinal de que erramos o nível:
-  // poucas peças gigantes (A Imitação de Cristo saiu com 5 peças de 64k chars
-  // antes deste ajuste, porque o div1 dela é o livro).
+  // e o capítulo mora um ou dois níveis abaixo.
+  //
+  // ⚠️ A MEDIANA MENTE (bug encontrado em 27/08/2026, minerando o Maclaren).
+  // A versão anterior descia de nível só se a MEDIANA passasse de 25k chars.
+  // O ThML do Maclaren é [Folha de rosto, O LIVRO INTEIRO, Índices] no div1:
+  // três peças de 1k, 1.106k e 5k. Ordenadas, a do meio tem 5k — tamanho de
+  // capítulo perfeitamente normal. O teste passava, o adaptador não descia, e
+  // o volume de Mark virou 3 "capítulos", um deles com 368 mil caracteres.
+  // Isso viraria um vídeo de 30 HORAS, e mataria os 1.500 sermões do canal 3.
+  //
+  // O sinal certo não é o tamanho típico, é a EXISTÊNCIA de uma peça grande
+  // demais pra ser capítulo: uma peça dessas é um container, não um capítulo.
+  // Um único container basta pra provar que o nível está errado, e é
+  // exatamente isso que a mediana esconde quando os irmãos são pequenos.
   let caps = [];
-  for (const nivel of [1, 2, 3]) {
+  for (const nivel of [1, 2, 3, 4]) {
     const tentativa = fatiarPorDiv(xml, nivel);
     if (!tentativa.length) continue;
     if (!caps.length) { caps = tentativa; continue; }
-    // desce de nível só enquanto as peças estiverem grandes demais pra um capítulo
-    if (medianaTamanho(caps) > 25000 && tentativa.length > caps.length) caps = tentativa;
+    // Desce só quando as DUAS coisas valem: ainda existe container aqui, e o
+    // nível de baixo reparte de verdade (mais peças, e nenhuma virando caco).
+    // A 2ª condição é o freio: sem ela, descer partiria um sermão em seções.
+    const temContainer = maiorTamanho(caps) > CAP_MAX;
+    const repartiuBem = tentativa.length > caps.length && medianaTamanho(tentativa) >= CAP_MIN;
+    if (temContainer && repartiuBem) caps = tentativa;
     else break;
   }
 
@@ -64,8 +79,17 @@ function fatiarPorDiv(xml, nivel) {
   return out;
 }
 
+// Um capítulo de sermão vira 20-45min de narração. Acima do teto não é
+// capítulo, é um container com vários dentro; abaixo do piso é caco de seção.
+const CAP_MAX = 60000;
+const CAP_MIN = 1500;
+
 function medianaTamanho(caps) {
   if (!caps.length) return 0;
   const t = caps.map((c) => c.corpo.length).sort((a, b) => a - b);
   return t[Math.floor(t.length / 2)];
+}
+
+function maiorTamanho(caps) {
+  return caps.reduce((m, c) => Math.max(m, c.corpo.length), 0);
 }

@@ -493,6 +493,27 @@ def processar(env, s3, c, s, forcar=False):
            [f"só {len(texto)} chars após limpar rosto/catálogo", c["slug"], s["numero"]])
         print(f"  🗑️  {nnnn} descartado: sobrou {len(texto)} chars (era folha de rosto)")
         return "descartado"
+
+    # TETO, o irmão que faltava do piso acima (aberto em 27/08, minerando o
+    # Maclaren). Calibração medida: 7.271 palavras ≈ 40k chars ≈ 45min de vídeo.
+    # O padrão de 55k (~60min) deixa folga pro maior sermão do Spurgeon (44k) e
+    # ainda pega o que não é sermão: no Maclaren sobraram peças de 77k, 101k e
+    # 145k chars que o seletor de nível não conseguiu repartir. 145k viraria
+    # narração de ~2h45, fora do formato Treasures, segurando uma vaga de CPU a
+    # tarde inteira.
+    #
+    # Status `longo` e NÃO `descartado`: isto não é lixo como folha de rosto, é
+    # container que ainda pode virar 3 sermões quando alguém repartir. Descartar
+    # em silêncio seria perder conteúdo bom sem ninguém ver.
+    teto = c.get("chars_max", 55000)
+    if len(texto) > teto:
+        d1(env, """UPDATE sermons SET status='longo',
+                   erro=?, updated_at=datetime('now') WHERE canal=? AND numero=?""",
+           [f"{len(texto)} chars (teto {teto}): provável container de vários sermões",
+            c["slug"], s["numero"]])
+        print(f"  📏 {nnnn} PARADO por tamanho: {len(texto)} chars "
+              f"(~{len(texto)//900}min) > teto {teto}. Precisa ser repartido.")
+        return "descartado"
     # Título e slug podem mudar depois da limpeza; a pasta segue o slug limpo.
     slug_limpo = slugificar(titulo)
     if slug_limpo != s["slug"] or titulo != s["titulo"]:
@@ -571,7 +592,11 @@ def main():
     # Idem: um run morto por pkill/timeout deixa o Kokoro e o Whisper vivos.
     for etapa in ("tts", "asr"):
         docker_nomeado.varrer(etapa, c["slug"])
-    onde = "AND numero = ?" if args.so else "AND status NOT IN ('narrado','descartado')"
+    # 'longo' entra na lista de parados junto com 'descartado': sem isso o
+    # container de 145k chars voltaria pra fila em TODO run, seria limpo,
+    # medido, barrado de novo, pra sempre. Fila que retenta o que já decidiu
+    # não processar é a mesma doença do `list_pending` do generate_marketing.
+    onde = "AND numero = ?" if args.so else "AND status NOT IN ('narrado','descartado','longo')"
     par = [c["slug"]] + ([args.so] if args.so else [])
     fila = d1(env, f"""SELECT numero, chapter_id, titulo, slug, obra, cap_n FROM sermons
                        WHERE canal = ? {onde} ORDER BY numero LIMIT ?""",
