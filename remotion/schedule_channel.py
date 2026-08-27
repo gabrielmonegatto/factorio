@@ -295,6 +295,15 @@ def main():
             print(f"   ↩️  calendário rebaseado: {ready[i0]} passa a sair "
                   f"{primeiro.date()}, 1/dia a partir dali (persistido)")
 
+    # ⚠️ SLOTS JÁ TOMADOS (mina de 26/08: DOIS vídeos públicos no mesmo minuto).
+    # A fórmula dá o slot pelo par (índice, channel_start), mas o channel_start
+    # MUDA ao longo da vida do canal (rebase de 10/08). Um retardatário — o 0008,
+    # que falhou na época dos vizinhos e só subiu semanas depois — ganhou slot
+    # calculado com uma base, e o 0022 ganhou o MESMO horário calculado com outra.
+    # Ninguém conferia o que o estado já tinha prometido. Fórmula não é registro:
+    # o conjunto de horários ocupados é dos vídeos, não da equação.
+    tomados = {v["publishAt"] for v in state["scheduled"].values() if v.get("publishAt")}
+
     for i, nnnn in enumerate(ready):
         when = slot_datetime(i, channel_start)
         if when > horizon:
@@ -308,7 +317,13 @@ def main():
         if when < now:
             print(f"  ⏭️  {nnnn} → slot {when:%Y-%m-%d %H:%M} no passado, pulando (rebase pega no próximo run)")
             continue
+        # Slot ocupado anda de dia em dia até achar buraco. +1 dia preserva o
+        # turno (manhã segue manhã), então funciona nas três cadências.
+        while when.strftime("%Y-%m-%dT%H:%M:%SZ") in tomados:
+            print(f"  ↪️  {nnnn}: slot {when:%Y-%m-%d %H:%M} já tem vídeo, empurrando 1 dia")
+            when += dt.timedelta(days=1)
         pa = when.strftime("%Y-%m-%dT%H:%M:%SZ")
+        tomados.add(pa)
 
         # já existe vídeo subido (seed) → só agenda
         if nnnn in SEEDED:
