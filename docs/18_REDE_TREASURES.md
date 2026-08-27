@@ -9,11 +9,14 @@
 
 ## 1. O desenho da rede (3 camadas por matéria-prima)
 
+> Nomes batidos pelo Gabriel em 26/08: **Treasures / Best Of / Vault**
+> (Best Of era "Wisdom" no rascunho; Vault era "agregadores").
+
 | Camada | Formato | Derivação |
 |---|---|---|
-| **Treasures** (canal-mãe por pregador) | sermão completo, ~30min | narração integral do sermão minerado |
-| **Wisdom** (condensado) | ≤15min, pregação destilada | NOVO corte + NOVO copy da mesma matéria-prima |
-| **Agregadores** ("Puritan Faith", "Patristic Faith"...) | compilações temáticas por tradição | formatos que NÃO cabem no canal-mãe |
+| **Treasures** (canal-mãe por pregador) | sermão/mensagem NA ÍNTEGRA, 20-45min | narração integral do capítulo minerado |
+| **Best Of** (condensado por pregador) | ≤10min, o miolo da pregação | NOVO corte + NOVO copy da mesma matéria-prima |
+| **Vault** (agregadores por tradição: Patristic Vault, Reformation Vault, Puritan Vault...) | compilações temáticas, 2-8h, cruzando pregadores | formatos que NÃO cabem no canal-mãe; crédito por trecho |
 
 A mineração de um pregador alimenta as três camadas. O custo marginal de cada
 canal derivado é edição e packaging, não matéria-prima nova.
@@ -36,6 +39,34 @@ O que cada camada muda pra ser derivação legítima:
   narração em OUTRA voz. Nunca o mesmo arquivo re-postado. ✅
 - Regra antiga da casa que continua valendo: **voz diferente por canal**. Dois
   canais com a mesma voz são o mesmo canal aos ouvidos de quem assiste os dois.
+
+### Multiplicação pra acervo pequeno (pergunta do Gabriel, 26/08)
+
+A referência que ele trouxe: canais tipo Luciano Subirá / Hernandes Dias Lopes
+têm a MESMA pregação 7x com títulos diferentes. Por que funciona lá e o que
+transfere pra cá:
+
+**Lá são gravações DIFERENTES da mesma mensagem** (igrejas diferentes, câmera
+diferente, duração diferente). O YouTube vê 7 vídeos distintos porque SÃO 7
+vídeos distintos. Repostar o nosso mesmo arquivo com outro título não é isso:
+é o mesmo hash de conteúdo, e cai na política de reused content (desmonetiza e
+mancha o canal).
+
+Mas a nossa esteira tem o equivalente honesto, e quase de graça: **re-renderizar
+é a nossa "outra igreja"**. Mesmo texto-fonte, outro vídeo de verdade:
+
+| Degrau | O que muda | Custo | 77 caps do Moody viram |
+|---|---|---|---|
+| 1. Best Of | corte novo (miolo), copy novo, título novo | só máquina | +150 a 300 cortes |
+| 2. Compilação temática | "Moody on Prayer, 3 hours": trechos de N sermões costurados, rotulada como compilação | montador ffmpeg (⬜ construir) | +dezenas de longos |
+| 3. Sermão compilado original | mensagem única montada de trechos do PRÓPRIO pregador sobre um tema, apresentada como coletânea ("from the writings of D.L. Moody") | curadoria LLM + montador | +dezenas |
+| 4. Remaster | narração em outra voz/velocidade, visual novo, corte novo | só máquina | dobra o catálogo |
+| 5. Minerar mais fundo | Gutenberg foi só a 1ª pá: Archive.org tem coletâneas de sermões, transcrições de jornal | esteira de mineração | 77 → 200-400 caps |
+
+A linha que não se cruza: mesmo ARQUIVO, título novo. Todo degrau acima produz
+arquivo novo com conteúdo transformado. E na camada Vault vale misturar
+pregadores no mesmo vídeo, desde que cada trecho seja creditado a quem falou:
+compilação assumida é formato; texto de um na boca de outro é fraude.
 
 ---
 
@@ -67,6 +98,33 @@ O que cada camada muda pra ser derivação legítima:
 | **Oswald Chambers** | 1917 | "My Utmost for His Highest", devocional best-seller há um século (publicado 1927, PD) | busca devocional diária |
 | **F.B. Meyer** | 1929 | biografias bíblicas devocionais | matéria-prima pra arquétipo 2 |
 | **R.A. Torrey** | 1928 | sucessor de Moody; obras pré-1930 | ⚠️ conferir obra a obra (morte tardia) |
+| **Alexander Maclaren** | 1910 | *Expositions of Holy Scripture*: 32 VOLUMES cobrindo a Bíblia inteira | volume monstruoso, expositivo |
+| **T. De Witt Talmage** | 1902 | 500+ sermões publicados; o "mais lido do mundo" na época (sindicado em 3.000 jornais) | volume + prosa vívida |
+| **Charles Finney** | 1875 | avivamentos; *Lectures on Revivals* | busca "revival" |
+
+### 📊 Ranking de volume (a pergunta "quem mais produziu?", 26/08)
+
+Ninguém alcança o Spurgeon, mas a prateleira logo abaixo dele sustenta canal
+diário por ANOS. Volume estimado de matéria-prima PD digitalizada:
+
+| # | Pregador | Volume | Fonte |
+|---|---|---|---|
+| 1 | **Spurgeon** | 3.541 caps já minerados (63 vols) e não é tudo | CCEL ✅ |
+| 2 | **Alexander Maclaren** | 32 volumes de exposições ≈ 1.500+ sermões | CCEL/Archive |
+| 3 | **João Crisóstomo** | ~800 homilias preservadas (tradução NPNF, PD) | CCEL |
+| 4 | **Agostinho** | ~800 sermões + cartas + tratados (NPNF) | CCEL |
+| 5 | **T. De Witt Talmage** | 500+ sermões publicados em coletâneas | Archive |
+| 6 | **Calvino** | milhares pregados; centenas traduzidas EN no séc. XIX | Monergism/Archive |
+| 7 | **Jonathan Edwards** | ~1.200 manuscritos, centenas publicados | CCEL/Yale (conferir edição) |
+| 8 | **Wesley** | 150 sermões-padrão + diários enormes | Gutenberg |
+| 9 | **Lutero** | milhares (Weimar); em EN a ed. Lenker (PD) cobre centenas | Archive |
+
+### 🕰️ Idade Média (o buraco entre patrística e Reforma)
+
+| Nome | Nota |
+|---|---|
+| **Bernardo de Claraval** | 86 sermões no Cântico (tradução PD); místico, nicho devoto |
+| **Tomás de Kempis** | *Imitação de Cristo*: **114 caps JÁ MINERADOS no nosso D1** |
 
 ### 🥈 Onda 2 — Puritanos (nicho MUITO fiel; alimenta o agregador "Puritan Faith")
 
@@ -123,16 +181,17 @@ obra (publicação pré-1930 nos EUA). Depois disso, fora.
 
 ---
 
-## 5. Ordem de lançamento que eu recomendo
+## 5. Ordem de lançamento
 
-1. **Moody** (Treasures 2): prosa mais fácil de modelar da Onda 1, busca alta,
-   valida a replicação da esteira multi-canal com o menor atrito.
+1. ✅ **Moody** (Treasures 2): **NO AR desde 25/08**, 77/77 renderizados,
+   warmup 14 dias a 1/dia e depois 1 a cada 2 dias. Validou a replicação:
+   a esteira dele se inaugurou pelo próprio cron.
 2. **Ryle** (Treasures 3): mesmo perfil, público reformado engajado.
-3. **Wisdom** (1º derivado): condensados de Spurgeon + Moody. Testa a camada 2
-   com matéria-prima já minerada, custo quase zero.
+3. **Best Of** (1º derivado): condensados de Spurgeon + Moody. Testa a camada 2
+   com matéria-prima já minerada, custo quase zero. Precisa do cortador (⬜).
 4. **Edwards ou Wesley** (Treasures 4): nomes maiores, prosa mais difícil.
-5. **"Puritan Faith"** (1º agregador): compilações longas/temáticas quando
-   houver 2+ puritanos minerados.
+5. **Puritan Vault** (1º agregador): compilações longas/temáticas quando
+   houver 2+ puritanos minerados. Precisa do montador de compilação (⬜).
 
 Patrística fica pra depois: a mineração das homilias (ANF/NPNF tem formatação
 acadêmica pesada, notas de rodapé etc.) é a mais cara da lista.
@@ -142,7 +201,27 @@ acadêmica pesada, notas de rodapé etc.) é a mais cara da lista.
 | Peça | Estado |
 |---|---|
 | Multi-canal (`canais.py`, credencial por canal, guardião) | ✅ pronta |
-| Mineração de sermão → narração → render → publicação | ✅ validada no Spurgeon |
-| Prompt de marketing POR CANAL (`generate_marketing.py` tem o SYSTEM hardcoded no Spurgeon) | ⬜ generalizar |
+| Mineração → narração → render → publicação, ponta a ponta por canal | ✅ validada 2x (Spurgeon E Moody) |
+| Prompt de marketing por canal (`montar_system(C)`) | ✅ generalizado (era hardcoded no Spurgeon) |
+| Esteira por canal como unidade systemd/cron (`esteira_canal.sh ligar <slug>`) | ✅ 24-25/08 |
+| Semáforo de CPU da máquina inteira (`vaga_cpu.py`) | ✅ 26/08 |
 | Etapa de modernização de grafia (puritanos) | ⬜ nova, LLM-função |
-| Formato compilação (agregadores) | ⬜ novo montador ffmpeg |
+| Cortador Best Of (miolo de sermão ≤10min) | ⬜ novo |
+| Montador de compilação (Vault, 2-8h temático) | ⬜ novo montador ffmpeg |
+| Aumento de cota da YouTube Data API | ⬜ **GATE DO GABRIEL: é o gargalo real da rede** |
+
+## 7. Capacidade medida e o gargalo real (26/08)
+
+Medido, não estimado (deltas dos mp4 no R2 + logs de narração):
+
+- **Render**: 33-37 min por vídeo longo numa vaga de 5 CPUs (18 min com a máquina livre).
+- **Narração + transcrição**: ~25 min por sermão de 40min numa vaga.
+- **Máquina** (16 vCPU, 3 vagas): ~**45-60 vídeos longos/dia** de ponta a ponta.
+  Prova prática: os 71 renders restantes do Moody saíram em ~1 madrugada.
+
+**Compute NÃO é o limite. O limite é a cota da YouTube Data API**: 10.000
+unidades/dia por projeto GCP, upload custa 1.600 → **~6 uploads/dia** pra rede
+INTEIRA no projeto atual. A VPS produz 50/dia; o YouTube deixa publicar 6.
+Multiplicar projetos pra multiplicar cota viola ToS (risco: suspensão de todos).
+Caminho certo: **formulário de audit/aumento de cota do projeto** (gate do
+Gabriel). Até lá, 6/dia paga confortavelmente 4-5 canais Treasures + margem.
