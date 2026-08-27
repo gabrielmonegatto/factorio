@@ -225,6 +225,71 @@ CANAIS = {
             },
         },
     },
+    # ─────────────────────────────────────────────────────────────────────
+    # Canal 4 — Alexander Maclaren Treasures (arquétipo TREASURES, 3º da família).
+    #
+    # Escolhido pelo Gabriel em 26/08 como Treasures 3, e é o MAIOR acervo da
+    # rede depois do Spurgeon: 1.482 capítulos já minerados (19 obras do CCEL,
+    # 27/08), mediana de 14k chars = sermão de ~25min. A 1/dia dá QUATRO ANOS
+    # sem repetir. Passa no filtro doutrinário da casa (doc 18_REDE_TREASURES,
+    # critério 6): herança reformada branda, púlpito expositivo e devocional.
+    #
+    # ⬜ GATES DO GABRIEL, nesta ordem:
+    #    1. escolher a voz (amostras bm_lewis/bm_daniel/bm_fable geradas em 27/08)
+    #    2. criar o canal no YouTube + verificar por telefone (senão a capa dá 403)
+    #    3. auth_youtube.py -> YT_MACLAREN_* no .env
+    #    4. preencher `youtube_channel_id` aqui
+    #    5. criar a coleção "The Best of Alexander Maclaren" na livraria
+    # Sem o passo 4 o publish ABORTA de propósito (assert_canal_certo).
+    "maclaren": {
+        "nome": "Alexander Maclaren Treasures",
+        "bucket": "mananciall",
+        "prefix": "channels/channels_youtube/treasures_maclaren",
+        "renders_prefix": "renders/maclaren",
+        "state_key": "schedule/maclaren_schedule.json",
+        "youtube_channel_id": "",          # ⬜ gate 4
+        "env_prefix": "YT_MACLAREN",
+        "idioma": "en",
+        # ⬜ PROVISÓRIA (recomendação minha até o Gabriel ouvir): britânica,
+        # porque Maclaren era escocês pregando em Manchester. bm_george está
+        # fora: é a voz do Spurgeon, e a regra da casa é uma voz por canal —
+        # dois canais com a mesma voz são o mesmo canal pra quem ouve os dois.
+        "voz": "bm_lewis",
+        "voz_speed": "0.9",
+        "videos_por_dia": 1.0,             # 1.482 capítulos = ~4 anos de diário
+        "morning_utc": 12,
+        "evening_utc": 23,
+        "warmup_days": 14,
+        "buffer_days": 14,
+        "max_uploads_per_run": 5,
+        # Teto menor que o padrão de 55k: o maior sermão do Maclaren no acervo
+        # tem ~50k, e as peças acima disso são container que o seletor de nível
+        # não repartiu (ver o status `longo` em narrar_sermao.py).
+        "chars_max": 52000,
+        "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our collection with the best books and expositions by Alexander Maclaren "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our collection with the best books and expositions by "
+            "Alexander Maclaren to enrich your soul. God bless you."),
+        "pregador": "Alexander Maclaren",
+        "autor_mineracao": "%aclaren%",
+        "asr_modelo": "small.en",
+        "pausa_frase_s": 0.75,
+        "titulo_sufixo": " (Alexander Maclaren)",
+        "tags": "Alexander Maclaren,maclaren,sermon,christian,bible exposition,expository preaching",
+        "hashtags": "#AlexanderMaclaren #Christian #Bible #Faith #Exposition",
+        "cta_livro": "The Best of Alexander Maclaren",
+        "cta_texto": "📖 Alexander Maclaren's books & expositions: {link}",
+        "colecao_titulo": "The Best of Alexander Maclaren",
+        "link_label": "mananciall.org/go/maclaren",
+        "redirect_base": "https://mananciall.org/go/maclaren?v=",
+        "link_canal": "https://mananciall.org/go/maclarentreasures",
+        "assets": None,                    # ⬜ busto e fundo ainda não gerados
+    },
 }
 
 PADRAO = "spurgeon"
