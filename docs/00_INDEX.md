@@ -20,6 +20,8 @@
   ├── 📄 16_BLUEPRINT_AREAS.md    → ⭐ Blueprint das 7 áreas da fábrica (piloto Mananciall) + prompts das frentes
   ├── 📄 17_UNIFICACAO_DE_DADOS.md → Aposentadoria do Teable/trigger.dev + migração pro D1 (19/08)
   ├── 📄 18_AUTOMACOES.md         → ⭐ Catálogo vivo de automações (vivas/manuais/aposentadas) + doutrina do motor
+  ├── 📄 22_ANCORAS_VISUAIS.md   → Âncoras dos shorts: catálogo de cenas, bíblia visual, as 10 minas do RunPod
+  ├── 📄 23_PLATAFORMA_AUDIOVISUAL.md → ⭐ Tese: Magnific (ex-Freepik) como plataforma única de imagem/vídeo/música (aposenta RunPod)
   ├── 📄 STACK.md                 → Infra da VPS (era 1.0 — infra vale, modelo de agentes não)
   ├── 📄 backlog_skills_seed.md   → Backlog bruto de workflows/skills por área (seed do catálogo)
   └── 📁 legacy/                  → Docs da era anterior (histórico, não seguir)
