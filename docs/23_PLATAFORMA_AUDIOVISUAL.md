@@ -46,26 +46,48 @@ Consequência direta, e é assim que a fábrica deve operar:
 Ou seja: o trabalho caro de ACHAR a imagem certa migra pro ilimitado; a API só
 executa o que já foi decidido.
 
-## 4. Orçamento de créditos no Premium+ (600k/ano)
+## 4. Orçamento: o plano é CAPACIDADE, não teto (corrigido 25/08 pelo Gabriel)
 
-| uso | conta | créditos/ano |
-|---|---|---|
-| fechar a biblioteca de âncoras (26 cenas + 27 variantes anti-repetição) | 53 × 140 | 7.420 (única vez) |
-| expansão da biblioteca (200 clipes/ano: cenas novas, 2ª marca Moody) | 200 × 140 | 28.000 |
-| trilhas originais (20 faixas/ano, 6 climas + renovação) | 20 × 160 | 3.200 |
-| stills novos por API (300/ano — a curadoria pesada vai no web app) | 300 × 75 | 22.500 |
-| SFX (200 efeitos/ano) | 200 × 15 | 3.000 |
-| **subtotal previsível** | | **~64.000 (11%)** |
-| reserva pra upscale de vídeo (custo não publicado — ver §6) | | folga de 536.000 |
+O painel mostra **45k créditos/mês** no Premium+ (~540k/ano; a página de vendas
+fala 600k/ano — conferir no painel qual régua vale e se sobra rola pro mês
+seguinte: a doc diz "credits valid for 1 year, no monthly resets", o que sugere
+que acumula).
 
-Mesmo triplicando tudo, não passa de 33% do plano. **Estourar limite não é
-risco realista no nosso volume** — o único item capaz de comer crédito em escala
-é upscale de vídeo LONGO, e por isso ele fica fora da esteira até termos o preço
-(§6).
+A primeira versão desta seção orçava 64k/ano "pra não estourar". Errado de
+mentalidade: a estratégia da holding é **abrir canais toda semana**, com
+bibliotecas de assets REAPROVEITÁVEIS por arquétipo de canal. O plano deve ser
+lido como capacidade de produção:
 
-Premium (240k, R$ 59/mês) também caberia no subtotal previsível; o Premium+ se
-justifica por **music rights** (trilha em canal monetizado) + folga pro upscale.
-É a diferença de R$ 76/mês comprando a licença musical e o teto alto.
+| capacidade mensal (45k cr) | se gastar tudo em... |
+|---|---|
+| ~320 clipes Kling 5s | 4-6 bibliotecas de canal completas POR MÊS |
+| ~280 faixas Lyria | trilha própria pra dezenas de canais |
+| ~600 stills Nano Banana Pro | ensaios ilustrados inteiros |
+| mix realista | 2-3 bibliotecas novas + trilhas + stills + SFX, todo mês |
+
+**Biblioteca de canal = ~40-70 cenas ≈ 6-10k créditos, gerada UMA vez e
+reusada em centenas de vídeos daquele arquétipo.** O custo marginal por vídeo
+publicado tende a zero — é o mesmo desenho das âncoras do Spurgeon, replicado.
+
+### A hierarquia de fornecimento (na ordem, sempre)
+
+1. **STOCK primeiro (custo zero em créditos).** O plano inclui o acervo
+   ex-Freepik: 250M+ fotos, VÍDEOS reais, vetores, PSDs, música e SFX, com
+   licença comercial. Céu estrelado, timelapse, natureza, textura — o acervo
+   provavelmente JÁ TEM, filmado de verdade, melhor que IA. Via API há teto de
+   100 downloads/dia (Premium/Pro). Regra: antes de gerar qualquer cena, buscar
+   no stock.
+2. **Web app UNLIMITED segundo (custo zero).** Curadoria, exploração, ensaios.
+3. **API por crédito por último.** Só o que precisa de identidade própria em
+   automação.
+
+### Exemplo aplicado: canal de narrações bíblicas (ideia do Gabriel)
+
+Fundos de céus estrelados e timelapses → quase tudo sai do STOCK (footage real,
+0 créditos). IA entra só pra cenas que o stock não tem no look do canal (ex.:
+céu com a paleta da marca) — aí Kling anima um still próprio. Biblioteca
+estimada: 30 fundos stock + 15 gerados ≈ **2,1k créditos**, uma tarde de
+trabalho. É o arquétipo mais barato possível de canal.
 
 ## 5. O que aposenta, o que fica
 
