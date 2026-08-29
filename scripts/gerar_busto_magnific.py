@@ -66,10 +66,18 @@ API = "https://api.magnific.com/v1/ai/text-to-image/nano-banana-pro-flash"
 # A URL da fotografia é parte do contrato, não comentário: é o que torna o
 # rosto auditável. Sem isso ninguém consegue checar se o busto é do homem
 # certo, e foi exatamente o que faltou quando o Murray saiu errado.
-# Todas conferidas em 29/08/2026 (Wikimedia Commons, domínio público).
+#
+# ⚠️ ESPELHADAS NO NOSSO R2, e não apontando pra Wikimedia direto.
+# Apontar pro upload.wikimedia.org funcionou duas vezes e na terceira a
+# Magnific devolveu "Unable to resolve image / could not download image":
+# a Wikimedia barra o fetcher deles. Referência que a API não consegue
+# baixar é o mesmo que não ter referência, e o busto volta a ser inventado.
+# Originais (domínio público, conferidos em 29/08/2026):
+#   murray   → commons/9/9c/Andrew_Murray.JPG
+#   maclaren → commons/e/ed/Alexander_Maclaren_(01).jpg
 REFERENCIAS = {
     "murray": {
-        "url": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Andrew_Murray.JPG",
+        "url": "https://pub-cd23eb57aece4069a2df4818e6b9eed3.r2.dev/referencias/pregadores/murray.jpg",
         "mime": "image/jpeg",
         "quem": ("Andrew Murray (1828-1917), ministro sul-africano da Igreja "
                  "Reformada Holandesa"),
@@ -82,7 +90,7 @@ REFERENCIAS = {
                    "Geneva preaching bands at the throat"),
     },
     "maclaren": {
-        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Alexander_Maclaren_%2801%29.jpg",
+        "url": "https://pub-cd23eb57aece4069a2df4818e6b9eed3.r2.dev/referencias/pregadores/maclaren.jpg",
         "mime": "image/jpeg",
         "quem": "Alexander Maclaren (1826-1910), pregador batista escocês de Manchester",
         "traços": ("elderly man in his sixties, bald on the crown with white hair at "
@@ -135,6 +143,33 @@ def chamar(caminho, corpo=None, metodo="POST"):
     raise SystemExit(f"❌ nenhum header autenticou. Último: {ultimo}")
 
 
+def luminancia_da_borda(dados):
+    """Média de brilho da moldura externa (0=preto, 255=branco).
+
+    ⚠️ FUNDO PRETO NÃO É ESTÉTICA, É REQUISITO. O template compõe o busto com
+    `mixBlendMode: 'screen'`, e screen só some com o fundo se ele for preto:
+    qualquer cinza vira véu por cima da cena. Medido em 29/08, SETE dos dez
+    primeiros bustos saíram com estante de livros atrás, mesmo o prompt pedindo
+    "pure black background" — o modelo obedece na maioria das vezes, não sempre.
+    Pedir e não conferir é o mesmo que não pedir.
+    """
+    from PIL import Image
+    import io
+    im = Image.open(io.BytesIO(dados)).convert("L")
+    w, h = im.size
+    px = im.load()
+    m = max(4, int(w * 0.03))
+    vals = []
+    for x in range(0, w, 8):
+        vals += [px[x, y] for y in range(0, m, 4)] + [px[x, y] for y in range(h - m, h, 4)]
+    for y in range(0, h, 8):
+        vals += [px[x, y] for x in range(0, m, 4)] + [px[x, y] for x in range(w - m, w, 4)]
+    return sum(vals) / len(vals)
+
+
+TETO_BORDA = 18.0        # acima disso o screen já deixa véu visível
+
+
 def esperar(task_id, limite_s=300):
     """A API é assíncrona. Sem webhook, resta perguntar de tempos em tempos."""
     t0 = time.monotonic()
@@ -174,41 +209,66 @@ def main():
     SC.aplicar_canal(a.canal)
     s3 = SC.s3c(SC.load_env())
 
+    reprovados = 0
     for i in range(1, a.n + 1):
         pose = POSES[(i - 1) % len(POSES)]
-        prompt = (
-            f"Photorealistic studio portrait of the exact same man shown in the "
-            f"reference photograph. Keep his facial identity unchanged: {ref['traços']}. "
-            f"Pose and expression: {pose}. Pure black background, dramatic Rembrandt "
-            f"lighting, sharp detail, square composition, no text, no watermark.")
         nome = f"{a.canal}_bust_cf_{i}.png"
         if a.dry_run:
-            print(f"  [{i:02}] {nome}\n       {prompt[:120]}...")
+            print(f"  [{i:02}] {nome}  ({pose})")
             continue
 
-        d = chamar(API, {
-            "prompt": prompt,
-            "aspect_ratio": "1:1",
-            "resolution": a.resolucao,
-            "reference_images": [{"image": ref["url"], "mime_type": ref["mime"],
-                                  "text": "the man whose face must be preserved"}],
-        })
-        task = (d.get("data") or d).get("task_id")
-        if not task:
-            raise SystemExit(f"❌ resposta sem task_id: {json.dumps(d)[:300]}")
-        urls = esperar(task)
-        if not urls:
-            raise SystemExit(f"❌ tarefa {task} terminou sem imagem")
+        # Até 3 tentativas, endurecendo a exigência de fundo a cada reprovação.
+        # O modelo acerta o preto na maioria das vezes, mas não sempre: sem este
+        # laço, 7 em 10 bustos foram pro R2 com estante de livros atrás.
+        dados = None
+        for tentativa in range(1, 4):
+            reforco = ("" if tentativa == 1 else
+                       " The background MUST be solid pure black (#000000), completely "
+                       "empty: no room, no bookshelf, no furniture, no window, no "
+                       "scenery, nothing but black behind him.")
+            prompt = (
+                f"Photorealistic studio portrait of the exact same man shown in the "
+                f"reference photograph. Keep his facial identity unchanged: {ref['traços']}. "
+                f"Pose and expression: {pose}. Pure black background, dramatic Rembrandt "
+                f"lighting, sharp detail, square composition, no text, no watermark."
+                f"{reforco}")
+            d = chamar(API, {
+                "prompt": prompt,
+                "aspect_ratio": "1:1",
+                "resolution": a.resolucao,
+                "reference_images": [{"image": ref["url"], "mime_type": ref["mime"],
+                                      "text": "the man whose face must be preserved"}],
+            })
+            task = (d.get("data") or d).get("task_id")
+            if not task:
+                raise SystemExit(f"❌ resposta sem task_id: {json.dumps(d)[:300]}")
+            urls = esperar(task)
+            if not urls:
+                raise SystemExit(f"❌ tarefa {task} terminou sem imagem")
+            alvo = urls[0] if isinstance(urls[0], str) else urls[0].get("url")
+            with urllib.request.urlopen(alvo, timeout=180, context=CTX) as r:
+                candidato = r.read()
 
-        alvo = urls[0] if isinstance(urls[0], str) else urls[0].get("url")
-        with urllib.request.urlopen(alvo, timeout=180, context=CTX) as r:
-            dados = r.read()
+            borda = luminancia_da_borda(candidato)
+            if borda <= TETO_BORDA:
+                dados = candidato
+                break
+            print(f"       ↻ tentativa {tentativa}: fundo claro "
+                  f"(borda {borda:.0f} > {TETO_BORDA:.0f}), refazendo")
+        if dados is None:
+            reprovados += 1
+            print(f"  [{i:02}] ⛔ {nome} DESCARTADO: sem fundo preto em 3 tentativas. "
+                  f"NÃO vai pro R2 (quebraria o screen do template).")
+            continue
         chave = f"{SC.CHANNEL_PREFIX}/_assets/avatars/{nome}"
         s3.put_object(Bucket=SC.BUCKET, Key=chave, Body=dados, ContentType="image/png")
         print(f"  [{i:02}] ok {len(dados)//1024}KB → {nome}")
 
-    print(f"\n🏁 {a.n} bustos de {a.canal} no R2 (Nano Banana Pro {a.resolucao}, "
-          f"ilimitado no Premium)")
+    print(f"\n🏁 {a.n - reprovados}/{a.n} bustos de {a.canal} no R2 "
+          f"(Nano Banana Pro {a.resolucao}, ilimitado no Premium)")
+    if reprovados:
+        print(f"   ⛔ {reprovados} reprovados no gate de fundo preto. "
+              f"Rode de novo pra preencher as vagas.")
 
 
 if __name__ == "__main__":
