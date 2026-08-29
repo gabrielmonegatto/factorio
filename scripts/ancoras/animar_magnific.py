@@ -105,15 +105,42 @@ def chamar(rota, chave, corpo=None, metodo="GET"):
         raise RuntimeError(f"HTTP {e.code} em {rota}: {corpo_erro}") from None
 
 
-def clarear(caminho, gama=0.30):
-    """Levanta a sombra antes de mandar. O preto volta na pós (graduar.py)."""
+ALVO_ENTRADA = 45.0   # luminância que o modelo enxerga bem sem lavar a cena
+
+
+def clarear(caminho, alvo=ALVO_ENTRADA):
+    """Levanta a sombra ATÉ UM ALVO antes de mandar. O preto volta na pós.
+
+    🧨 Nasceu com gama FIXO 0.30, calibrado pra `rain_on_dark_glass` (luminância
+    7,2). Aplicado em `light_shaft_nave` (11,2, mas com vitral aceso) levou a
+    cena pra 75,4: lavou o contraste, estourou a janela e o clipe saiu quase
+    parado — sem textura não há o que animar. Custou 280 créditos pra descobrir.
+
+    É o MESMO erro que o graduar.py já tinha cometido na volta e que foi
+    consertado lá: cada cena parte de um brilho diferente, então o alvo é igual
+    pra todas e a curva é de cada uma. Ida e volta agora seguem a mesma regra.
+    """
     from PIL import Image
-    import io
+    import io as _io
     im = Image.open(caminho).convert("RGB")
+    h = im.convert("L").histogram()
+    total = sum(h) or 1
+
+    def luz(g):
+        return sum(n * ((i / 255.0) ** g) * 255 for i, n in enumerate(h)) / total
+
+    baixo, alto = 0.05, 1.0        # gama MENOR = mais claro
+    for _ in range(30):
+        meio = (baixo + alto) / 2
+        if luz(meio) > alvo:
+            baixo = meio
+        else:
+            alto = meio
+    gama = (baixo + alto) / 2
     tabela = [min(255, int((i / 255.0) ** gama * 255 + 0.5)) for i in range(256)] * 3
-    buf = io.BytesIO()
+    buf = _io.BytesIO()
     im.point(tabela).save(buf, format="PNG")
-    return buf.getvalue()
+    return buf.getvalue(), round(gama, 3)
 
 
 def gerar(chave, imagem_b64, prompt, negativo, webhook=None):
@@ -162,13 +189,27 @@ def main():
     ap.add_argument("--limite", type=int, default=1,
                     help="TETO DURO de clipes por execução. Conta de teste tem "
                          "crédito contado: o default é 1 de propósito.")
-    ap.add_argument("--clarear", type=float, default=0.30)
+    ap.add_argument("--alvo", type=float, default=ALVO_ENTRADA,
+                    help="luminância alvo da ENTRADA (o gama é resolvido por cena)")
     ap.add_argument("--confirmar", action="store_true",
                     help="sem isto, NADA é gerado e nada é cobrado")
     ap.add_argument("--pular-existentes", action="store_true", default=True)
     args = ap.parse_args()
 
     stills = sorted(f for f in os.listdir(args.stills) if f.lower().endswith((".png", ".jpg")))
+    # 🧨 ORDEM POR PESO DE USO, não alfabética. Medido sobre 3.092 batidas de 20
+    # sermões: light_shaft_nave aparece em 9,4% delas e single_candle em 0,0%.
+    # Gerar em ordem alfabética queima os primeiros créditos em cena que quase
+    # nunca é pedida — e é o crédito do começo que decide se a esteira destrava.
+    caminho_peso = os.path.join(HERE, "peso_cenas.json")
+    if os.path.exists(caminho_peso):
+        with open(caminho_peso, encoding="utf-8") as fh:
+            peso = json.load(fh)
+        ids_cat = [c["id"] for c in ca.carregar_catalogo()]
+        def _peso(nome_arq):
+            cid = sc.id_de_cena(os.path.splitext(nome_arq)[0], ids_cat)
+            return -(peso.get(cid) or 0)
+        stills.sort(key=_peso)
     if not stills:
         sys.exit(f"❌ nenhum still em {args.stills}")
     os.makedirs(args.saida, exist_ok=True)
@@ -192,13 +233,20 @@ def main():
         base = os.path.splitext(nome)[0]
         cid = sc.id_de_cena(base, ids)
         cena = por_id.get(cid) or {}
-        print(f"  {base}")
+        try:
+            with open(os.path.join(HERE, "peso_cenas.json"), encoding="utf-8") as fh:
+                pct = json.load(fh).get(cid or "", 0)
+        except Exception:
+            pct = 0
+        print(f"  {base}  ({pct}% das batidas do acervo)")
         print(f"     prompt: {(cena.get('movimento_en') or '(sem cena no catálogo)')[:90]}")
         if not args.confirmar:
             continue
 
         chave = env("MAGNIFIC_API_KEY")
-        b64 = base64.b64encode(clarear(os.path.join(args.stills, nome), args.clarear)).decode()
+        dados_img, gama_usado = clarear(os.path.join(args.stills, nome), args.alvo)
+        b64 = base64.b64encode(dados_img).decode()
+        print(f"     entrada clareada até luz {args.alvo:.0f} (gama {gama_usado})")
         task, st = gerar(chave, b64, cena.get("movimento_en"), negativo)
         if not task:
             print("     ❌ a API não devolveu task_id")
