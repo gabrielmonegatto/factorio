@@ -125,7 +125,21 @@ trabalho. É o arquétipo mais barato possível de canal.
 - Consumo conferido no painel/analytics **semanalmente** no primeiro mês.
 - Conta é do Gabriel; chave vive no `.env`, nunca em chat, commit ou pod.
 
-## 8. Sequência de adoção
+## 8. Caminho de entrada decidido (25/08, restrição de caixa do Gabriel)
+
+**Começa no Premium MENSAL (R$ 80/mês)**, não no Premium+ anual. Cabe: a
+primeira semana consome ~4,4k créditos (~22% do mês do Premium) e o ilimitado
+do web app existe em todos os planos pagos.
+
+O que o Premium não tem: **music rights**. Regra de contorno enquanto estivermos
+nele: **NÃO gerar trilha no Lyria** — shorts seguem com as 4 faixas worship já
+licenciadas dos longos. Trilha própria só depois do upgrade pro Premium+ anual
+(quando o caixa permitir; nada gerado se perde na troca).
+
+Na troca da conta de teste pra própria: trocar a chave no `.env` e REVOGAR a
+chave emprestada da empresa de design.
+
+## 8b. Sequência de adoção
 
 1. **Agora (conta de teste):** 1–2 gerações medidas → comparar com o Wan →
    validar contrato da API de ponta a ponta (upload, poll, download, graduação).
