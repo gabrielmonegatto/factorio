@@ -37,18 +37,29 @@ PREFIXO_R2 = "renders/ancoras"
 #   controle com prompt tímido  0.3%   parado de verdade
 #   storm_swell / wave_on_rock  2.3-2.8%  utilizável
 #   mar_05 (o melhor que já saiu) 4.7%
-MOV_PARADO = 1.0   # abaixo disso não sobe
-MOV_FRACO = 2.0    # entre os dois, sobe com aviso
+# Faixas recalibradas em 29/08 pro passo de 1s (as antigas eram do passo de 1
+# quadro e barravam clipe bom do Kling).
+MOV_PARADO = 2.0   # abaixo disso não sobe
+MOV_FRACO = 5.0    # entre os dois, sobe com aviso
 
 sys.path.insert(0, HERE)
 import casar_ancora as ca  # noqa: E402
 
 
-def _stat(caminho, chave):
-    r = subprocess.run(
-        ["ffmpeg", "-v", "info", "-i", caminho, "-vf",
-         f"signalstats,metadata=print:key=lavfi.signalstats.{chave}", "-f", "null", "-"],
-        capture_output=True, text=True)
+# 🧨 PASSO ENTRE OS QUADROS COMPARADOS. Comparar quadros CONSECUTIVOS mede
+# VELOCIDADE, não deslocamento — e movimento lento e contínuo, que é exatamente
+# o que a direção deste canal pede, marca quase zero. Medido em 29/08: o clipe
+# da nave dá 0,2% entre quadros vizinhos e MUDA 4,1% DOS PIXELS entre o quadro 5
+# e o 115. Ele foi barrado por "parado" sendo que está ótimo no olho.
+# Comparando de 24 em 24 (1 segundo), movimento contemplativo aparece.
+PASSO = 24
+
+
+def _stat(caminho, chave, passo=PASSO):
+    vf = (f"select='not(mod(n\,{passo}))',setpts=N/FRAME_RATE/TB,"
+          f"signalstats,metadata=print:key=lavfi.signalstats.{chave}")
+    r = subprocess.run(["ffmpeg", "-v", "info", "-i", caminho, "-vf", vf,
+                        "-f", "null", "-"], capture_output=True, text=True)
     return [float(m) for m in re.findall(chave + r"=([\d.]+)", r.stderr)]
 
 
