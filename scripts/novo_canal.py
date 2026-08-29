@@ -356,16 +356,24 @@ def main():
         # ⚠️ "bash" pelado no Windows resolve pro bash do WSL, que nem existe
         # configurado nesta máquina: o deploy falhava mudo ("execvpe failed")
         # e a VPS ficava sem conhecer o canal recém-criado. Git Bash explícito.
-        gitbash = os.environ.get("GIT_BASH", r"C:\Program Files\Git\bin\bash.exe")
-        if not os.path.exists(gitbash):
-            gitbash = "bash"
-        r = subprocess.run([gitbash, os.path.join(RAIZ, "scripts", "deploy_vps.sh"),
-                            "--sem-imagem"], cwd=RAIZ, timeout=900,
-                           capture_output=True, text=True)
-        ultima = (r.stdout or r.stderr).strip().splitlines()[-1:]
-        print(f"🚚 deploy: {ultima[0] if ultima else '?'} (rc={r.returncode})")
+        # ⚠️ NÃO chamar o deploy_vps.sh daqui. Já tentei, duas mortes diferentes:
+        # 1) "bash" pelado resolve pro WSL e morre em execvpe;
+        # 2) via Git Bash explícito, o ssh aninhado do passo "conferindo"
+        #    (docker run dentro de ssh dentro de bash dentro de subprocess)
+        #    pendura sem stdin/tty e estoura timeout DEPOIS de já ter sincronizado.
+        # O que a VPS precisa AGORA é um arquivo: o canais.py com o canal novo.
+        # scp direto é atômico e sem pipe aninhado. O deploy completo continua
+        # sendo o caminho oficial e roda na próxima rodada normal da sessão.
+        r = subprocess.run(
+            ["scp", "-i", CHAVE, "-o", "StrictHostKeyChecking=no",
+             CANAIS_PY, f"{VPS}:/app/_factorio/remotion/canais.py"],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=120)
         if r.returncode != 0:
-            raise SystemExit("❌ deploy falhou; a VPS não conhece o canal novo. Pare aqui.")
+            raise SystemExit(f"❌ scp do canais.py falhou: {r.stderr[:200]}")
+        conferido = ssh(f"cd /app/_factorio/remotion && python3 -c "
+                        f"\"import canais; print(canais.get('{a.slug}')['nome'])\"").strip()
+        print(f"🚚 canais.py na VPS confere: {conferido}")
+        print("   (rodar `bash scripts/deploy_vps.sh --sem-imagem` na próxima folga)")
     if "cta" in etapas:
         gravar_ctas(a, voz)
     if "fila" in etapas:
