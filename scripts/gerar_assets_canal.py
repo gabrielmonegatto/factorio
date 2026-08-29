@@ -111,6 +111,164 @@ RECEITAS = {
             "variacoes": [""],
         },
     },
+    # ── Maclaren: batista escocês, Union Chapel de Manchester. Paleta fria e
+    # sóbria, capela vitoriana inglesa (nem catedral gótica do Spurgeon, nem
+    # salão de madeira americano do Moody). Ele morreu em 1910, e as fotos
+    # conhecidas são de idoso: barba branca cheia, careca no topo.
+    "maclaren": {
+        "prefix": "channels/channels_youtube/treasures_maclaren/_assets",
+        "fundos": {
+            "n": 20, "subdir": "chapel", "nome": "chapel_bg_cf_{i}.png",
+            "base": ("interior of a Victorian English nonconformist chapel, cool "
+                     "grey-blue light through tall plain windows, dark polished wood "
+                     "galleries and box pews, deeply shadowed, restrained and austere, "
+                     "cinematic, photorealistic, wide 16:9 composition, no people, no text"),
+            "variacoes": [
+                "high pulpit seen from the empty floor below",
+                "curved gallery balcony wrapping the upper level",
+                "grey morning light through tall clear windows",
+                "long aisle between dark wooden pews",
+                "organ pipes rising behind the pulpit in shadow",
+                "rain streaking the windows, cold northern light",
+                "single gas lamp lit in the gloom",
+                "the chapel seen from the pulpit looking out",
+                "worn stone floor and dark wainscoting",
+                "an open pulpit Bible under a reading lamp",
+                "late winter afternoon, low raking light",
+                "narrow stair up to the gallery",
+                "empty pews receding into deep shadow",
+                "plain cross on a whitewashed wall",
+                "entrance doors from inside, pale light spilling in",
+                "vestry doorway with a hanging coat and lamp",
+                "dust in a shaft of grey light",
+                "hymn board with faded numbers beside the pulpit",
+                "candle stubs on a windowsill at dusk",
+                "the chapel at night, one lamp still burning",
+            ],
+        },
+        "bustos": {
+            "n": 5, "subdir": "avatars", "nome": "maclaren_bust_cf_{i}.png",
+            # REFERÊNCIA conferida em 29/08 (retrato de 1889, ele com 63):
+            # https://upload.wikimedia.org/wikipedia/commons/e/ed/Alexander_Maclaren_(01).jpg
+            # Este prompt CONFERE com a foto; ficou como está. Só ganhou a URL,
+            # porque prompt de rosto sem referência anotada é o que produziu o
+            # Murray errado no mesmo arquivo.
+            "base": ("photorealistic portrait of Alexander Maclaren, the Scottish "
+                     "Baptist preacher of Manchester, as an elderly man in his "
+                     "seventies: full white beard, bald crown with white hair at the "
+                     "sides, deep-set intelligent eyes, scholarly and severe but kind, "
+                     "wearing a formal black Victorian frock coat with white shirt and "
+                     "dark tie. Pure black background, dramatic Rembrandt lighting, "
+                     "cool neutral key light, sharp detail, square composition, no text"),
+            "variacoes": [
+                "looking directly at the camera, steady and penetrating gaze",
+                "three-quarter view, head slightly turned, contemplative",
+                "serious and scholarly, brow slightly furrowed",
+                "calm and gentle expression, eyes softened",
+                "slightly lower angle, dignified and composed",
+            ],
+        },
+        "avatar": {
+            "n": 1, "subdir": "", "nome": "channelavatar.png",
+            "base": ("photorealistic tight head-and-shoulders portrait of Alexander "
+                     "Maclaren, elderly Scottish Baptist preacher, full white beard, "
+                     "bald crown, formal black Victorian frock coat, cool Rembrandt "
+                     "lighting on a pure black background, centered square composition, "
+                     "crisp and readable as a small circular profile picture, no text"),
+            "variacoes": [""],
+        },
+        "banner": {
+            "n": 1, "subdir": "", "nome": "channelbanner.png",
+            "base": ("wide cinematic banner: interior of a Victorian English chapel in "
+                     "cool grey-blue light, dark wooden galleries and empty pews, tall "
+                     "plain windows, deep shadows at the edges, very wide panoramic "
+                     "composition with empty space in the center for a title, "
+                     "atmospheric, photorealistic, no people, no text"),
+            "variacoes": [""],
+        },
+    },
+    # ── Murray: sul-africano da Igreja Reformada Holandesa, devocional de
+    # oração e entrega. Paleta quente e SUAVE (não dramática): o conteúdo é
+    # meditativo, não de avivamento. Morreu em 1917, barba branca longa.
+    "murray": {
+        "prefix": "channels/channels_youtube/treasures_murray/_assets",
+        "fundos": {
+            "n": 20, "subdir": "kerk", "nome": "kerk_bg_cf_{i}.png",
+            "base": ("interior of a 19th century South African Dutch Reformed church, "
+                     "whitewashed walls, dark simple wooden pews, warm soft light "
+                     "through tall shuttered windows, quiet and contemplative, gentle "
+                     "shadows, cinematic, photorealistic, wide 16:9 composition, "
+                     "no people, no text"),
+            "variacoes": [
+                "simple raised pulpit against a whitewashed wall",
+                "warm afternoon light through tall shuttered windows",
+                "long rows of dark wooden pews on a pale floor",
+                "an open Bible on the pulpit, soft light falling on it",
+                "narrow side aisle with lime-washed walls",
+                "early morning light, pale and still",
+                "a single oil lamp burning at dusk",
+                "the church seen from the back, pulpit distant",
+                "wooden ceiling beams and a plain white wall",
+                "quiet corner with a worn kneeling bench",
+                "light pooling on a stone threshold",
+                "shutters half closed, warm slatted light",
+                "a plain wooden cross on a white wall",
+                "the entrance doorway with light spilling in",
+                "dust motes drifting in soft golden light",
+                "hymn numbers on a small wooden board",
+                "an empty chair beside the pulpit steps",
+                "evening light turning the white walls amber",
+                "a window seat with an open psalter",
+                "the church at night, one lamp glowing",
+            ],
+        },
+        "bustos": {
+            "n": 5, "subdir": "avatars", "nome": "murray_bust_cf_{i}.png",
+            # ⚠️ REESCRITO 29/08 OLHANDO A FOTOGRAFIA. A versão anterior dizia
+            # "elderly man, long full white beard, thin white hair, gaunt ascetic
+            # face" — eu escrevi de imaginação, não da foto, e saiu um sósia do
+            # Maclaren. Gabriel pegou olhando o Google Imagens.
+            # Descrição inventada faz TODO pregador vitoriano convergir pro mesmo
+            # barbudo branco genérico, e aí o canal mostra a cara de outro homem.
+            # REFERÊNCIA (conferida em 29/08, é a foto da Wikipedia):
+            # https://upload.wikimedia.org/wikipedia/commons/9/9c/Andrew_Murray.JPG
+            # Murray (1828-1917) na foto está de MEIA-IDADE, não velho.
+            "base": ("photorealistic portrait of Andrew Murray, the South African "
+                     "Dutch Reformed minister, as a middle-aged man in his forties: "
+                     "high broad forehead with a deeply receding hairline, DARK brown "
+                     "hair swept back and full over the ears, DARK full beard along the "
+                     "jaw and chin with the upper lip nearly clean-shaven, long straight "
+                     "nose, serious direct gaze, wearing a high-buttoned black clerical "
+                     "frock coat with two white rectangular Geneva preaching bands at "
+                     "the throat. Pure black background, dramatic Rembrandt lighting, "
+                     "warm soft key light, sharp detail, square composition, no text"),
+            "variacoes": [
+                "looking directly at the camera, calm and resolute",
+                "three-quarter view, head slightly turned, attentive",
+                "warm and fatherly expression, eyes kind",
+                "quiet intensity, thoughtful and still",
+                "slightly lower angle, upright and dignified",
+            ],
+        },
+        "avatar": {
+            "n": 1, "subdir": "", "nome": "channelavatar.png",
+            "base": ("photorealistic tight head-and-shoulders portrait of Andrew Murray, "
+                     "elderly South African Dutch Reformed minister, long white beard, "
+                     "formal black clerical coat, warm soft Rembrandt lighting on a pure "
+                     "black background, centered square composition, crisp and readable "
+                     "as a small circular profile picture, no text"),
+            "variacoes": [""],
+        },
+        "banner": {
+            "n": 1, "subdir": "", "nome": "channelbanner.png",
+            "base": ("wide cinematic banner: interior of a 19th century South African "
+                     "Dutch Reformed church, whitewashed walls and dark wooden pews in "
+                     "warm soft light, tall shuttered windows, gentle shadows at the "
+                     "edges, very wide panoramic composition with empty space in the "
+                     "center for a title, atmospheric, photorealistic, no people, no text"),
+            "variacoes": [""],
+        },
+    },
 }
 
 
