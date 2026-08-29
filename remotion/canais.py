@@ -250,10 +250,11 @@ CANAIS = {
         "youtube_channel_id": "",          # ⬜ gate 4
         "env_prefix": "YT_MACLAREN",
         "idioma": "en",
-        # ⬜ PROVISÓRIA (recomendação minha até o Gabriel ouvir): britânica,
-        # porque Maclaren era escocês pregando em Manchester. bm_george está
-        # fora: é a voz do Spurgeon, e a regra da casa é uma voz por canal —
-        # dois canais com a mesma voz são o mesmo canal pra quem ouve os dois.
+        # ✅ TRAVADA 27/08 pelo Gabriel, depois de ouvir bm_lewis/bm_daniel/
+        # bm_fable no mesmo trecho real ("What Crouches at the Door").
+        # Britânica porque Maclaren era escocês pregando em Manchester.
+        # bm_george está fora: é a voz do Spurgeon, e a regra da casa é uma voz
+        # por canal, senão os dois soam como o mesmo canal pra quem ouve os dois.
         "voz": "bm_lewis",
         "voz_speed": "0.9",
         "videos_por_dia": 1.0,             # 1.482 capítulos = ~4 anos de diário
@@ -288,6 +289,53 @@ CANAIS = {
         "link_label": "mananciall.org/go/maclaren",
         "redirect_base": "https://mananciall.org/go/maclaren?v=",
         "link_canal": "https://mananciall.org/go/maclarentreasures",
+        "assets": None,                    # ⬜ busto e fundo ainda não gerados
+    },
+    # ─────────────────────────────────────────────────────────────────────
+    # Canal Treasures gerado pelo BERÇÁRIO (scripts/novo_canal.py) em 28/08/2026.
+    # ⬜ GATES DO GABRIEL: canal no YouTube -> verificar por TELEFONE ->
+    #    auth_youtube.py (YT_MURRAY_*) -> preencher youtube_channel_id ->
+    #    coleção "The Best of Andrew Murray" na livraria. Sem o ID o publish ABORTA (guardião).
+    "murray": {
+        "nome": "Andrew Murray Treasures",
+        "bucket": "mananciall",
+        "prefix": "channels/channels_youtube/treasures_murray",
+        "renders_prefix": "renders/murray",
+        "state_key": "schedule/murray_schedule.json",
+        "youtube_channel_id": "",
+        "env_prefix": "YT_MURRAY",
+        "idioma": "en",
+        "voz": "bm_daniel",
+        "voz_speed": "0.9",
+        "videos_por_dia": 0.5,
+        "morning_utc": 12,
+        "evening_utc": 23,
+        "warmup_days": 14,
+        "buffer_days": 14,
+        "max_uploads_per_run": 5,
+        "chars_max": 55000,
+        "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our collection with the best books and writings by Andrew Murray "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our collection with the best books and writings by "
+            "Andrew Murray to enrich your soul. God bless you."),
+        "pregador": "Andrew Murray",
+        "autor_mineracao": "%Murray%",
+        "asr_modelo": "small.en",
+        "pausa_frase_s": 0.75,
+        "titulo_sufixo": " (Andrew Murray)",
+        "tags": "Andrew Murray,murray,sermon,christian,gospel,preaching",
+        "hashtags": "#AndrewMurray #Christian #Gospel #Faith",
+        "cta_livro": "The Best of Andrew Murray",
+        "cta_texto": "📖 Andrew Murray's books & writings: {link}",
+        "colecao_titulo": "The Best of Andrew Murray",
+        "link_label": "mananciall.org/go/murray",
+        "redirect_base": "https://mananciall.org/go/murray?v=",
+        "link_canal": "https://mananciall.org/go/murraytreasures",
         "assets": None,                    # ⬜ busto e fundo ainda não gerados
     },
 }
