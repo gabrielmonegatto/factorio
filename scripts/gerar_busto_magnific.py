@@ -100,6 +100,33 @@ REFERENCIAS = {
     },
 }
 
+# ── LINGUAGEM VISUAL DO ARQUÉTIPO ─────────────────────────────────────────
+#
+# ⚠️ TREASURES NÃO É FOTOGRAFIA. Corrigido em 29/08 depois que o Gabriel viu os
+# primeiros bustos: "ficaram super maneiros, porém REALISTAS; estamos usando pro
+# treasures uma linguagem específica que fica um desenho, não parecendo uma foto".
+#
+# A armadilha aqui é sutil: os prompts antigos (Spurgeon, Moody) TAMBÉM dizem
+# "photorealistic", e mesmo assim saem pintados — porque o modelo da Cloudflare
+# renderiza pintado de qualquer jeito. O Nano Banana leva a palavra ao pé da
+# letra e devolve fotografia de estúdio, com poro de pele e textura de tecido.
+# Ou seja: trocar de modelo mudou o estilo sem ninguém mexer no prompt.
+# Copiar a redação antiga pra cá foi o erro; o estilo tem que ser DITO.
+#
+# O estilo fotográfico não foi jogado fora: o Gabriel quer usá-lo no próximo
+# arquétipo de canal. Por isso ele mora numa constante nomeada, e não espalhado
+# nos prompts — arquétipo novo escolhe a sua e pronto.
+ESTILO_TREASURES = (
+    "Rendered as a PAINTED digital portrait, NOT a photograph: smooth painterly "
+    "brushwork, idealized skin without visible pores or skin texture, hair and "
+    "beard in soft flowing brushstrokes, warm golden-brown palette, the dark "
+    "clothing dissolving into the background, subtle vignette, the finish of a "
+    "classical oil portrait. No photographic grain, no camera lens artifacts.")
+
+# Reservado pro arquétipo fotográfico que vem depois; NÃO usar no Treasures.
+ESTILO_FOTO = ("Photorealistic studio photograph, sharp detail, natural skin "
+               "texture, real fabric weave.")
+
 # O pedido de POSE muda; a identidade fica travada pela referência.
 POSES = [
     "looking directly at the camera, calm and resolute",
@@ -227,11 +254,11 @@ def main():
                        "empty: no room, no bookshelf, no furniture, no window, no "
                        "scenery, nothing but black behind him.")
             prompt = (
-                f"Photorealistic studio portrait of the exact same man shown in the "
+                f"Head-and-shoulders portrait of the exact same man shown in the "
                 f"reference photograph. Keep his facial identity unchanged: {ref['traços']}. "
-                f"Pose and expression: {pose}. Pure black background, dramatic Rembrandt "
-                f"lighting, sharp detail, square composition, no text, no watermark."
-                f"{reforco}")
+                f"Pose and expression: {pose}. {ESTILO_TREASURES} "
+                f"Pure black background, dramatic Rembrandt lighting, square "
+                f"composition, no text, no watermark.{reforco}")
             d = chamar(API, {
                 "prompt": prompt,
                 "aspect_ratio": "1:1",
