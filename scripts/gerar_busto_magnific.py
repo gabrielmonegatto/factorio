@@ -60,6 +60,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.abspath(os.path.join(HERE, ".."))
 sys.path.insert(0, os.path.join(RAIZ, "remotion"))
 
+class FalhaDaImagem(Exception):
+    """Erro que atinge UMA imagem, não o lote. Ver o laço de tentativas."""
+
+
 API = "https://api.magnific.com/v1/ai/text-to-image/nano-banana-pro-flash"
 
 # ── Referência visual POR PREGADOR ────────────────────────────────────────
@@ -170,6 +174,36 @@ def chamar(caminho, corpo=None, metodo="POST"):
     raise SystemExit(f"❌ nenhum header autenticou. Último: {ultimo}")
 
 
+def saturacao_do_fundo(dados):
+    """Quanta COR existe na região de fundo (0 = preto/cinza puro).
+
+    ⚠️ Esta métrica substituiu a de luminância, que me enganou duas vezes.
+    Medir brilho não pega fundo pintado escuro: um busto do Maclaren saiu com
+    backdrop VERMELHO de estúdio e passou com "borda 6.2", porque vermelho
+    escuro tem luminância baixa e porque a média diluía a região clara num mar
+    de canto escuro. Trocar média por percentil também não resolveu: o corte de
+    ponto preto já zerava a borda extrema, e o vermelho vivia no MIOLO do fundo,
+    atrás da cabeça, fora da faixa amostrada.
+
+    Cor é o sinal certo, e é binário na prática: fundo preto dá saturação ~0 a
+    12; backdrop pintado dá 50 a 210. Não tem zona cinzenta pra errar.
+
+    Amostra as laterais e o topo (18% de cada), que é onde há fundo num
+    retrato de cabeça e ombros. O rodapé fica de fora: lá está o peito.
+    """
+    from PIL import Image
+    import io
+    im = Image.open(io.BytesIO(dados)).convert("HSV").resize((256, 256))
+    px = im.load()
+    m = int(256 * 0.18)
+    sat = [px[x, y][1] for x in range(256) for y in range(256)
+           if x < m or x >= 256 - m or y < m]
+    return sum(sat) / len(sat)
+
+
+TETO_SATURACAO = 20.0     # acima disso é backdrop pintado, não é preto
+
+
 def luminancia_da_borda(dados):
     """Média de brilho da moldura externa (0=preto, 255=branco).
 
@@ -195,6 +229,36 @@ def luminancia_da_borda(dados):
 
 
 TETO_BORDA = 18.0        # acima disso o screen já deixa véu visível
+PONTO_PRETO = 0.16       # abaixo disto (0..1) é fundo, não é o pregador
+
+
+def cravar_preto(dados):
+    """Puxa o ponto preto pra baixo: fundo quase-preto vira preto DE VERDADE.
+
+    O estilo pintado do Treasures nasce com vinheta suave, e vinheta não é
+    #000000. Medido em 29/08: com o estilo fotográfico o gate de fundo passava
+    quase sempre; com o pintado, só 1 em 5 passou, e insistir em refazer não
+    converge — é feitio do estilo, não azar.
+
+    Brigar com o modelo por algo que se resolve em duas linhas de aritmética é
+    desperdício. Isto é um ajuste de níveis clássico: tudo abaixo do ponto preto
+    vai a zero e o resto é reesticado, então a queda é SUAVE. Nada de corte
+    duro, que deixaria halo em volta da cabeça (a mesma mina do recorte dos
+    bustos do Gemini, quando o corte reto fez o busto parecer adesivo).
+
+    O paletó escuro escurece junto, e isso é desejado: o figurino se dissolver
+    no fundo já é parte da linguagem do arquétipo.
+    """
+    from PIL import Image
+    import io
+    im = Image.open(io.BytesIO(dados)).convert("RGB")
+    p = int(PONTO_PRETO * 255)
+    tabela = [0 if v <= p else min(255, round((v - p) * 255 / (255 - p)))
+              for v in range(256)]
+    im = im.point(tabela * 3)
+    saida = io.BytesIO()
+    im.save(saida, "PNG")
+    return saida.getvalue()
 
 
 def esperar(task_id, limite_s=300):
@@ -207,7 +271,10 @@ def esperar(task_id, limite_s=300):
         if status == "COMPLETED":
             return data.get("generated", [])
         if status == "FAILED":
-            raise SystemExit(f"❌ a Magnific reportou FAILED: {json.dumps(data)[:300]}")
+            # Devolve em vez de matar o processo: um "Content violation" numa
+            # pose derrubou o lote do Murray no 5º e perdeu o que já tinha sido
+            # feito. Falha de UMA imagem é falha de uma imagem.
+            raise FalhaDaImagem(data.get("error") or json.dumps(data)[:160])
         time.sleep(5)
     raise SystemExit(f"❌ tarefa {task_id} não terminou em {limite_s}s")
 
@@ -249,39 +316,56 @@ def main():
         # laço, 7 em 10 bustos foram pro R2 com estante de livros atrás.
         dados = None
         for tentativa in range(1, 4):
-            reforco = ("" if tentativa == 1 else
-                       " The background MUST be solid pure black (#000000), completely "
-                       "empty: no room, no bookshelf, no furniture, no window, no "
-                       "scenery, nothing but black behind him.")
+            # A exigência de fundo entra SEMPRE, não só na repetição: com o
+            # estilo pintado a taxa de acerto na 1ª tentativa era ~35%, e
+            # deixar a regra pra 2ª rodada era jogar fora uma geração inteira.
+            # "no signature" porque o estilo de pintura convida o modelo a
+            # assinar: um busto do Maclaren veio com "J. Davies" no canto,
+            # atribuição inventada num retrato que vai pro ar por anos.
+            reforco = (" The background MUST be solid pure black (#000000), completely "
+                       "empty: no room, no wall, no painted backdrop, no colored or "
+                       "red or brown studio background, no furniture, no scenery, "
+                       "nothing but pure black behind him. "
+                       "No signature, no artist signature, no lettering of any kind."
+                       + ("" if tentativa == 1 else
+                          " PREVIOUS ATTEMPT FAILED: the background had colour in it. "
+                          "It must be absolute black, like a subject lit in a dark room."))
             prompt = (
                 f"Head-and-shoulders portrait of the exact same man shown in the "
                 f"reference photograph. Keep his facial identity unchanged: {ref['traços']}. "
                 f"Pose and expression: {pose}. {ESTILO_TREASURES} "
                 f"Pure black background, dramatic Rembrandt lighting, square "
                 f"composition, no text, no watermark.{reforco}")
-            d = chamar(API, {
-                "prompt": prompt,
-                "aspect_ratio": "1:1",
-                "resolution": a.resolucao,
-                "reference_images": [{"image": ref["url"], "mime_type": ref["mime"],
-                                      "text": "the man whose face must be preserved"}],
-            })
-            task = (d.get("data") or d).get("task_id")
-            if not task:
-                raise SystemExit(f"❌ resposta sem task_id: {json.dumps(d)[:300]}")
-            urls = esperar(task)
-            if not urls:
-                raise SystemExit(f"❌ tarefa {task} terminou sem imagem")
+            try:
+                d = chamar(API, {
+                    "prompt": prompt,
+                    "aspect_ratio": "1:1",
+                    "resolution": a.resolucao,
+                    "reference_images": [{"image": ref["url"], "mime_type": ref["mime"],
+                                          "text": "the man whose face must be preserved"}],
+                })
+                task = (d.get("data") or d).get("task_id")
+                if not task:
+                    raise FalhaDaImagem(f"resposta sem task_id: {json.dumps(d)[:160]}")
+                urls = esperar(task)
+                if not urls:
+                    raise FalhaDaImagem("tarefa terminou sem imagem")
+            except FalhaDaImagem as e:
+                print(f"       ↻ tentativa {tentativa}: a Magnific recusou ({e}), refazendo")
+                continue
             alvo = urls[0] if isinstance(urls[0], str) else urls[0].get("url")
             with urllib.request.urlopen(alvo, timeout=180, context=CTX) as r:
-                candidato = r.read()
+                candidato = cravar_preto(r.read())
 
+            sat = saturacao_do_fundo(candidato)
             borda = luminancia_da_borda(candidato)
-            if borda <= TETO_BORDA:
+            if sat <= TETO_SATURACAO and borda <= TETO_BORDA:
                 dados = candidato
                 break
-            print(f"       ↻ tentativa {tentativa}: fundo claro "
-                  f"(borda {borda:.0f} > {TETO_BORDA:.0f}), refazendo")
+            motivo = (f"fundo colorido (saturação {sat:.0f} > {TETO_SATURACAO:.0f})"
+                      if sat > TETO_SATURACAO
+                      else f"fundo claro (borda {borda:.0f} > {TETO_BORDA:.0f})")
+            print(f"       ↻ tentativa {tentativa}: {motivo}, refazendo")
         if dados is None:
             reprovados += 1
             print(f"  [{i:02}] ⛔ {nome} DESCARTADO: sem fundo preto em 3 tentativas. "
