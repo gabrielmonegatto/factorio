@@ -131,6 +131,14 @@ ESTILO_TREASURES = (
 ESTILO_FOTO = ("Photorealistic studio photograph, sharp detail, natural skin "
                "texture, real fabric weave.")
 
+BASE_PUB = "https://pub-cd23eb57aece4069a2df4818e6b9eed3.r2.dev"
+
+
+def url_mestre(slug):
+    """Onde mora o RETRATO-MESTRE pintado do pregador (ver gerar_mestre)."""
+    return f"{BASE_PUB}/referencias/pregadores/{slug}_pintado.png"
+
+
 # O pedido de POSE muda; a identidade fica travada pela referência.
 POSES = [
     "looking directly at the camera, calm and resolute",
@@ -279,6 +287,60 @@ def esperar(task_id, limite_s=300):
     raise SystemExit(f"❌ tarefa {task_id} não terminou em {limite_s}s")
 
 
+def gerar_mestre(slug, ref, s3, resolucao):
+    """Repinta a FOTO no estilo Treasures, uma vez, e vira a referência de tudo.
+
+    ## O conflito que isto elimina (diagnosticado em 30/08)
+
+    Com a fotografia como referência e o texto pedindo pintura, o modelo recebe
+    dois sinais contraditórios e resolve o cabo de guerra pra um lado a cada
+    geração: metade dos bustos saía pintada, metade fotográfica, no MESMO
+    prompt. Nenhum reforço de texto estabiliza isso, porque a causa não é o
+    texto, é a referência puxando pro acabamento dela.
+
+    Com o mestre pintado como referência, referência e texto dizem a mesma
+    coisa, e o estilo para de oscilar. De quebra, a identidade ganha um ponto
+    único de aprovação humana: o Gabriel aprova O mestre, e as poses herdam.
+    É o mesmo desenho que o Spurgeon já tinha com o spurgeon_base.png.
+    """
+    prompt = (
+        f"Repaint this exact photograph as a classical painted portrait. It must be "
+        f"the EXACT same man, same facial identity, same features: {ref['traços']}. "
+        f"Same head-and-shoulders framing, facing the viewer. {ESTILO_TREASURES} "
+        f"Pure black background, dramatic Rembrandt lighting, square composition, "
+        f"no text, no watermark, no signature.")
+    for tentativa in range(1, 4):
+        try:
+            d = chamar(API, {
+                "prompt": prompt, "aspect_ratio": "1:1", "resolution": resolucao,
+                "reference_images": [{"image": ref["url"], "mime_type": ref["mime"],
+                                      "text": "the man whose face must be preserved"}],
+            })
+            task = (d.get("data") or d).get("task_id")
+            if not task:
+                raise FalhaDaImagem("resposta sem task_id")
+            urls = esperar(task)
+            if not urls:
+                raise FalhaDaImagem("terminou sem imagem")
+        except FalhaDaImagem as e:
+            print(f"   ↻ mestre, tentativa {tentativa}: {e}")
+            continue
+        alvo = urls[0] if isinstance(urls[0], str) else urls[0].get("url")
+        with urllib.request.urlopen(alvo, timeout=180, context=CTX) as r:
+            dados = cravar_preto(r.read())
+        sat = saturacao_do_fundo(dados)
+        if sat > TETO_SATURACAO:
+            print(f"   ↻ mestre, tentativa {tentativa}: fundo colorido (sat {sat:.0f})")
+            continue
+        s3.put_object(Bucket="mananciall",
+                      Key=f"referencias/pregadores/{slug}_pintado.png",
+                      Body=dados, ContentType="image/png")
+        print(f"🖼️  mestre pintado de {slug} no R2: {url_mestre(slug)}")
+        return True
+    print("⛔ mestre não passou no gate em 3 tentativas")
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--canal", required=True, choices=sorted(REFERENCIAS))
@@ -286,6 +348,8 @@ def main():
     ap.add_argument("--resolucao", default="2K")
     ap.add_argument("--permitir-4k", action="store_true",
                     help="4K sai do ilimitado e passa a custar 150 créditos/imagem")
+    ap.add_argument("--mestre", action="store_true",
+                    help="(re)gera o retrato-mestre pintado e para (aprovação humana antes das poses)")
     ap.add_argument("--refazer", action="store_true",
                     help="regenera TODOS os slots, inclusive os já aprovados")
     ap.add_argument("--dry-run", action="store_true")
@@ -299,11 +363,29 @@ def main():
 
     ref = REFERENCIAS[a.canal]
     print(f"🎨 {ref['quem']}")
-    print(f"   referência: {ref['url']}")
 
     import canais, schedule_channel as SC
     SC.aplicar_canal(a.canal)
     s3 = SC.s3c(SC.load_env())
+
+    if a.mestre:
+        # Só o mestre, e PARA: a identidade repintada passa pelo olho do
+        # Gabriel antes de virar a referência de todas as poses.
+        ok = gerar_mestre(a.canal, ref, s3, a.resolucao)
+        sys.exit(0 if ok else 1)
+
+    # As poses usam o MESTRE PINTADO como referência quando ele existe: é isso
+    # que estabiliza o estilo (ver gerar_mestre). Sem mestre, cai na fotografia
+    # e o estilo volta a oscilar — o aviso existe pra ninguém achar que é bug.
+    try:
+        s3.head_object(Bucket="mananciall",
+                       Key=f"referencias/pregadores/{a.canal}_pintado.png")
+        ref = dict(ref, url=url_mestre(a.canal), mime="image/png")
+        print(f"   referência: MESTRE PINTADO ({ref['url']})")
+    except Exception:
+        print(f"   referência: fotografia ({ref['url']})")
+        print("   ⚠️  sem mestre pintado: o estilo tende a oscilar. "
+              "Gere com --mestre e aprove antes.")
 
     reprovados = 0
     for i in range(1, a.n + 1):
