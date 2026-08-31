@@ -286,6 +286,8 @@ def main():
     ap.add_argument("--resolucao", default="2K")
     ap.add_argument("--permitir-4k", action="store_true",
                     help="4K sai do ilimitado e passa a custar 150 créditos/imagem")
+    ap.add_argument("--refazer", action="store_true",
+                    help="regenera TODOS os slots, inclusive os já aprovados")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
@@ -307,9 +309,25 @@ def main():
     for i in range(1, a.n + 1):
         pose = POSES[(i - 1) % len(POSES)]
         nome = f"{a.canal}_bust_cf_{i}.png"
+        chave = f"{SC.CHANNEL_PREFIX}/_assets/avatars/{nome}"
         if a.dry_run:
             print(f"  [{i:02}] {nome}  ({pose})")
             continue
+
+        # PREENCHE VAGA, não refaz tudo. O rendimento do estilo pintado é ~60%
+        # por tentativa, então rodar de novo pra completar o lote é o normal —
+        # e refazendo os 5 toda vez a gente sorteava de novo os que já estavam
+        # bons, podendo PERDER um aprovado. Slot que já tem imagem aprovada no
+        # R2 é pulado; `--refazer` ignora isto e regenera tudo.
+        if not a.refazer:
+            try:
+                atual = s3.get_object(Bucket=SC.BUCKET, Key=chave)["Body"].read()
+                if saturacao_do_fundo(atual) <= TETO_SATURACAO:
+                    print(f"  [{i:02}] ⏭️  {nome} já está aprovado, pulando")
+                    continue
+                print(f"  [{i:02}] {nome} no R2 tem fundo colorido, refazendo")
+            except Exception:
+                pass          # não existe ainda: gera
 
         # Até 3 tentativas, endurecendo a exigência de fundo a cada reprovação.
         # O modelo acerta o preto na maioria das vezes, mas não sempre: sem este
