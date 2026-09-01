@@ -277,7 +277,13 @@ def main():
               f"{len(fila)} na fila")
         ok = erro = 0
         for i, pasta in enumerate(fila, 1):
-            nnnn = pasta.split("_")[0]
+            # 🧨 NÃO extrair número do nome da pasta. 116 pastas deste acervo são
+            # da série "edb_NN" (diário do Brainerd, obra diferente) e não começam
+            # com dígito: `split("_")[0]` devolvia "edb" pra TODAS, o find_folder
+            # casava sempre na mesma pasta, e 116 sermões viraram um só — minerado
+            # e re-minerado, com o log ainda dizendo "ok". Nome completo da pasta
+            # casa exatamente uma, seja qual for a convenção do nome.
+            nnnn = pasta
             try:
                 process(env, s3, system, nnnn, dry=args.dry_run, force=args.force)
                 ok += 1
