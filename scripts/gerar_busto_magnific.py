@@ -66,6 +66,15 @@ class FalhaDaImagem(Exception):
 
 API = "https://api.magnific.com/v1/ai/text-to-image/nano-banana-pro-flash"
 
+# ⚠️ A API COBRA CRÉDITO MESMO NOS MODELOS "ILIMITADOS" DO PLANO (descoberto
+# em 30/08 da pior forma: 402 Insufficient credits no meio de um lote, depois
+# de ~105 gerações no dia). O "unlimited" do plano vale pra INTERFACE web; a
+# API é medida por crédito, ~75 por imagem 2K. Cada retry do gate é geração
+# nova e cobra igual. Por isso o contador abaixo: o custo de cada execução
+# precisa aparecer no log ANTES do saldo do Gabriel descobrir sozinho.
+CUSTO_POR_GERACAO = 75
+GERACOES = 0
+
 # ── Referência visual POR PREGADOR ────────────────────────────────────────
 # A URL da fotografia é parte do contrato, não comentário: é o que torna o
 # rosto auditável. Sem isso ninguém consegue checar se o busto é do homem
@@ -311,6 +320,8 @@ def gerar_mestre(slug, ref, s3, resolucao):
         f"no text, no watermark, no signature.")
     for tentativa in range(1, 4):
         try:
+            global GERACOES
+            GERACOES += 1
             d = chamar(API, {
                 "prompt": prompt, "aspect_ratio": "1:1", "resolution": resolucao,
                 "reference_images": [{"image": ref["url"], "mime_type": ref["mime"],
@@ -437,6 +448,8 @@ def main():
                 f"Pure black background, dramatic Rembrandt lighting, square "
                 f"composition, no text, no watermark.{reforco}")
             try:
+                global GERACOES
+                GERACOES += 1
                 d = chamar(API, {
                     "prompt": prompt,
                     "aspect_ratio": "1:1",
@@ -480,6 +493,8 @@ def main():
     if reprovados:
         print(f"   ⛔ {reprovados} reprovados no gate de fundo preto. "
               f"Rode de novo pra preencher as vagas.")
+    print(f"💰 gerações nesta execução: {GERACOES} ≈ {GERACOES * CUSTO_POR_GERACAO} "
+          f"créditos da Magnific (retries do gate cobram igual)")
 
 
 if __name__ == "__main__":
