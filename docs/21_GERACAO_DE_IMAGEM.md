@@ -93,3 +93,54 @@ Meio-termo que resolve os dois lados:
 - Gera-se muito de uma vez (é barato e paralelo), e canal novo só escolhe a fatia.
 - ⚠️ Se todos os canais usarem o mesmo pool inteiro, eles ficam visualmente
   intercambiáveis, e aí "10 canais" vira "1 canal em 10 endereços".
+
+---
+
+## INCIDENTE 30/08/2026: ~8.000 créditos da Magnific queimados num dia
+
+> Documentado por ordem do Gabriel ("documenta esta merda ai pra nao
+> acontecer novamente"). Este capítulo é a lei que sobrou do prejuízo.
+
+### O que aconteceu
+
+Gerando os bustos do Maclaren e do Murray pela API da Magnific
+(`gerar_busto_magnific.py`), afirmei pro Gabriel que o Nano Banana Pro em
+1K/2K estava "na lista de ilimitados do Premium" e **não gastaria o saldo**.
+Rodei ~105 gerações no dia (lotes + retries dos gates de qualidade). No meio
+de um lote: **HTTP 402 Insufficient credits**. ~7.900 créditos consumidos,
+~40% do saldo mensal de 20k, somados ao que ele já tinha usado no mês.
+
+### As três causas, em ordem de culpa
+
+1. **Li o rótulo do plano e não conferi o consumo.** O "unlimited" da página
+   de preços vale pra INTERFACE WEB. A API é outro produto: medida por
+   crédito, ~75 por imagem 2K. A verificação óbvia (olhar o painel de consumo
+   depois do primeiro lote pequeno) não foi feita.
+2. **Retry contra API paga é multiplicador de custo.** Os gates de qualidade
+   (fundo preto, saturação) refazem a geração ao reprovar, e cada retry
+   cobra igual. Com o estilo pintado reprovando ~40% das vezes, cada busto
+   aprovado custou em média 1,7 gerações.
+3. **Os lotes refeitos pelos MEUS erros de pipeline** (referência deitada,
+   estilo fotográfico, fundo vermelho) foram ~40 gerações. Cada diagnóstico
+   por tentativa-e-erro em API paga tem preço de etiqueta.
+
+### As leis que ficam
+
+1. **Custo se verifica no PAINEL, nunca no rótulo do plano.** Primeiro lote é
+   pequeno (n=1), aí confere-se o saldo antes/depois, e SÓ ENTÃO se afirma o
+   custo pro Gabriel.
+2. **Toda execução imprime o próprio custo** ("gerações: N ≈ X créditos") no
+   fim do log. Já implementado no gerar_busto_magnific.py. Script novo que
+   chame API paga nasce com contador igual.
+3. **Lote grande se combina antes.** Custo conhecido por canal Treasures:
+   mestre + 5 poses ≈ 1.200-1.500 créditos com retries. Acima de ~2.000
+   créditos numa sessão, o Gabriel aprova antes.
+4. **Iteração de pipeline se faz em resolução barata ou n=1.** Debug de
+   prompt/gate com lote de 5 em 2K foi pagar preço de produção por trabalho
+   de bancada.
+
+### Estado ao fechar o incidente
+
+Murray 5/5 e Maclaren 3/5 no estilo aprovado; os 2 restantes (~300 créditos)
+esperam a renovação do ciclo. Nada do funil de vídeo depende da Magnific:
+narração, render e publicação seguem em Cloudflare/VPS a custo zero.
