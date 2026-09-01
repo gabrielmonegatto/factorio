@@ -243,3 +243,57 @@ INTEIRA no projeto atual. A VPS produz 50/dia; o YouTube deixa publicar 6.
 Multiplicar projetos pra multiplicar cota viola ToS (risco: suspensão de todos).
 Caminho certo: **formulário de audit/aumento de cota do projeto** (gate do
 Gabriel). Até lá, 6/dia paga confortavelmente 4-5 canais Treasures + margem.
+
+## 8. Verificação por telefone: como fazer e como gerenciar (30/08)
+
+O YouTube limita **~2 canais verificados por número por ano**. Pra 10+ canais,
+a solução limpa é chip pré-pago próprio. O que importa saber:
+
+### O insight que simplifica tudo
+
+**Número de verificação ≠ número de segurança da conta.** O YouTube usa o
+telefone UMA vez, no ato de verificar o canal. Perder o número depois NÃO
+perde o canal: a segurança da conta é do login Google, não desse número.
+
+Por isso a regra de ouro: **NUNCA cadastrar o chip de verificação como
+telefone de recuperação/2FA da conta Google.** Recuperação e 2FA ficam no
+número principal do Gabriel (ou app autenticador). O chip é consumível.
+
+### Passo a passo
+
+1. Comprar chip pré-pago (Vivo/Claro/TIM, R$ 10-20; eSIM também serve).
+   ⚠️ Número VoIP/virtual/alugado o Google REJEITA, e canal montado em
+   número alugado é canal em risco. Só linha de operadora de verdade.
+2. Ativar o chip num celular qualquer (só precisa receber SMS/ligação).
+3. Logado na conta do canal: youtube.com/verify → informar o número →
+   receber o código → pronto. Isso libera capa própria, vídeo >15min e live.
+4. Anotar no registro abaixo. O mesmo chip serve pro 2º canal do ano.
+5. Recarga mínima ocasional se quiser manter o número vivo, mas não é
+   obrigatório pro canal (ver insight acima).
+
+### Registro de números (preencher a cada verificação)
+
+| Número (últimos 4) | Canal verificado | Data | Obs |
+|---|---|---|---|
+| (principal) | Charles Spurgeon Treasures | pré-08/2026 | |
+| (principal) | D.L. Moody Treasures | 25/08/2026 | esgotou o principal no ano |
+| | Alexander Maclaren Treasures | | chip 1 |
+| | Andrew Murray Treasures | | chip 1 (2º uso) |
+
+### Quando mandar o formulário de aumento de cota (a pergunta do Gabriel)
+
+A intuição dele está certa: **com volume pequeno a chance de negarem é
+grande.** O formulário de audit avalia legitimidade E necessidade
+demonstrada; pedir aumento usando 20% da cota é pedir pra ser negado, e
+negativa cria histórico.
+
+Momento certo, na ordem:
+1. 4+ canais no ar publicando diariamente (Spurgeon, Moody, Maclaren, Murray);
+2. gráfico de uso da cota no GCP batendo no teto (>90%) por 2+ semanas
+   seguidas: é ISSO que o avaliador olha como "necessidade";
+3. canais limpos, sem strike, com descrição honesta do caso de uso
+   ("ferramenta própria de publicação de conteúdo próprio em domínio público").
+
+Estimativa: 3-4 semanas após a estreia do Maclaren e do Murray. Até lá o
+funil não trava: upload manual não gasta cota, e a API só "veste" o vídeo
+(~150 unidades) — o vestidor de uploads cobre a estreia dos 10 canais.
