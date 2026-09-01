@@ -25,11 +25,15 @@ que é justamente o Nano Banana (Gemini 2.5 Flash Image).
 
 Fundo e cena continuam na Cloudflare, de graça: lá não há rosto pra errar.
 
-## Custo
+## Custo (corrigido em 30/08, depois de errar caro)
 
-Nano Banana Pro em 1K/2K está na lista de ILIMITADOS do plano Premium, então
-não consome o saldo mensal. `--resolucao 4K` sairia da lista e passaria a
-custar 150 créditos por imagem: está bloqueado atrás de `--permitir-4k`.
+⚠️ ESTE SCRIPT GASTA O SALDO DO GABRIEL: ~75 créditos por geração em 2K, e
+retry do gate cobra igual. A versão anterior deste texto dizia que o Nano
+Banana Pro era "ilimitado no Premium" e não consumia saldo. MENTIRA na
+prática: o unlimited vale pra interface web, a API é medida por crédito.
+Descoberto com 402 Insufficient credits depois de ~105 gerações num dia
+(~8 mil créditos, 40% do mês). Toda execução imprime o custo no final;
+lote grande se combina com o Gabriel ANTES.
 
 Uso:
   python scripts/gerar_busto_magnific.py --canal murray --n 5
