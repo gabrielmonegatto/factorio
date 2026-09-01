@@ -338,6 +338,241 @@ CANAIS = {
         "link_canal": "https://mananciall.org/go/murraytreasures",
         "assets": None,                    # ⬜ busto e fundo ainda não gerados
     },
+    # ─────────────────────────────────────────────────────────────────────
+    # Canal Treasures gerado pelo BERÇÁRIO (scripts/novo_canal.py) em 01/09/2026.
+    # ⬜ GATES DO GABRIEL: canal no YouTube -> verificar por TELEFONE ->
+    #    auth_youtube.py (YT_HENRY_*) -> preencher youtube_channel_id ->
+    #    coleção "The Best of Matthew Henry" na livraria. Sem o ID o publish ABORTA (guardião).
+    "henry": {
+        "nome": "Matthew Henry Treasures",
+        "bucket": "mananciall",
+        "prefix": "channels/channels_youtube/treasures_henry",
+        "renders_prefix": "renders/henry",
+        "state_key": "schedule/henry_schedule.json",
+        "youtube_channel_id": "",
+        "env_prefix": "YT_HENRY",
+        "idioma": "en",
+        "voz": "bm_fable",
+        "voz_speed": "0.9",
+        "videos_por_dia": 1.0,
+        "morning_utc": 12,
+        "evening_utc": 23,
+        "warmup_days": 14,
+        "buffer_days": 14,
+        "max_uploads_per_run": 5,
+        "chars_max": 55000,
+        "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our collection with the best books and writings by Matthew Henry "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our collection with the best books and writings by "
+            "Matthew Henry to enrich your soul. God bless you."),
+        "pregador": "Matthew Henry",
+        "autor_mineracao": "%Henry%",
+        "asr_modelo": "small.en",
+        "pausa_frase_s": 0.75,
+        "titulo_sufixo": " (Matthew Henry)",
+        "tags": "Matthew Henry,henry,sermon,christian,gospel,preaching",
+        "hashtags": "#MatthewHenry #Christian #Gospel #Faith",
+        "cta_livro": "The Best of Matthew Henry",
+        "cta_texto": "📖 Matthew Henry's books & writings: {link}",
+        "colecao_titulo": "The Best of Matthew Henry",
+        "link_label": "mananciall.org/go/henry",
+        "redirect_base": "https://mananciall.org/go/henry?v=",
+        "link_canal": "https://mananciall.org/go/henrytreasures",
+        "assets": None,                    # ⬜ busto e fundo ainda não gerados
+    },
+    # ─────────────────────────────────────────────────────────────────────
+    # Canal Treasures gerado pelo BERÇÁRIO (scripts/novo_canal.py) em 01/09/2026.
+    # ⬜ GATES DO GABRIEL: canal no YouTube -> verificar por TELEFONE ->
+    #    auth_youtube.py (YT_WESLEY_*) -> preencher youtube_channel_id ->
+    #    coleção "The Best of John Wesley" na livraria. Sem o ID o publish ABORTA (guardião).
+    "wesley": {
+        "nome": "John Wesley Treasures",
+        "bucket": "mananciall",
+        "prefix": "channels/channels_youtube/treasures_wesley",
+        "renders_prefix": "renders/wesley",
+        "state_key": "schedule/wesley_schedule.json",
+        "youtube_channel_id": "",
+        "env_prefix": "YT_WESLEY",
+        "idioma": "en",
+        "voz": "am_michael",
+        "voz_speed": "0.9",
+        "videos_por_dia": 0.5,
+        "morning_utc": 12,
+        "evening_utc": 23,
+        "warmup_days": 14,
+        "buffer_days": 14,
+        "max_uploads_per_run": 5,
+        "chars_max": 55000,
+        "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our collection with the best books and writings by John Wesley "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our collection with the best books and writings by "
+            "John Wesley to enrich your soul. God bless you."),
+        "pregador": "John Wesley",
+        "autor_mineracao": "%Wesley%",
+        "asr_modelo": "small.en",
+        "pausa_frase_s": 0.75,
+        "titulo_sufixo": " (John Wesley)",
+        "tags": "John Wesley,wesley,sermon,christian,gospel,preaching",
+        "hashtags": "#JohnWesley #Christian #Gospel #Faith",
+        "cta_livro": "The Best of John Wesley",
+        "cta_texto": "📖 John Wesley's books & writings: {link}",
+        "colecao_titulo": "The Best of John Wesley",
+        "link_label": "mananciall.org/go/wesley",
+        "redirect_base": "https://mananciall.org/go/wesley?v=",
+        "link_canal": "https://mananciall.org/go/wesleytreasures",
+        "assets": None,                    # ⬜ busto e fundo ainda não gerados
+    },
+    # ─────────────────────────────────────────────────────────────────────
+    # Canal Treasures gerado pelo BERÇÁRIO (scripts/novo_canal.py) em 01/09/2026.
+    # ⬜ GATES DO GABRIEL: canal no YouTube -> verificar por TELEFONE ->
+    #    auth_youtube.py (YT_RYLE_*) -> preencher youtube_channel_id ->
+    #    coleção "The Best of J.C. Ryle" na livraria. Sem o ID o publish ABORTA (guardião).
+    "ryle": {
+        "nome": "J.C. Ryle Treasures",
+        "bucket": "mananciall",
+        "prefix": "channels/channels_youtube/treasures_ryle",
+        "renders_prefix": "renders/ryle",
+        "state_key": "schedule/ryle_schedule.json",
+        "youtube_channel_id": "",
+        "env_prefix": "YT_RYLE",
+        "idioma": "en",
+        "voz": "am_echo",
+        "voz_speed": "0.9",
+        "videos_por_dia": 0.5,
+        "morning_utc": 12,
+        "evening_utc": 23,
+        "warmup_days": 14,
+        "buffer_days": 14,
+        "max_uploads_per_run": 5,
+        "chars_max": 55000,
+        "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our collection with the best books and writings by J.C. Ryle "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our collection with the best books and writings by "
+            "J.C. Ryle to enrich your soul. God bless you."),
+        "pregador": "J.C. Ryle",
+        "autor_mineracao": "%Ryle%",
+        "asr_modelo": "small.en",
+        "pausa_frase_s": 0.75,
+        "titulo_sufixo": " (J.C. Ryle)",
+        "tags": "J.C. Ryle,ryle,sermon,christian,gospel,preaching",
+        "hashtags": "#J.C.Ryle #Christian #Gospel #Faith",
+        "cta_livro": "The Best of J.C. Ryle",
+        "cta_texto": "📖 J.C. Ryle's books & writings: {link}",
+        "colecao_titulo": "The Best of J.C. Ryle",
+        "link_label": "mananciall.org/go/ryle",
+        "redirect_base": "https://mananciall.org/go/ryle?v=",
+        "link_canal": "https://mananciall.org/go/ryletreasures",
+        "assets": None,                    # ⬜ busto e fundo ainda não gerados
+    },
+    # ─────────────────────────────────────────────────────────────────────
+    # Canal Treasures gerado pelo BERÇÁRIO (scripts/novo_canal.py) em 01/09/2026.
+    # ⬜ GATES DO GABRIEL: canal no YouTube -> verificar por TELEFONE ->
+    #    auth_youtube.py (YT_WHYTE_*) -> preencher youtube_channel_id ->
+    #    coleção "The Best of Alexander Whyte" na livraria. Sem o ID o publish ABORTA (guardião).
+    "whyte": {
+        "nome": "Alexander Whyte Treasures",
+        "bucket": "mananciall",
+        "prefix": "channels/channels_youtube/treasures_whyte",
+        "renders_prefix": "renders/whyte",
+        "state_key": "schedule/whyte_schedule.json",
+        "youtube_channel_id": "",
+        "env_prefix": "YT_WHYTE",
+        "idioma": "en",
+        "voz": "am_eric",
+        "voz_speed": "0.9",
+        "videos_por_dia": 0.5,
+        "morning_utc": 12,
+        "evening_utc": 23,
+        "warmup_days": 14,
+        "buffer_days": 14,
+        "max_uploads_per_run": 5,
+        "chars_max": 55000,
+        "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our collection with the best books and writings by Alexander Whyte "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our collection with the best books and writings by "
+            "Alexander Whyte to enrich your soul. God bless you."),
+        "pregador": "Alexander Whyte",
+        "autor_mineracao": "%Whyte%",
+        "asr_modelo": "small.en",
+        "pausa_frase_s": 0.75,
+        "titulo_sufixo": " (Alexander Whyte)",
+        "tags": "Alexander Whyte,whyte,sermon,christian,gospel,preaching",
+        "hashtags": "#AlexanderWhyte #Christian #Gospel #Faith",
+        "cta_livro": "The Best of Alexander Whyte",
+        "cta_texto": "📖 Alexander Whyte's books & writings: {link}",
+        "colecao_titulo": "The Best of Alexander Whyte",
+        "link_label": "mananciall.org/go/whyte",
+        "redirect_base": "https://mananciall.org/go/whyte?v=",
+        "link_canal": "https://mananciall.org/go/whytetreasures",
+        "assets": None,                    # ⬜ busto e fundo ainda não gerados
+    },
+    # ─────────────────────────────────────────────────────────────────────
+    # Canal Treasures gerado pelo BERÇÁRIO (scripts/novo_canal.py) em 01/09/2026.
+    # ⬜ GATES DO GABRIEL: canal no YouTube -> verificar por TELEFONE ->
+    #    auth_youtube.py (YT_MEYER_*) -> preencher youtube_channel_id ->
+    #    coleção "The Best of F.B. Meyer" na livraria. Sem o ID o publish ABORTA (guardião).
+    "meyer": {
+        "nome": "F.B. Meyer Treasures",
+        "bucket": "mananciall",
+        "prefix": "channels/channels_youtube/treasures_meyer",
+        "renders_prefix": "renders/meyer",
+        "state_key": "schedule/meyer_schedule.json",
+        "youtube_channel_id": "",
+        "env_prefix": "YT_MEYER",
+        "idioma": "en",
+        "voz": "am_liam",
+        "voz_speed": "0.9",
+        "videos_por_dia": 0.5,
+        "morning_utc": 12,
+        "evening_utc": 23,
+        "warmup_days": 14,
+        "buffer_days": 14,
+        "max_uploads_per_run": 5,
+        "chars_max": 55000,
+        "cta_assets": ["_assets/introfixed.mp3", "_assets/finalfixed.mp3"],
+        "cta_intro_texto": (
+            "So take this opportunity to subscribe to the channel, turn on notifications, "
+            "and visit our collection with the best books and writings by F.B. Meyer "
+            "to enrich your soul. Link in the description below. God bless you, and let us begin."),
+        "cta_outro_texto": (
+            "If you enjoyed this message, consider subscribing to the channel, turning on "
+            "notifications, and visiting our collection with the best books and writings by "
+            "F.B. Meyer to enrich your soul. God bless you."),
+        "pregador": "F.B. Meyer",
+        "autor_mineracao": "%Meyer%",
+        "asr_modelo": "small.en",
+        "pausa_frase_s": 0.75,
+        "titulo_sufixo": " (F.B. Meyer)",
+        "tags": "F.B. Meyer,meyer,sermon,christian,gospel,preaching",
+        "hashtags": "#F.B.Meyer #Christian #Gospel #Faith",
+        "cta_livro": "The Best of F.B. Meyer",
+        "cta_texto": "📖 F.B. Meyer's books & writings: {link}",
+        "colecao_titulo": "The Best of F.B. Meyer",
+        "link_label": "mananciall.org/go/meyer",
+        "redirect_base": "https://mananciall.org/go/meyer?v=",
+        "link_canal": "https://mananciall.org/go/meyertreasures",
+        "assets": None,                    # ⬜ busto e fundo ainda não gerados
+    },
 }
 
 PADRAO = "spurgeon"
