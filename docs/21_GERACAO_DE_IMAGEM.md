@@ -144,3 +144,25 @@ de um lote: **HTTP 402 Insufficient credits**. ~7.900 créditos consumidos,
 Murray 5/5 e Maclaren 3/5 no estilo aprovado; os 2 restantes (~300 créditos)
 esperam a renovação do ciclo. Nada do funil de vídeo depende da Magnific:
 narração, render e publicação seguem em Cloudflare/VPS a custo zero.
+
+### Adendo do incidente (30/08, parte 2): pose colapsada e conteúdo alucinado
+
+Do lote "final" de 10 bustos, sobraram 3: no Murray, três eram CLONES da mesma
+pose, um saiu de ARMADURA AZUL e um com frase escrita em cima; no Maclaren, um
+virou dândi de colete bordado e anéis. Gabriel: "esse processo está um lixo
+ainda". Duas causas novas, distintas das quatro leis acima:
+
+**5. O mestre ancora a POSE junto com o estilo.** Pedir "5 poses" da mesma
+referência devolve clones; forçar variação faz o modelo alucinar adereço.
+Variação de pose por API é crédito jogado fora. A rotação de bustos precisa de
+VARIEDADE NA TELA, não de pose inédita: `derivar_bustos.py` gera espelho +
+níveis de zoom por código, de graça, sem chance de armadura. O padrão da casa
+vira: **IA gera 1-2 retratos-base; aritmética gera a rotação.** Corta ~70% do
+custo por canal e elimina a classe inteira de defeito.
+
+**6. Gate de pixel não vê SIGNIFICADO.** Saturação pega fundo colorido; não
+pega armadura, anel, frase, nem homem errado. Todo lote gerado por IA passa por
+OLHOS antes do R2: na sessão, os meus (Read na imagem); automatizado, um modelo
+de visão da Workers AI (grátis) com checklist JSON (mesmo homem? sem texto? sem
+adereço anacrônico? pintado?). Pedir e não OLHAR foi o que deixou uma armadura
+azul chegar na aprovação do dono.
