@@ -90,10 +90,23 @@ def env(chave):
     return v
 
 
+def _ssl():
+    """🧨 A MESMA mina do animar_magnific: o urllib deste Python não acha a raiz
+    de certificado e devolve 'certificate has expired', que parece problema do
+    SERVIDOR e não é (curl abre normal). Este script nasceu antes do conserto e
+    repetiu o erro. Conserto que fica num arquivo só não protege os outros."""
+    import ssl
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
+
+
 def http_json(url, headers=None):
     req = urllib.request.Request(url, headers={
         "User-Agent": "factorio-broll/1.0", **(headers or {})})
-    with urllib.request.urlopen(req, timeout=60) as r:
+    with urllib.request.urlopen(req, timeout=60, context=_ssl()) as r:
         return json.loads(r.read())
 
 
@@ -185,7 +198,7 @@ def main():
             if not os.path.exists(destino):
                 try:
                     req = urllib.request.Request(c["url"], headers={"User-Agent": "factorio-broll/1.0"})
-                    with urllib.request.urlopen(req, timeout=300) as r, open(destino, "wb") as f:
+                    with urllib.request.urlopen(req, timeout=300, context=_ssl()) as r,                             open(destino, "wb") as f:
                         f.write(r.read())
                 except Exception as e:
                     print(f"   ❌ download {c['fonte']}/{c['id']}: {str(e)[:100]}")

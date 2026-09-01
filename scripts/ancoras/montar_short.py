@@ -130,7 +130,9 @@ def batidas(words, min_s=4.0, max_s=9.0):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--sermao", required=True)
+    ap.add_argument("--sermao", help="número do sermão (AMBÍGUO: ver --pasta)")
+    ap.add_argument("--pasta", help="nome COMPLETO da pasta no R2. Preferir este: "
+                    "o acervo tem numeração duplicada (dois sermões '0001').")
     ap.add_argument("--clip", type=int, default=1)
     ap.add_argument("--fonte", choices=["imagem", "video"], default="imagem")
     ap.add_argument("--min-batida", type=float, default=4.0)
@@ -142,12 +144,34 @@ def main():
 
     cli = s3()
     C = canais.get("spurgeon")
-    nnnn = f"{int(args.sermao):04d}"
-    res = cli.list_objects_v2(Bucket="mananciall", Prefix=f"{C['prefix']}/{nnnn}", MaxKeys=200)
-    keys = [o["Key"] for o in res.get("Contents", [])]
-    if not keys:
-        sys.exit(f"❌ sermão {nnnn} não achado no R2")
-    pasta = keys[0].rsplit("/", 1)[0]
+    # 🧨 NUMERAÇÃO DUPLICADA. O acervo tem DOIS sermões '0001'
+    # (consolation_in_christ e the_immutability_of_god), e pelo menos 9 números
+    # colidem. Casar por prefixo e pegar o primeiro publica o sermão ERRADO sem
+    # dar erro nenhum. Quando o número é ambíguo, este script recusa e pede
+    # --pasta em vez de escolher por conta própria.
+    if args.pasta:
+        alvo, nnnn = f"{C['prefix']}/{args.pasta}", args.pasta.split("_")[0]
+        res = cli.list_objects_v2(Bucket="mananciall", Prefix=alvo + "/", MaxKeys=200)
+        keys = [o["Key"] for o in res.get("Contents", [])]
+        if not keys:
+            sys.exit(f"❌ pasta {args.pasta!r} não achada no R2")
+        pasta = alvo
+    else:
+        if not args.sermao:
+            sys.exit("informe --pasta (preferido) ou --sermao N")
+        nnnn = f"{int(args.sermao):04d}"
+        res = cli.list_objects_v2(Bucket="mananciall",
+                                  Prefix=f"{C['prefix']}/{nnnn}", MaxKeys=400)
+        keys = [o["Key"] for o in res.get("Contents", [])]
+        if not keys:
+            sys.exit(f"❌ sermão {nnnn} não achado no R2")
+        pastas = sorted({k.split("/")[3] for k in keys})
+        if len(pastas) > 1:
+            lista = chr(10).join("   " + x for x in pastas)
+            sys.exit(f"❌ '{nnnn}' é ambíguo, casa {len(pastas)} pastas:" + chr(10)
+                     + lista + chr(10) + "   Use --pasta <nome completo>.")
+        pasta = f"{C['prefix']}/{pastas[0]}"
+        keys = [k for k in keys if k.startswith(pasta + "/")]
     arquivos = [k.rsplit("/", 1)[1] for k in keys]
 
     meta = json.loads(cli.get_object(Bucket="mananciall", Key=f"{pasta}/clips_meta.json")["Body"].read())
@@ -155,7 +179,10 @@ def main():
     dur_ms = clip["end_ms"] - clip["start_ms"]
     # a fonte entra no nome: sem isso a montagem em vídeo sobrescreve a de stills
     # e não sobra com o que comparar
-    tag = f"{nnnn}_c{args.clip:02d}_cenas_{args.fonte}"
+    # tag pelo nome da PASTA, não pelo número: dois '0001' gerariam o mesmo
+    # arquivo e um sobrescreveria o outro
+    base_tag = pasta.rsplit("/", 1)[-1]
+    tag = f"{base_tag}_c{args.clip:02d}_cenas_{args.fonte}"
     print(f"📖 {meta.get('title', nnnn)} · clipe {args.clip} · {dur_ms/1000:.1f}s")
     print(f"   \"{clip['hook_text']}\"\n")
 

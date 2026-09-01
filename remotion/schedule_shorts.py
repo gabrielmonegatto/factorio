@@ -84,21 +84,32 @@ def fila(s3, C):
     itens = []
     for k in sorted(metas):
         pasta = k.split("/")[3]
-        nnnn = pasta.split("_")[0]
+        # 🧨 O NÚMERO NÃO IDENTIFICA. O acervo tem dois '0001'
+        # (consolation_in_christ e the_immutability_of_god) e pelo menos 9
+        # números colidem. Usando o número como id, os dois vira(ria)m a MESMA
+        # entrada no estado: um seria publicado e o outro sumia da fila calado.
+        nnnn = pasta
         m = json.loads(s3.get_object(Bucket=BUCKET, Key=k)["Body"].read())
         clips = m.get("clips", [])
         # guarda o índice ORIGINAL: é ele que o render_short usa (--clip N)
         ordenados = sorted(enumerate(clips, 1),
                            key=lambda p: -(p[1].get("score") or 0))
-        for idx, c in ordenados:
+        for rank, (idx, c) in enumerate(ordenados):
             itens.append({
-                "id": f"{nnnn}_c{idx:02d}",
-                "sermao": nnnn, "clip": idx,
+                "rank": rank,
+                "id": f"{pasta}_c{idx:02d}",
+                "pasta": pasta, "clip": idx,
                 "titulo_sermao": m.get("title", pasta),
                 "hook": c.get("hook_text", ""),
                 "score": c.get("score"),
                 "dur": round((c["end_ms"] - c["start_ms"]) / 1000),
             })
+    # 🧨 INTERCALAR SERMÕES. Ordenado só por sermão, o canal publica os 4 clipes
+    # do sermão 1 em dias seguidos: quem assiste dois dias seguidos ouve a mesma
+    # pregação e o canal parece um disco arranhado. Ordenando por RANK primeiro,
+    # sai o melhor clipe de cada sermão antes de voltar pros segundos melhores —
+    # e o canal estreia com o melhor material que existe no acervo.
+    itens.sort(key=lambda x: (x["rank"], x["pasta"]))
     return itens
 
 
@@ -120,14 +131,13 @@ def renderizar(C, item):
     """Chama o montador de shorts (cenas + trilha) e devolve o mp4 local."""
     r = subprocess.run(
         [sys.executable, os.path.join(HERE, "..", "scripts", "ancoras", "montar_short.py"),
-         "--sermao", str(int(item["sermao"])), "--clip", str(item["clip"]),
-         "--fonte", "video"],
+         "--pasta", item["pasta"], "--clip", str(item["clip"]), "--fonte", "video"],
         capture_output=True, text=True, cwd=os.path.join(HERE, ".."))
     if r.returncode != 0:
         print(f"   ❌ render falhou: {(r.stderr or r.stdout)[-400:]}")
         return None
     saida = os.path.join(HERE, "out", "shorts",
-                         f"{item['sermao']}_c{item['clip']:02d}_cenas_video.mp4")
+                         f"{item['pasta']}_c{item['clip']:02d}_cenas_video.mp4")
     return saida if os.path.exists(saida) else None
 
 
@@ -210,7 +220,7 @@ def main():
         if not args.confirm:
             sys.exit("❌ publicar é irreversível: rode com --confirm (ou --dry-run)")
 
-        chave = ja_renderizado(s3, C, f"{it['sermao']}_c{it['clip']:02d}_cenas_video")
+        chave = ja_renderizado(s3, C, f"{it['pasta']}_c{it['clip']:02d}_cenas_video")
         if chave:
             local = os.path.join(HERE, "out", "shorts", os.path.basename(chave))
             if not os.path.exists(local):
