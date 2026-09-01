@@ -78,8 +78,14 @@ def d1(sql, params=None):
         data=corpo, method="POST",
         headers={"Authorization": "Bearer " + env_local()["CLOUDFLARE_API_TOKEN"],
                  "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=120) as r:
-        j = json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            j = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        # O corpo do erro é onde a Cloudflare diz o MOTIVO. Sem isto, um 400
+        # vira "Bad Request" pelado e o diagnóstico vira adivinhação (30/08).
+        corpo = e.read().decode("utf-8", "replace")[:400]
+        raise SystemExit(f"❌ D1 HTTP {e.code}: {corpo}\n   sql: {sql[:120]}")
     if not j.get("success"):
         raise SystemExit(f"❌ D1: {json.dumps(j.get('errors'))[:250]}")
     return j["result"][0].get("results") or []
