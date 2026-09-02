@@ -88,3 +88,4 @@ agents/*/sessions/
 agents/*/cron/output/
 **/.skills_prompt_snapshot.json
 remotion/public/shorts/
+relatorios/logs/

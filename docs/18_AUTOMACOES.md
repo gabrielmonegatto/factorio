@@ -127,6 +127,13 @@
 - **projeto:** fábrica (org) · **como rodar:** `node tools/notion/notion-tarefas.mjs "<Área>"` e afins
 - **etapas:** leitura/escrita dos bancos de gestão no Notion (tasks, roadmap, entregas). É ferramenta de sessão, não cadência.
 
+### diretor-diario (piloto 01/09/2026)
+- **projeto:** fábrica (org) · **como rodar:** cron na VPS chama `infra/diretor/diretor.sh` (manual: `claude -p "/diretor-diario"` na raiz do repo)
+- **etapas:** Claude Code headless acorda → `tools/notion/fila.mjs --listar` (banco Tasks do Notion, filtro Responsável=Claude) → executa até 3 tarefas `Gate=auto` com Prompt escrito → `--concluir`/`--travar` grava Exec na task → relatório em `relatorios/diretor-AAAA-MM-DD.md` commitado. Gate=aprovação NUNCA executa: prepara e espera o Gabriel.
+- **contrato de máquina no banco Tasks:** colunas `Gate` (auto/aprovação), `Prompt` (ordem de serviço autocontida), `Exec` (só a máquina escreve). Task sem Gate+Prompt é invisível pro motor.
+- **credencial:** `CLAUDE_CODE_OAUTH_TOKEN` em `/srv/fabrica/.diretor.env` na VPS (gerada por `claude setup-token`, conta Max do Gabriel). Sem token o cron dorme em silêncio.
+- **cadência:** 10:00 e 20:00 UTC (07h/17h BRT).
+
 ## APOSENTADAS
 
 n8n (era 1) · Prefect (era 2, nunca rodou) · trigger.dev (era 3, 25+ scripts) · Hermes/agents (era 4) · Teable/Baserow + mcp_universal (era 5, containers somem 27/08/2026). Carcaças completas em `C:\Users\Monegatto\Desktop\_archives\factorio-legado-20260822\`.
