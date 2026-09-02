@@ -239,6 +239,35 @@ def preparar_texto(bruto):
     return [p for p in paras if len(p.split()) > 2]
 
 
+def folego_dias(env, s3, c):
+    """Dias de estoque à frente: (narrados - publicados) / cadência.
+
+    É o que torna a esteira INTELIGENTE sem orquestrador (pedido do Gabriel,
+    01/09): cada canal mede o próprio fôlego e cede vaga sozinho. Spurgeon com
+    ~80 dias de estoque não tem por que disputar CPU com a Bíblia que tem zero.
+    A prioridade EMERGE, canal continua ilha: quebrou um, nada mais quebra.
+    """
+    narrados = d1(env, "SELECT COUNT(*) n FROM sermons WHERE canal=? AND status='narrado'",
+                  [c["slug"]])[0]["n"]
+    try:
+        est = json.loads(s3.get_object(Bucket=c["bucket"],
+                                       Key=c["state_key"])["Body"].read())
+        publicados = len(est.get("scheduled", {}))
+    except Exception:
+        publicados = 0                      # canal ainda não estreou: fome máxima
+    cadencia = float(c.get("videos_por_dia") or 1.0)
+    return max(0.0, (narrados - publicados) / cadencia)
+
+
+def regime_do_folego(folego, limite, minutos):
+    """Traduz fôlego em apetite. Os args do cron viram TETO, nunca piso."""
+    if folego < 15:
+        return limite, minutos, "FOME (estoque < 15 dias): apetite cheio"
+    if folego < 45:
+        return min(limite, 6), min(minutos or 60, 60), "confortável: apetite reduzido"
+    return min(limite, 1), min(minutos or 20, 20), "farto (45+ dias): só goteja e cede as vagas"
+
+
 def enfileirar(env, c):
     """Capítulo minerado ainda sem sermão vira linha na fila, em ordem de obra."""
     d1(env, SCHEMA)
@@ -616,6 +645,10 @@ def main():
     # certo muda se a máquina mudar. O orçamento não chuta — só começa um
     # sermão novo se ainda houver tempo na janela, e nunca corta um pela metade
     # (interromper no meio deixaria áudio parcial no R2).
+    folego = folego_dias(env, s3, c)
+    args.limite, args.minutos, regime = regime_do_folego(folego, args.limite, args.minutos)
+    fila = fila[: args.limite]
+    print(f"🌡️  fôlego: {folego:.0f} dias de estoque → {regime}")
     print(f"🎬 processando até {len(fila)}"
           + (f" ou {args.minutos} min, o que vier primeiro" if args.minutos else "") + "\n")
     t0 = time.monotonic()

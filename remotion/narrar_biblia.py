@@ -85,6 +85,19 @@ def main():
     if a.so:
         fila = [a.so.zfill(4)]
 
+    # Fôlego local (mesma lógica do narrar_sermao, com o estoque contado do R2):
+    # cada esteira se auto-regula, sem orquestrador. Canal sem estreia = fome.
+    narrados = len(pastas) - len(fila)
+    try:
+        est = json.loads(s3.get_object(Bucket="mananciall",
+                                       Key=c["state_key"])["Body"].read())
+        publicados = len(est.get("scheduled", {}))
+    except Exception:
+        publicados = 0
+    folego = max(0.0, (narrados - publicados) / float(c.get("videos_por_dia") or 1.0))
+    a.limite, a.minutos, regime = N.regime_do_folego(folego, a.limite, a.minutos)
+    print(f"🌡️  fôlego: {folego:.0f} dias → {regime}")
+
     t0 = time.monotonic()
     feitos = 0
     for nnnn in fila[: a.limite]:
