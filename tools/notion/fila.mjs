@@ -96,11 +96,30 @@ async function mudar(id, props) {
   console.log('ok');
 }
 
+// O ENCADEAMENTO da linha de montagem: esteira que termina uma peça cria a
+// task da próxima área como último passo do POP. É isto que faz "minerou ->
+// cai na fila da i18n" acontecer sem gatilho externo nenhum.
+async function criar(demanda, prompt, nota) {
+  const r = await api('pages', 'POST', {
+    parent: { database_id: TASKS_DB },
+    properties: {
+      Demanda: { title: rt(demanda) },
+      Status: { select: { name: 'Iniciar' } },
+      'Responsável': { multi_select: [{ name: 'Claude' }] },
+      Gate: { select: { name: 'auto' } },
+      Prompt: { rich_text: rt(prompt) },
+      ...(nota ? { Notas: { rich_text: rt(nota) } } : {}),
+    },
+  });
+  console.log(r.id);
+}
+
 const args = process.argv.slice(2);
 const flag = n => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : null; };
 const nota = flag('--nota') ?? '';
 
 if (args.includes('--listar')) await listar();
+else if (flag('--criar')) await criar(flag('--criar'), flag('--prompt') ?? '', nota);
 else if (flag('--pegar')) await mudar(flag('--pegar'), { Status: { select: { name: 'working' } }, Exec: { rich_text: rt(`${hoje()} pegou`) } });
 else if (flag('--concluir')) await mudar(flag('--concluir'), { Status: { select: { name: 'Finalizado' } }, Exec: { rich_text: rt(`${hoje()} ✓ ${nota}`) } });
 else if (flag('--travar')) await mudar(flag('--travar'), { Status: { select: { name: 'aguardando' } }, Exec: { rich_text: rt(`${hoje()} ⛔ ${nota}`) } });
