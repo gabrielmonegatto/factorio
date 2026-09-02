@@ -221,6 +221,82 @@ def limpar_titulo(bruto, paras, obra=None, numero=None):
     return f"{t} ({parte.group(1)})" if parte else t
 
 
+LIVROS_NUMERADOS = re.compile(
+    r"\b([123])\s+(Samuel|Kings|Chronicles|Corinthians|Thessalonians|Timothy|Peter|John)\b")
+_ORD = {"1": "First", "2": "Second", "3": "Third"}
+_ROMANO = {"i": 1, "v": 5, "x": 10, "l": 50, "c": 100, "d": 500, "m": 1000}
+
+
+def _romano_para_int(r):
+    total, ant = 0, 0
+    for ch in reversed(r.lower()):
+        v = _ROMANO[ch]
+        total = total - v if v < ant else total + v
+        ant = max(ant, v)
+    return total
+
+
+def normalizar_narracao(texto):
+    """Prepara o texto pro NARRADOR, não pro leitor.
+
+    Nasceu de o Gabriel OUVIR o Moody (01/09): "D. L. Moody" saía travado e
+    robótico (o Kokoro pausa em cada ponto de inicial), "John 3:16" saía torto,
+    e a pontuação de época engasgava a prosódia. O Spurgeon soava bem por
+    SORTE: o CCEL entrega tipografia limpa; o Gutenberg entrega a página como
+    impressa em 1880, com tudo que um tipógrafo usava e um narrador não fala.
+    O doc 10 (item B3) previa exatamente esta camada; ela não tinha sido
+    construída.
+
+    Cada regra existe por um defeito ouvido ou previsto. Ordem importa.
+    """
+    t = texto
+    # 1. _itálico_ do Gutenberg: o par de sublinhados não é fala.
+    t = re.sub(r"_(.+?)_", r"\1", t, flags=re.S)
+    # 2. Iniciais de nome: "D. L. Moody" vira "D L Moody". Os pontos viram
+    #    micro-pausas que soam robóticas; sem eles o Kokoro fala "dee el".
+    t = re.sub(r"\b([A-Z])\.\s*([A-Z])\.\s*([A-Z])\.(?=\s*[A-Z])", r"\1 \2 \3", t)
+    t = re.sub(r"\b([A-Z])\.\s*([A-Z])\.(?=\s*[A-Z])", r"\1 \2", t)
+    # 3. Livro numerado: "2 Kings" -> "Second Kings" (é como se FALA).
+    t = LIVROS_NUMERADOS.sub(lambda m: f"{_ORD[m.group(1)]} {m.group(2)}", t)
+    # 4. Referência capítulo:versículo em fala natural:
+    #    "John 3:16" -> "John 3, verse 16" · "3:16-18" -> "3, verses 16 to 18"
+    t = re.sub(r"(\d+):(\d+)\s*[-–]\s*(\d+)", r"\1, verses \2 to \3", t)
+    t = re.sub(r"(\d+):(\d+)", r"\1, verse \2", t)
+    # 5. Numeral romano depois de Chapter/Psalm/Part vira arábico
+    #    ("CHAPTER II." saía como "i-i").
+    t = re.sub(r"\b(Chapter|Psalm|Part|Book|Volume)\s+([IVXLCDM]{1,7})\b\.?",
+               lambda m: f"{m.group(1)} {_romano_para_int(m.group(2))}",
+               t, flags=re.I)
+    # 6. Abreviações de época que o narrador leria como escrito.
+    ABREV = [(r"\bSt\.(?=\s+[A-Z])", "Saint"), (r"\bMr\.", "Mister"),
+             (r"\bMrs\.", "Missus"), (r"\bDr\.", "Doctor"),
+             (r"\bRev\.(?=\s+[A-Z])", "Reverend"),
+             (r"\bchap\.", "chapter"), (r"\bvv\.", "verses"),
+             (r"\bver\.(?=\s*\d)", "verse"), (r"\bv\.(?=\s*\d)", "verse"),
+             (r"&c\.", "et cetera"), (r"\betc\.", "et cetera"),
+             (r"\bi\.\s*e\.", "that is"), (r"\be\.\s*g\.", "for example"),
+             (r"\bcf\.", "compare"), (r"\bviz\.", "namely"),
+             (r"\bA\.\s*D\.", "A D"), (r"\bB\.\s*C\.", "B C")]
+    for rx, sub in ABREV:
+        t = re.sub(rx, sub, t)
+    # 6b. Repete a regra do romano: "chap. iv." so vira "chapter iv." DEPOIS
+    #     da expansao acima, entao a primeira passada nao o alcancava.
+    t = re.sub(r"\b(Chapter|Psalm|Part|Book|Volume)\s+([ivxlcdm]{1,7})\b\.?",
+               lambda m: f"{m.group(1)} {_romano_para_int(m.group(2))}",
+               t, flags=re.I)
+    # 7. Pontuação que engasga: travessão duplo vira vírgula-pausa;
+    #    reticências de 4+ pontos viram 3; asterisco de separador some.
+    t = t.replace("--", ", ")
+    t = re.sub(r"\.{4,}", "...", t)
+    t = re.sub(r"[ \t]*\*+[ \t]*", " ", t)
+    # 8. Linha inteira em CAIXA ALTA (título impresso) muda a prosódia do TTS:
+    #    vira capitalização normal.
+    t = re.sub(r"^[A-Z][A-Z0-9 .,;:'\"!?-]{11,}$", lambda m: m.group(0).capitalize(),
+               t, flags=re.M)
+    t = re.sub(r"[ \t]{2,}", " ", t)
+    return t
+
+
 def preparar_texto(bruto):
     """Tira do texto o que é marca de página, não fala.
 
@@ -512,7 +588,7 @@ def processar(env, s3, c, s, forcar=False):
     paras = preparar_texto(cap[0]["body"])
     titulo = limpar_titulo(s["titulo"], paras, s.get("obra"), s.get("cap_n"))
     paras = cortar_bordas(paras)
-    texto = "\n\n".join(paras)
+    texto = normalizar_narracao("\n\n".join(paras))
     # Capítulo que era SÓ folha de rosto e sumário sobra vazio depois da
     # limpeza. Isso não é falha de execução, é material que nunca deveria
     # virar vídeo: sai da fila como `descartado` e não volta a ser tentado.

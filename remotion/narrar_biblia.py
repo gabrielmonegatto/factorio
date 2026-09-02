@@ -110,7 +110,7 @@ def main():
         pasta, _fs = pastas[nnnn]
         corpo = s3.get_object(Bucket="mananciall",
                               Key=f"{c['prefix']}/{pasta}/text.txt")["Body"].read()
-        texto = corpo.decode("utf-8")
+        texto = N.normalizar_narracao(corpo.decode("utf-8"))
         print(f"\n  📖 {pasta} · {len(texto)//1000}k chars (~{len(texto.split())//140}min)")
 
         work = os.path.join(N.WORK, c["slug"], nnnn)
