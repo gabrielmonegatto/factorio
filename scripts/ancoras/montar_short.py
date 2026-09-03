@@ -47,6 +47,8 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, REMOTION)
 import casar_ancora as ca  # noqa: E402
 import canais  # noqa: E402
+import docker_nomeado  # noqa: E402
+import vaga_cpu  # noqa: E402
 
 PUBLIC_IMAGENS = os.path.join(REMOTION, "public", "images")
 
@@ -302,10 +304,30 @@ def main():
 
     os.makedirs(OUT_DIR, exist_ok=True)
     saida = os.path.join(OUT_DIR, f"{tag}.mp4")
-    npx = "npx.cmd" if os.name == "nt" else "npx"
     print("🎬 renderizando ...")
-    run([npx, "remotion", "render", "Short-Sermon", saida,
-         f"--props={props_path}", "--log=error"], cwd=REMOTION)
+    # 🧨 O host NÃO tem node_modules: `npx remotion` aqui fora era exatamente o
+    # "could not determine executable to run" que segurou o cron dos shorts por
+    # dias sem ninguém ver (o log dizia, mas ninguém lia). O Remotion da fábrica
+    # vive DENTRO da imagem factorio-render:v5, igual aos vídeos longos: monta o
+    # public/ do host por cima do do container (props, wav, cenas, bustos) e
+    # renderiza lá dentro, com vaga de CPU e container nomeado como manda a casa.
+    if os.name == "nt":
+        run(["npx.cmd", "remotion", "render", "Short-Sermon", saida,
+             f"--props={props_path}", "--log=error"], cwd=REMOTION)
+    else:
+        with vaga_cpu.vaga(f"render short {tag}", espera_max_s=1800):
+            r = docker_nomeado.rodar(
+                "shortrender", "spurgeon", tag[:40],
+                ["--cpus=5", "--memory=4g",
+                 "-v", f"{os.path.join(REMOTION, 'public')}:/app/public",
+                 "-v", f"{OUT_DIR}:/render_out"],
+                "factorio-render:v5",
+                ["npx", "remotion", "render", "Short-Sermon",
+                 f"/render_out/{tag}.mp4",
+                 f"--props=/app/public/shorts/{tag}_props.json", "--log=error"],
+                check=False)
+            if r.returncode != 0 or not os.path.exists(saida):
+                sys.exit(f"❌ render no container falhou (exit {r.returncode})")
     print(f"✅ {saida} ({os.path.getsize(saida)/1e6:.1f} MB)")
 
 
