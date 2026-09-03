@@ -289,7 +289,11 @@ def gravar_ctas(a, voz):
         f"--input /data/$p.txt --output /data/$p.wav --voice {voz} --speed 0.9 "
         f"--split sentence --silence 0.75 --trim >/dev/null 2>&1; "
         f"docker run --rm -v {remoto}:/data --entrypoint ffmpeg factorio-tts "
-        f"-y -loglevel error -i /data/$p.wav -ac 1 -b:a 96k /data/$p.mp3; done && "
+        f"-y -loglevel error -i /data/$p.wav -ac 1 -b:a 96k "
+        # 1,7s de silêncio na cauda: é a 'pausa natural' pós-CTA do Spurgeon,
+        # medida e aprovada de ouvido (02/09). O --trim do Kokoro tira a cauda;
+        # sem este pad o sermão atropela o CTA. Ver ajustar_cauda_cta.py.
+        f"-af apad=pad_dur=1.7 /data/$p.mp3; done && "
         f"cd /app/_factorio/remotion && python3 - <<'PY'\n"
         f"import narrar_sermao as N\n"
         f"env = N.load_env(); s3 = N.s3c(env)\n"
