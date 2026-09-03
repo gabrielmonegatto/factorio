@@ -21,7 +21,7 @@ Você está no QG da fábrica de negócios digitais da holding EternalL. Este re
 
 | Dado | Casa | Acesso |
 |---|---|---|
-| Gestão humana (tarefas MACRO, roadmap, documentos) | **Notion** (decisão 20/08: cockpit do Gabriel) | kit `tools/notion/` |
+| Gestão humana (tarefas MACRO, roadmap, documentos) | **Notion**, e só nos 16 bancos do CÂNONE (`docs/24_CANONE_NOTION.md`; mapa da máquina em `tools/notion/canone.json`). Banco fora do cânone é de outro espaço: leitura sob pedido, escrita nunca | kit `tools/notion/` |
 | Curadoria de catálogo e dados (Biblioteca, intel, indicadores) | **D1 + bi.mananciall.org** | edição auditada no painel |
 | Estado de esteira, intel, produto | **D1** (`mananciall-db`, `mananciall-mining`, `eternall-intel`, `br4nds`) | API HTTP do D1 (parâmetro vinculado) ou `wrangler` |
 | Código, SOPs, docs técnicos | este repo (git) | nativo |

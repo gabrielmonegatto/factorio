@@ -1,0 +1,125 @@
+{
+  "atualizado": "2026-09-03",
+  "regra": "Cânone do Business System. A máquina (diretor, esteiras, kit tools/notion) só escreve em banco DECLARADO AQUI. Banco que não está nesta lista pertence a outro espaço (Life System, Dojo, Br4nds, Catálogo de Métricas) e é território do Gabriel: leitura sob pedido, escrita nunca.",
+  "paginas": {
+    "businessSystem": "33d6bf27-9f65-4043-8a5d-c53fe0b241a3",
+    "factorio": "3c1f06f1-0ce3-8117-87df-d894ffd804f9",
+    "ecommerce": "3c4f06f1-0ce3-81a7-83be-e16a3ce25e3b"
+  },
+  "bancos": {
+    "unidades": {
+      "id": "3a6f06f1-0ce3-816d-84ea-d6ce6ddeb89f",
+      "bloco": "chao",
+      "papel": "os negocios da holding",
+      "grao": "um negocio"
+    },
+    "areas": {
+      "id": "3c1f06f1-0ce3-8076-908b-fbcb7b67294c",
+      "bloco": "chao",
+      "papel": "as 7 areas da fabrica + Growth",
+      "grao": "uma area"
+    },
+    "tasks": {
+      "id": "3a7f06f1-0ce3-81cd-8696-cc002c44f430",
+      "bloco": "chao",
+      "papel": "A FILA UNICA: toda ordem de servico, humana ou de maquina",
+      "grao": "uma tarefa macro",
+      "contrato": [
+        "Gate",
+        "Prompt",
+        "Exec"
+      ]
+    },
+    "roadmap": {
+      "id": "3c1f06f1-0ce3-81ff-bdba-f04376322409",
+      "bloco": "chao",
+      "papel": "entregas e marcos por area e onda",
+      "grao": "uma entrega"
+    },
+    "esteiras": {
+      "id": "3c7f06f1-0ce3-811c-a6fc-cacd3439ca95",
+      "bloco": "chao",
+      "papel": "inventario do que roda sozinho",
+      "grao": "uma automacao",
+      "fonte": "docs/18_AUTOMACOES.md"
+    },
+    "pops": {
+      "id": "3d0f06f1-0ce3-81fa-969e-ce0e3ed50629",
+      "bloco": "manual",
+      "papel": "vitrine do catalogo de skills",
+      "grao": "um procedimento",
+      "fonte": ".claude/skills/"
+    },
+    "recursos": {
+      "id": "3d0f06f1-0ce3-81f2-8eed-c2182f083018",
+      "bloco": "manual",
+      "papel": "ferramentas, contas, custo e ONDE vive a credencial",
+      "grao": "uma ferramenta"
+    },
+    "biblioteca": {
+      "id": "3bef06f1-0ce3-81d0-8ce6-daa092972b00",
+      "bloco": "ativos",
+      "papel": "catalogo editorial",
+      "grao": "uma obra"
+    },
+    "artigos": {
+      "id": "3c7f06f1-0ce3-81e3-bdee-e82ef8185a84",
+      "bloco": "ativos",
+      "papel": "enciclopedia",
+      "grao": "um verbete"
+    },
+    "canais": {
+      "id": "3d0f06f1-0ce3-81db-af0c-f64b0d5d64c0",
+      "bloco": "ativos",
+      "papel": "canais proprios por marca e plataforma",
+      "grao": "um canal"
+    },
+    "conteudos": {
+      "id": "3d0f06f1-0ce3-81c8-be27-d15416b7abf7",
+      "bloco": "ativos",
+      "papel": "pecas publicadas em qualquer formato",
+      "grao": "uma peca"
+    },
+    "ofertas": {
+      "id": "3d0f06f1-0ce3-819f-b2f4-cf9f9155d6b8",
+      "bloco": "ativos",
+      "papel": "o que e vendavel",
+      "grao": "uma oferta"
+    },
+    "fontes": {
+      "id": "3d0f06f1-0ce3-81ed-811a-f6a47bf12d1b",
+      "bloco": "mercado",
+      "papel": "fontes de mineracao (espelho de agregado)",
+      "grao": "uma fonte"
+    },
+    "referencias": {
+      "id": "3c0f06f1-0ce3-813b-94a4-c436be12ede0",
+      "bloco": "mercado",
+      "papel": "curadoria de terceiros que serve de modelo",
+      "grao": "uma referencia"
+    },
+    "experimentos": {
+      "id": "45cf06f1-0ce3-8240-a7ac-81ec37f4d89b",
+      "bloco": "mercado",
+      "papel": "testes e apostas com aprendizado",
+      "grao": "um teste"
+    },
+    "indicadores": {
+      "id": "3c1f06f1-0ce3-8196-9da9-e8c5895d2e4d",
+      "bloco": "mercado",
+      "papel": "metricas por area com valor espelhado do D1",
+      "grao": "uma metrica"
+    }
+  },
+  "foraDoCanone": {
+    "Catalogo de Metricas (Br4nds)": "3c3f06f1-0ce3-81ae-a447-c8ea2f0dbee3 | 40 metricas do Br4nds/Bluue. NAO fundir no Indicadores: e catalogo de outro espaco.",
+    "Life System": "tasks/metas/habitos pessoais do Gabriel. Ajudo quando ele pedir; cadencia nunca toca.",
+    "Dojo": "dicionario de golpes e faixas. Espaco pessoal.",
+    "Wiki empresarial (Documentacoes, Playbooks)": "espaco da Br4nds. POPs da fabrica sao outro banco, de proposito.",
+    "Shorts": "3c7f06f1-0ce3-814b-878d-e5308b913e37 | fila de PRODUCAO de shorts (pre-publicacao). Papel diferente de Conteudos (acervo publicado)."
+  },
+  "lixeira": {
+    "Backlog de Canais": "3cff06f1-0ce3-8193-84b7-d3202c0a0875 | criado e descartado em 02/09. Canais nasceu limpo; importar as linhas antigas depende de ordem do Gabriel.",
+    "Unidades": "RESTAURADO em 03/09: estava na lixeira e e o eixo de Tasks/Experimentos/Metas."
+  }
+}
