@@ -297,3 +297,21 @@ Momento certo, na ordem:
 Estimativa: 3-4 semanas após a estreia do Maclaren e do Murray. Até lá o
 funil não trava: upload manual não gasta cota, e a API só "veste" o vídeo
 (~150 unidades) — o vestidor de uploads cobre a estreia dos 10 canais.
+
+## 9. A linha de produção no Notion (05/09)
+
+Pedido do Gabriel: "a publicação é só uma etapa; todos os Treasures, ao cair na
+linha no Notion, já são construídos de ponta a ponta, e os gates meus eu marco OK".
+
+Desenho: 1 linha do banco `Canais` = 1 canal em 13 estações (00 backlog → 12 no
+ar). `scripts/linha_treasures.py` mede o estado real e escreve Etapa/Bloqueio;
+o Gabriel só mexe em Estado (backlog→esteira) e em 5 checkboxes (Busto aprovado,
+Canal YouTube criado, Verificado por telefone, Coleção na loja, Estrear
+autorizado). Estações e critérios de "pronto": docstring do script e página
+"🏭 Linha Treasures" no Notion. Automação registrada no doc 18_AUTOMACOES.
+
+Limite honesto da v1: o berçário (estações 01-05) roda do Windows (`--puxar`),
+porque o `novo_canal.py` fala com a VPS por ssh e edita o canais.py do repo; na
+VPS a linha só mede, espelha e liga produtor/esteira. Fonte `archive` (Parker,
+Talmage) ainda não tem adaptador: a linha avisa em vez de tentar.
+

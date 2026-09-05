@@ -109,6 +109,13 @@
 
 ---
 
+### linha-treasures (05/09/2026)
+- **O quê:** linha de produção dos canais Treasures. Mede o estado real de cada canal (D1, R2, canais.py, .env, cron/systemd) e espelha no banco `Canais` do Notion (Etapa 00..12, Bloqueio, contadores); age nos gates que o Gabriel liberou por checkbox: liga o produtor (busto aprovado + 15 narrados), liga a esteira e move a estreia (Estrear autorizado), abre Tasks de busto e OAuth.
+- **Cadência:** cron `/etc/cron.d/factory-linha`, `50 */4 * * *`, log `/var/log/factory_linha.log`.
+- **Código:** `scripts/linha_treasures.py` (`--avancar`; `--dry-run` pra prévia; `--semear` cria linhas; `--puxar` roda o berçário no Windows pros canais puxados pra esteira).
+- **Vitrine:** página "🏭 Linha Treasures" (Notion, sob Factorio) + banco Canais. Views são manuais (board por Etapa).
+- **Saúde:** se `Atualizado em` no banco Canais parar de andar por mais de 8h, a linha morreu.
+
 ## MANUAIS (prontas, rodam sob comando)
 
 ### health-check (gate: DISCORD_WEBHOOK_FABRICA no .env)
