@@ -315,3 +315,27 @@ porque o `novo_canal.py` fala com a VPS por ssh e edita o canais.py do repo; na
 VPS a linha só mede, espelha e liga produtor/esteira. Fonte `archive` (Parker,
 Talmage) ainda não tem adaptador: a linha avisa em vez de tentar.
 
+### Cronograma proposto em 05/09 (teto = cota, 1 estreia/semana)
+
+Murray 12/09 (0,5/dia) · Maclaren 19/09 (1/dia) · Ryle 26/09 · Whyte 03/10 ·
+Meyer 10/10 · Henry e Wesley depois do aumento de cota · Parker/Crisóstomo/
+Talmage no backlog (adaptador Archive + limpeza de notas). Shorts: Spurgeon 1/dia
+já; Moody ~15/09 (pós re-narração + generalizar montador); demais canais só depois
+da cota. Formulário de cota: semana de 29/09 (~92% de uso com 5 canais). Detalhe e
+checklist por estação: página "Linha Treasures" no Notion.
+
+### Redes por idioma (decisão do Gabriel, 05/09)
+
+Tudo nasce em inglês e depois é traduzido (PT primeiro, depois ES), como no site.
+Cada rede-idioma tem e-mail padrão próprio (EN: mananciallpontoorg; PT: e-mail
+novo com sufixo _pt; ES idem), logo projeto GCP e cota próprios. Separação
+legítima: conteúdo distinto (língua), não rotação de projeto. Pesquisado 05/09:
+(a) "conteúdo reutilizado/inautêntico" é política de MONETIZAÇÃO, não de
+encerramento; reaproveitar música, cenários e template entre canais é permitido,
+o que pega é vídeo materialmente igual. (b) Não existe penalidade por e-mail
+novo: o algoritmo é por canal/vídeo e todo canal novo passa pelo mesmo "cold
+start"; conta de marca sob e-mail antigo não herda nada. O risco real de e-mail
+novo é CONFIANÇA (limites até verificar telefone, detecção de spam se criar
+muitos canais de uma vez no mesmo IP): escalonar criação, verificar, usar
+normalmente 2-3 dias antes do 1º upload.
+
