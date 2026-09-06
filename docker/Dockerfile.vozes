@@ -1,0 +1,20 @@
+# Páreo de vozes PT-BR (06/09/2026): imagem por MOTOR, porque cada um pina um
+# torch diferente e misturar os dois num só ambiente é briga de dependência.
+#   docker build -f Dockerfile.vozes --build-arg MOTOR=qwen       -t factorio-vozes:qwen .
+#   docker build -f Dockerfile.vozes --build-arg MOTOR=chatterbox -t factorio-vozes:chatterbox .
+# CPU-only de propósito: é curadoria (minutos de áudio), não produção.
+FROM python:3.11-slim
+ARG MOTOR=qwen
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git ffmpeg libsndfile1 build-essential curl && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir torch==2.8.0 torchaudio==2.8.0 \
+    --extra-index-url https://download.pytorch.org/whl/cpu
+RUN if [ "$MOTOR" = "qwen" ]; then pip install --no-cache-dir -U qwen-tts soundfile numpy; \
+    else pip install --no-cache-dir chatterbox-tts soundfile numpy; fi
+
+ENV HF_HOME=/cache
+WORKDIR /app
+COPY bakeoff_vozes.py /app/bakeoff_vozes.py
+ENTRYPOINT ["python3", "-u", "/app/bakeoff_vozes.py"]
