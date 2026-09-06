@@ -76,19 +76,15 @@ def motor_qwen(texto, out_dir, lang):
     model = Qwen3TTSModel.from_pretrained("Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
                                           device_map="cpu", dtype=torch.float32)
     print(f"[qwen] modelo carregado em {time.time()-t0:.0f}s", flush=True)
-    fs = frases(texto)
     for nome, instruct in DESIGNS_QWEN:
-        # 1ª frase define a voz; as demais clonam dela pra manter o MESMO timbre
-        # ao longo do trecho (design a cada frase daria um locutor por frase).
+        # MINA (06/09): o modelo VoiceDesign NÃO faz `generate_voice_clone` (isso é
+        # do modelo Base; levanta ValueError). Então o trecho inteiro vai numa
+        # chamada só, que é o que garante o MESMO timbre do começo ao fim. A
+        # clonagem da candidata vencedora, depois, usa o Base com este wav de ref.
         t1 = time.time()
-        wavs, sr = model.generate_voice_design(text=fs[0], language=lang, instruct=instruct)
-        semente = np.asarray(wavs[0], dtype=np.float32).squeeze()
-        pedacos = [semente]
-        for f in fs[1:]:
-            w, sr = model.generate_voice_clone(text=f, language=lang,
-                                               ref_audio=(semente, sr), ref_text=fs[0])
-            pedacos.append(w[0])
-        audio = emendar(pedacos, sr)
+        wavs, sr = model.generate_voice_design(text=texto.strip(), language=lang,
+                                               instruct=instruct)
+        audio = np.asarray(wavs[0], dtype=np.float32).squeeze()
         print(f"[qwen] {nome}: RTF {(time.time()-t1)/(len(audio)/sr):.1f}", flush=True)
         salvar(f"qwen_{nome}", audio, sr, out_dir)
 
