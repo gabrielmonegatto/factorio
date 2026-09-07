@@ -38,7 +38,16 @@ def garimpar(idioma, falantes, por_falante, out):
     pasta = os.path.join(out, idioma)
     os.makedirs(pasta, exist_ok=True)
     from datasets import Audio
-    ds = load_dataset("facebook/multilingual_librispeech", idioma, split="train", streaming=True)
+    # MINA: o MLS do Hugging Face NÃO tem inglês (só dutch/french/german/italian/
+    # polish/portuguese/spanish). Inglês vem do LibriTTS-R (mesma origem LibriVox,
+    # CC BY 4.0, restaurado), com o mesmo grão por falante.
+    if idioma == "english":
+        ds = load_dataset("mythicinfinity/libritts_r", "clean", split="train.clean.100",
+                          streaming=True)
+        ds = ds.rename_column("text_normalized", "transcript")
+    else:
+        ds = load_dataset("facebook/multilingual_librispeech", idioma, split="train",
+                          streaming=True)
     # decode=False: o decodificador padrão do `datasets` puxa torch/torchcodec
     # (falhou na 1ª rodada: "No module named torch"). Os bytes lidos direto pelo
     # soundfile dispensam torch inteiro.
