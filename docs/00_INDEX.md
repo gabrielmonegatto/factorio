@@ -23,6 +23,7 @@
   ├── 📄 22_ANCORAS_VISUAIS.md   → Âncoras dos shorts: catálogo de cenas, bíblia visual, as 10 minas do RunPod
   ├── 📄 23_PLATAFORMA_AUDIOVISUAL.md → ⭐ Tese: Magnific (ex-Freepik) como plataforma única de imagem/vídeo/música (aposenta RunPod)
   ├── 📄 24_CANONE_NOTION.md    → ⭐ Os 16 bancos canônicos do Business System (mapa da máquina: tools/notion/canone.json)
+  ├── 📄 25_VOZES.md            → Catálogo de vozes da rede (TTS de nuvem, free tiers, trava de gasto)
   ├── 📄 STACK.md                 → Infra da VPS (era 1.0 — infra vale, modelo de agentes não)
   ├── 📄 backlog_skills_seed.md   → Backlog bruto de workflows/skills por área (seed do catálogo)
   └── 📁 legacy/                  → Docs da era anterior (histórico, não seguir)
