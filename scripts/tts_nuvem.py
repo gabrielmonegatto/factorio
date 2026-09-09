@@ -82,6 +82,82 @@ CATALOGO = {
 }
 
 
+# ── PLANEJAMENTO DE GASTO (política do Gabriel, 09/09/2026) ────────────────
+# "Tudo bem pagar, desde que a gente aproveite todo mês o free tier das três e
+# vá administrando pra gastar o mínimo."
+#
+# ⚠️ A administração é POR CANAL, não por sermão. Não dá pra mandar o sermão de
+# hoje pro Google e o de amanhã pra Azure DENTRO DO MESMO CANAL: seriam vozes
+# diferentes, e a lei da casa (doc 10, doc 25 §4) é 1 canal = 1 voz travada pra
+# sempre. Então o que se distribui entre provedores são os CANAIS.
+CHARS_SERMAO = 45_000          # sermão de ~1h medido no acervo
+GRATIS = {"google": 1_000_000, "azure": 500_000, "polly": 1_000_000}
+PRECO_POR_MILHAO = {"google": 30.0, "azure": 16.0, "polly": 16.0}   # USD, além do free
+
+# canal, vídeos/dia, provedor, voz  (editar conforme a rede PT crescer)
+# Atribuição já OTIMIZADA pelo --planejar em 09/09 (US$ 18,90/mês, zero free
+# tier ocioso). A regra que o otimizador descobriu: o canal MENOR vai pro free
+# tier MENOR (Azure, 500k), e o excedente sobra pros provedores de US$ 16/M em
+# vez do de US$ 30/M.
+PLANO = [
+    ("spurgeon_pt", 1.0, "google", "pt-BR-Chirp3-HD-Charon"),
+    ("biblia_pt", 1.0, "polly", "Thiago"),
+    ("moody_pt", 0.5, "azure", "pt-BR-AntonioNeural"),
+]
+
+
+def custo_de(atribuicao):
+    """atribuicao = lista de (chars, provedor). Devolve (custo_total, por_provedor)."""
+    por_prov = {}
+    for chars, prov in atribuicao:
+        por_prov[prov] = por_prov.get(prov, 0) + chars
+    total = sum(max(0, u - GRATIS[p]) / 1e6 * PRECO_POR_MILHAO[p] for p, u in por_prov.items())
+    return total, por_prov
+
+
+def tabela(por_prov, total):
+    print(f"\n{'provedor':10} {'usado':>12} {'grátis':>12} {'excedente':>12} {'US$/mês':>8}")
+    for prov in GRATIS:
+        usado = por_prov.get(prov, 0)
+        exc = max(0, usado - GRATIS[prov])
+        print(f"{prov:10} {usado:12,} {GRATIS[prov]:12,} {exc:12,} "
+              f"{exc / 1e6 * PRECO_POR_MILHAO[prov]:8.2f}")
+    ocioso = sum(max(0, GRATIS[p] - por_prov.get(p, 0)) for p in GRATIS)
+    print(f"💵 total US$ {total:.2f}/mês · free tier ocioso: {ocioso:,} chars "
+          f"(~{ocioso // CHARS_SERMAO} sermões que caberiam de graça)")
+
+
+def planejar():
+    """Custo do plano atual e a atribuição MAIS BARATA possível.
+
+    A busca é força bruta (3 provedores elevado ao nº de canais): com dezenas de
+    canais ainda é instantâneo, e evita a armadilha de distribuir 'no olho'. Dois
+    canais PODEM dividir provedor (vozes diferentes do mesmo catálogo); o que não
+    pode é um canal trocar de provedor no meio, porque trocaria de voz.
+    """
+    import itertools
+    canais_ = [(c, cad, int(cad * 30 * CHARS_SERMAO)) for c, cad, _, _ in PLANO]
+    print(f"{'canal':14} {'vid/dia':>7} {'chars/mês':>12}  provedor  voz")
+    for (c, cad, chars), (_, _, prov, voz) in zip(canais_, PLANO):
+        print(f"{c:14} {cad:7.1f} {chars:12,}  {prov:8}  {voz}")
+    atual, por_prov = custo_de([(ch, p) for (_, _, ch), (_, _, p, _) in zip(canais_, PLANO)])
+    print("\n── plano atual ──")
+    tabela(por_prov, atual)
+
+    provs = list(GRATIS)
+    melhor = min(itertools.product(provs, repeat=len(canais_)),
+                 key=lambda comb: custo_de([(ch, p) for (_, _, ch), p in zip(canais_, comb)])[0])
+    custo, pp = custo_de([(ch, p) for (_, _, ch), p in zip(canais_, melhor)])
+    if custo < atual - 0.01:
+        print("\n── mais barato (trocar o PLANO por isto) ──")
+        for (c, _, _), p in zip(canais_, melhor):
+            print(f"   {c:14} -> {p}  (voz: {CATALOGO[p][0][0]})")
+        tabela(pp, custo)
+        print(f"🟢 economia: US$ {atual - custo:.2f}/mês")
+    else:
+        print("\n🟢 o plano atual já é o mais barato possível.")
+
+
 def mes():
     return dt.date.today().strftime("%Y-%m")
 
@@ -227,6 +303,8 @@ def main():
     ap.add_argument("--provedor", choices=list(MOTORES), default="google")
     ap.add_argument("--vozes", action="store_true", help="lista as vozes do provedor")
     ap.add_argument("--uso", action="store_true")
+    ap.add_argument("--planejar", action="store_true",
+                    help="custo mensal do plano de canais e free tier ocioso")
     ap.add_argument("--amostras", action="store_true",
                     help="gera o texto em TODOS os candidatos do catálogo")
     ap.add_argument("--texto", help="arquivo de texto a narrar")
@@ -237,6 +315,9 @@ def main():
     ap.add_argument("--velocidade", type=float, default=0.92)
     a = ap.parse_args()
 
+    if a.planejar:
+        planejar()
+        return
     env = N.load_env()
     if a.uso:
         for p, teto in TETOS.items():

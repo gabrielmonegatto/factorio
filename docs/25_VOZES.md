@@ -87,17 +87,31 @@ Ricardo só existe em Standard (qualidade velha): fora.
 4. **Velocidade padrão 0,92** e a engenharia de pausa da casa (corte em ponto
    final, aparar pontas, emendar com 0,75s). Vale pros três provedores.
 
-### Atribuição proposta (a confirmar no ouvido)
+### Atribuição (calculada, não chutada)
 
-| Canal | Provedor | Voz sugerida | Por quê |
+Política do Gabriel (09/09): "tudo bem pagar, desde que a gente aproveite todo
+mês o free tier das três e vá administrando pra gastar o mínimo".
+
+⚠️ A administração é **por canal**, não por sermão: mandar o sermão de hoje pro
+Google e o de amanhã pra Azure trocaria a VOZ do canal no meio. O que se
+distribui entre provedores são os canais inteiros.
+
+`python3 scripts/tts_nuvem.py --planejar` faz a conta e busca por força bruta a
+atribuição mais barata. Rodado em 09/09, ele corrigiu o meu palpite inicial e
+economizou US$ 5,20/mês:
+
+| Canal | vídeos/dia | Provedor | Voz |
 |---|---|---|---|
-| Spurgeon BR (canal-herói) | Google Chirp 3 HD | Charon | melhor qualidade do free tier; a voz do canal principal |
-| Bíblia PT | Azure | Antonio ou Valerio | provedor diferente = free tier somado; voz neutra serve à Escritura |
-| 3º canal PT | Azure | Donato ou Fabio | ainda dentro do mesmo free tier |
-| 4º canal PT | Polly | Thiago | enquanto durarem os 12 meses grátis |
+| Spurgeon BR | 1,0 | Google Chirp 3 HD | Charon |
+| Bíblia PT | 1,0 | Amazon Polly | Thiago |
+| Moody PT | 0,5 | Azure | Antonio |
 
-Somando os três free tiers: **2,5M chars/mês ≈ 55 horas de sermão por mês de
-graça**, o que paga ~1,8 vídeo/dia na rede PT inteira.
+Custo: **US$ 18,90/mês pelos três canais, com ZERO free tier ocioso.** A regra
+que o otimizador achou: o canal MENOR vai pro free tier MENOR (Azure, 500k), e o
+excedente cai nos provedores de US$ 16/M em vez do de US$ 30/M.
+
+Reordenar toda vez que entrar canal novo: o `--planejar` avisa se existe
+atribuição melhor. Trocar provedor de canal JÁ NO AR não vale (troca a voz).
 
 ## §5 Chaves no `.env` (nunca no git)
 
