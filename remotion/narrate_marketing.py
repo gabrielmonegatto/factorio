@@ -153,11 +153,19 @@ def list_pending(s3):
         if not res.get("IsTruncated"):
             break
         token = res.get("NextContinuationToken")
-    folders = {}
+    # 🧨 MINA DE 09/09/2026 (a terceira da mesma família: ver schedule_channel e
+    # generate_marketing). 77 números do acervo do Spurgeon têm DUAS pastas, e
+    # agrupar pelo NÚMERO funde os arquivos das duas. Aqui isso escondia sermão
+    # pendente: a pasta B tinha hook e cta, a A não, e o número saía da fila.
+    # Avaliar sempre a pasta que o `find_folder` abre: a primeira lexicográfica.
+    pastas = {}
     for k in keys:
-        m = re.match(rf"{CHANNEL_PREFIX}/(\d[\d-]*)_-_[^/]+/(.+)$", k)
+        m = re.match(rf"{CHANNEL_PREFIX}/((\d[\d-]*)_-_[^/]+)/(.+)$", k)
         if m:
-            folders.setdefault(m.group(1)[:4], set()).add(m.group(2))
+            pastas.setdefault(m.group(1), set()).add(m.group(3))
+    folders = {}
+    for nome in sorted(pastas):
+        folders.setdefault(nome[:4], pastas[nome])
     pend = []
     for num, f in sorted(folders.items()):
         if "marketing_meta.json" in f and not {"hook.wav", "hook.json",
