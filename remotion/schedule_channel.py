@@ -156,6 +156,27 @@ def slot_datetime(i, channel_start):
     return dt.datetime(d.year, d.month, d.day, hour, 0, 0, tzinfo=dt.timezone.utc)
 
 
+def proximo_slot(anterior, n_ja):
+    """O slot SEGUINTE a um horário, na cadência do canal.
+
+    Complementa o `slot_datetime`: aquele responde "onde cai o i-ésimo vídeo do
+    calendário ideal", este responde "qual o próximo horário depois deste". É
+    este que o agendador usa em regime, porque calendário real anda a partir do
+    que já foi prometido, não de um índice (ver a MINA do buraco de 14 dias).
+    """
+    if n_ja < WARMUP_DAYS:                       # warmup é sempre 1/dia
+        prox = anterior + dt.timedelta(days=1)
+    elif VIDEOS_POR_DIA == 2.0:
+        if anterior.hour < EVENING_UTC:          # manhã -> noite do MESMO dia
+            return anterior.replace(hour=EVENING_UTC, minute=0, second=0, microsecond=0)
+        prox = anterior + dt.timedelta(days=1)
+    elif VIDEOS_POR_DIA == 0.5:
+        prox = anterior + dt.timedelta(days=2)
+    else:
+        prox = anterior + dt.timedelta(days=1)
+    return prox.replace(hour=MORNING_UTC, minute=0, second=0, microsecond=0)
+
+
 def list_ready_sermons(s3):
     """Sermões prontos pra render/publicar (têm sermão+transcrição+copy+hook+outro), em ordem."""
     token, keys = None, []
@@ -169,17 +190,34 @@ def list_ready_sermons(s3):
             break
         token = res.get("NextContinuationToken")
     import re
-    folders = {}
+    # 🧨 MINA MEDIDA EM 09/09/2026 (o 0036 falhou no upload sem motivo aparente).
+    # A versão antiga agrupava os arquivos pelo NÚMERO (`m.group(1)[:4]`), e o
+    # acervo do Spurgeon tem 77 números com DUAS pastas (0036_-_the_first_
+    # resurrection e 0036_-_..., 0001_-_consolation_in_christ e 0001_-_the_
+    # immutability_of_god, etc). Os arquivos das duas viravam UM conjunto só, e
+    # o número passava no teste pela UNIÃO: uma pasta tinha o áudio, a outra
+    # tinha o copy, e nenhuma das duas estava pronta de verdade. O agendador
+    # prometia o slot e o publicador quebrava lá na frente.
+    # Conserto: avaliar POR PASTA, e olhar exatamente a pasta que o publicador
+    # vai pegar. O `find_sermon_folder` do build_job usa `keys[0]` de um list
+    # por prefixo, ou seja, a PRIMEIRA em ordem lexicográfica. Aqui é a mesma
+    # regra, senão o agendador aprova uma pasta e o publicador abre outra.
+    pastas = {}
     for k in keys:
-        m = re.match(rf"{CHANNEL_PREFIX}/(\d[\d-]*)_-_[^/]+/(.+)$", k)
+        m = re.match(rf"{CHANNEL_PREFIX}/((\d[\d-]*)_-_[^/]+)/(.+)$", k)
         if m:
-            folders.setdefault(m.group(1)[:4], set()).add(m.group(2))
+            pastas.setdefault(m.group(1), set()).add(m.group(3))
+
     def ok(f):
-        has = lambda rx: any(__import__("re").match(rx, x) for x in f)
+        has = lambda rx: any(re.match(rx, x) for x in f)
         return (has(r"sermon_\d+\.(wav|mp3)$") and "transcript.json" in f and "marketing_meta.json" in f
                 and has(r"hook\.(wav|mp3)$") and "hook.json" in f
                 and has(r"cta_narration\.(wav|mp3)$") and "cta_narration.json" in f)
-    return sorted(n for n, f in folders.items() if ok(f))
+
+    escolhida = {}
+    for nome in sorted(pastas):            # lexicográfica = a mesma do build_job
+        escolhida.setdefault(nome[:4], nome)
+    return sorted(n for n, nome in escolhida.items() if ok(pastas[nome]))
 
 
 def video_rendered(s3, nnnn):
@@ -268,32 +306,34 @@ def main():
     ok = 0        # tentativas que terminaram com videoId e estado salvo
     to_render = []
 
-    # ── REBASE DO CALENDÁRIO ────────────────────────────────────────────────
-    # MINA (04/08/2026): a versão antiga jogava TODO slot vencido em `now + 2h`.
-    # Depois da parada de 6 dias (token do YouTube expirado), 3 vídeos caíram no
-    # MESMO minuto. Remendar item a item não resolve: o atrasado colide com o
-    # slot futuro de quem vem depois.
-    # Conserto: desloca a régua inteira pra que o PRIMEIRO não agendado caia
-    # amanhã, e o resto siga 1/dia sem buraco nem empilhamento.
-    i0 = next((i for i, n in enumerate(ready) if n not in state["scheduled"]), None)
-    if i0 is not None:
-        # Próximo slot de 12:00 UTC ainda alcançável (2h de folga pro upload).
-        # MINA (10/08): mirar sempre em "amanhã" furava um dia inteiro quando o
-        # cron das 06:00 rodava e o slot das 12:00 do MESMO dia ainda dava tempo.
-        base = now + dt.timedelta(hours=2)
-        pd = base.date() if base.hour < MORNING_UTC else (base + dt.timedelta(days=1)).date()
-        primeiro = dt.datetime(pd.year, pd.month, pd.day,
-                               MORNING_UTC, 0, 0, tzinfo=dt.timezone.utc)
-        if slot_datetime(i0, channel_start) < primeiro:
-            channel_start = (primeiro - dt.timedelta(days=i0)).date()
-            # MINA (10/08): PERSISTIR o rebase. A 1ª versão só mexia na variável
-            # local; o run seguinte do cron recarregava o channel_start velho do
-            # R2 e recalculava de outra base → datas duplicadas (2 vídeos no
-            # mesmo dia) e dias sem vídeo nenhum.
-            state["channel_start"] = channel_start.isoformat()
-            horizon = now + dt.timedelta(days=BUFFER_DAYS)
-            print(f"   ↩️  calendário rebaseado: {ready[i0]} passa a sair "
-                  f"{primeiro.date()}, 1/dia a partir dali (persistido)")
+    # ── O CALENDÁRIO ANDA A PARTIR DO PRIMEIRO BURACO, NÃO DE UM ÍNDICE ─────
+    #
+    # 🧨 MINA MEDIDA EM 09/09/2026 (o Spurgeon parou de publicar por 14 dias).
+    # A regra antiga era `slot = channel_start + índice_do_sermão_no_ready`, com
+    # um "rebase" que reancorava o channel_start quando o slot calculado caía no
+    # passado. Duas coisas envenenam essa fórmula ao longo da vida do canal:
+    #   1. o `ready` CRESCE (acervo novo entra na lista e empurra os índices);
+    #   2. cada rebase reancora o channel_start.
+    # Depois de um rebase, os índices dos sermões JÁ AGENDADOS passam a apontar
+    # pra datas futuras que ninguém vai usar (eles já têm data própria, anterior),
+    # e essas datas viram BURACO. Medido: o 0034 saiu em 07/09 e o 0035 foi parar
+    # em 22/09, com 09/09 a 21/09 vazios. O canal parecia morto com 164 sermões
+    # prontos na prateleira.
+    # E o rebase não pegava, porque ele só conserta slot no PASSADO; slot longe
+    # demais no FUTURO passava batido.
+    #
+    # Conserto: fórmula não é registro. O agendador anda com um CURSOR que começa
+    # no próximo horário alcançável e pula o que já foi prometido (`tomados`).
+    # Assim ele PREENCHE buraco em vez de criar, sem nunca empilhar dois no mesmo
+    # minuto, e não depende mais de índice nem de channel_start em regime.
+    #
+    # Próximo slot ainda alcançável (2h de folga pro upload). MINA (10/08): mirar
+    # sempre em "amanhã" furava um dia inteiro quando o cron das 06:00 rodava e o
+    # slot das 12:00 do MESMO dia ainda dava tempo.
+    base = now + dt.timedelta(hours=2)
+    pd = base.date() if base.hour < MORNING_UTC else (base + dt.timedelta(days=1)).date()
+    primeiro = dt.datetime(pd.year, pd.month, pd.day,
+                           MORNING_UTC, 0, 0, tzinfo=dt.timezone.utc)
 
     # ⚠️ SLOTS JÁ TOMADOS (mina de 26/08: DOIS vídeos públicos no mesmo minuto).
     # A fórmula dá o slot pelo par (índice, channel_start), mas o channel_start
@@ -304,26 +344,20 @@ def main():
     # o conjunto de horários ocupados é dos vídeos, não da equação.
     tomados = {v["publishAt"] for v in state["scheduled"].values() if v.get("publishAt")}
 
-    for i, nnnn in enumerate(ready):
-        when = slot_datetime(i, channel_start)
-        if when > horizon:
-            break                      # além do buffer — fica pra próximo run
+    cursor = primeiro
+    for nnnn in ready:
         if nnnn in state["scheduled"]:
-            continue                   # já agendado
-        # Slot no passado não deveria mais existir (o rebase acima cuida disso).
-        # Se acontecer, PULA em vez de empurrar pra `now`: empurrar era justamente
-        # o que empilhava vários vídeos no mesmo minuto. Melhor sair um dia depois
-        # do que sair três de uma vez.
-        if when < now:
-            print(f"  ⏭️  {nnnn} → slot {when:%Y-%m-%d %H:%M} no passado, pulando (rebase pega no próximo run)")
-            continue
-        # Slot ocupado anda de dia em dia até achar buraco. +1 dia preserva o
-        # turno (manhã segue manhã), então funciona nas três cadências.
-        while when.strftime("%Y-%m-%dT%H:%M:%SZ") in tomados:
-            print(f"  ↪️  {nnnn}: slot {when:%Y-%m-%d %H:%M} já tem vídeo, empurrando 1 dia")
-            when += dt.timedelta(days=1)
+            continue                   # já agendado: tem data própria, não mexe
+        # Anda até o primeiro horário livre. Como `tomados` já traz TODOS os
+        # horários prometidos (inclusive os do futuro), isto preenche buraco.
+        while cursor.strftime("%Y-%m-%dT%H:%M:%SZ") in tomados:
+            cursor = proximo_slot(cursor, len(state["scheduled"]))
+        when = cursor
+        if when > horizon:
+            break                      # além do buffer — fica pro próximo run
         pa = when.strftime("%Y-%m-%dT%H:%M:%SZ")
         tomados.add(pa)
+        cursor = proximo_slot(when, len(state["scheduled"]))
 
         # já existe vídeo subido (seed) → só agenda
         if nnnn in SEEDED:

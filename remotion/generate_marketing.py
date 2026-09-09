@@ -191,11 +191,22 @@ def list_pending(s3):
             break
         token = res.get("NextContinuationToken")
 
-    folders = {}
+    # 🧨 MINA DE 09/09/2026 (irmã da do schedule_channel): agrupar pelo NÚMERO
+    # funde as DUAS pastas que 77 números do acervo do Spurgeon têm. Se a pasta
+    # B tem `marketing_meta.json` e a A não, o número inteiro era classificado
+    # como "já tem copy", ia pro fim da fila e o `--limit 6` do cron nunca o
+    # alcançava. Foi por isso que 33 sermões ficaram presos: o log dizia
+    # "já tem copy completo" enquanto a pasta que o publicador abre estava vazia.
+    # Aqui, como no agendador, avalia-se a pasta que o `find_folder` vai pegar:
+    # a PRIMEIRA em ordem lexicográfica.
+    pastas = {}
     for k in keys:
-        m = re.match(rf"{CHANNEL_PREFIX}/(\d[\d-]*)_-_[^/]+/(.+)$", k)
+        m = re.match(rf"{CHANNEL_PREFIX}/((\d[\d-]*)_-_[^/]+)/(.+)$", k)
         if m:
-            folders.setdefault(m.group(1), set()).add(m.group(2))
+            pastas.setdefault(m.group(1), set()).add(m.group(3))
+    folders = {}
+    for nome in sorted(pastas):
+        folders.setdefault(nome[:4], pastas[nome])
 
     # ⚠️ MINA ENCONTRADA EM 25/08 — o Moody travou em 6 vídeos por causa disto.
     #
