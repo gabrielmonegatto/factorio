@@ -55,6 +55,7 @@ Ofertas (pedidos ficam no D1), Referências (os 36 mil vídeos de concorrente fi
 |---|---|---|
 | `Biblioteca Mananciall` | uma obra | catálogo editorial (202 obras) |
 | `Artigos Enciclopédia` | um verbete | a enciclopédia |
+| `Bíblia Mananciall · Revisão` | um capítulo | revisão das edições Clássica e Simples (1.189 linhas). Entrou em 10/09, ver §9 |
 | `Canais` | um canal | canais próprios por marca e plataforma |
 | `Conteúdos` | uma peça | publicados em qualquer formato (longo, short, post, artigo) |
 | `Ofertas` | uma oferta | o que é vendável: preço, página, gateway |
@@ -120,3 +121,24 @@ fica intocado; a função de migração segue no script como referência.
 - Ligar os contadores: esteira que preenche `Fontes` (obras/mineradas/na fila), `Canais`
   (publicados/inscritos) e `Ofertas` (vendas 7d) a partir do D1.
 - Views (board, filtro) são manuais na UI: a API não cria view.
+
+## §9 Entradas depois de 03/09
+
+### `Bíblia Mananciall · Revisão` (10/09/2026)
+
+- **Id:** `3d7f06f1-0ce3-8179-a470-c76c89429cf2`, sob a página Business System (mesmo pai da
+  Biblioteca). Chave no `canone.json`: `bibliaRevisao`.
+- **Grão:** um capítulo. 1.189 linhas. É exceção consciente ao filtro do §2 ("nunca um
+  capítulo"): aqui o capítulo É a unidade de decisão humana (o Gabriel aprova ou pede ajuste
+  capítulo a capítulo), o volume é fixo e não cresce, e a revisão não tem outra casa com tela.
+- **Fonte:** D1 `mananciall-db-dev` (só leitura), pelo script versionado
+  `apps/eternall/mananciallbible/scripts/notion_revisao.mjs`. Idempotente, chave de upsert é a
+  coluna `Chave` (`Jo-3`).
+- **Donos das colunas:**
+
+| Coluna | Dono | Regra |
+|---|---|---|
+| Capítulo, Chave, Livro, Testamento, Ordem, Versículos, Escrita, Bancada | máquina | reescritas a cada rodada se o D1 mudar |
+| Revisão Fable | máquina | `Revisar` na criação; depois só muda com fonte da máquina (`--fable`) |
+| Revisão humana | **Gabriel** | a máquina põe `Revisar` na criação e nunca mais toca |
+| Nota | **Gabriel** | a máquina nunca escreve |

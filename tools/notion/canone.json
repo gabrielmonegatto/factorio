@@ -1,5 +1,5 @@
 {
-  "atualizado": "2026-09-05",
+  "atualizado": "2026-09-10",
   "regra": "Cânone do Business System. A máquina (diretor, esteiras, kit tools/notion) só escreve em banco DECLARADO AQUI. Banco que não está nesta lista pertence a outro espaço (Life System, Dojo, Br4nds, Catálogo de Métricas) e é território do Gabriel: leitura sob pedido, escrita nunca.",
   "paginas": {
     "businessSystem": "33d6bf27-9f65-4043-8a5d-c53fe0b241a3",
@@ -67,6 +67,14 @@
       "bloco": "ativos",
       "papel": "enciclopedia",
       "grao": "um verbete"
+    },
+    "bibliaRevisao": {
+      "id": "3d7f06f1-0ce3-8179-a470-c76c89429cf2",
+      "bloco": "ativos",
+      "papel": "revisao da Biblia Mananciall por capitulo",
+      "grao": "um capitulo",
+      "fonte": "apps/eternall/mananciallbible/scripts/notion_revisao.mjs (le o D1 mananciall-db-dev, so leitura)",
+      "donos": "maquina escreve Capitulo, Chave, Livro, Testamento, Ordem, Versiculos, Escrita, Bancada e Revisao Fable (esta so com fonte da maquina); do Gabriel: Revisao humana e Nota, que a maquina preenche so na criacao da linha e nunca mais toca"
     },
     "canais": {
       "id": "3d0f06f1-0ce3-81db-af0c-f64b0d5d64c0",
