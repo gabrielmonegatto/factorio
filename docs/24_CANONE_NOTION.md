@@ -142,3 +142,8 @@ fica intocado; a função de migração segue no script como referência.
 | Revisão Fable | máquina | `Revisar` na criação; depois só muda com fonte da máquina (`--fable`) |
 | Revisão humana | **Gabriel** | a máquina põe `Revisar` na criação e nunca mais toca |
 | Nota | **Gabriel** | a máquina nunca escreve |
+
+- **Visões:** `A revisar (Fable)` (filtro Revisão Fable = Revisar) e `Por livro` (agrupada por
+  Livro), ambas ordenadas por `Ordem`. Criadas pela conexão MCP do Notion
+  (`notion-create-view`, que aceita filtro, ordem e agrupamento). A API REST 2022-06-28 continua
+  sem criar view; o MCP cria.
