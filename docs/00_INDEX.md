@@ -25,6 +25,7 @@
   ├── 📄 24_CANONE_NOTION.md    → ⭐ Os 16 bancos canônicos do Business System (mapa da máquina: tools/notion/canone.json)
   ├── 📄 25_VOZES.md            → Catálogo de vozes da rede (TTS de nuvem, free tiers, trava de gasto)
   ├── 📄 26_MOTOR_VIVO.md       → ⭐ Motor vivo: Claude na VPS por cron/Discord, controle de tarefas, organograma, plano 80/20 (10/09/2026)
+  ├── 📄 27_ESTRUTURA_LLC_E_BRASIL.md → LLC em Wyoming pro Stripe (mundo) + CPF/ME no Brasil (Mercado Pago); Cosit 56/2026 = 15%/ano no Brasil; custos, ordem de execução, contadores (10/09/2026)
   ├── 📄 STACK.md                 → Infra da VPS (era 1.0 — infra vale, modelo de agentes não)
   ├── 📄 backlog_skills_seed.md   → Backlog bruto de workflows/skills por área (seed do catálogo)
   └── 📁 legacy/                  → Docs da era anterior (histórico, não seguir)
