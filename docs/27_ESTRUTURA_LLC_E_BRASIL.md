@@ -157,8 +157,12 @@ pagas com a receita. O único erro caro é esquecer o Form 5472 em abril.
 | Passo | Onde | Custo | Prazo |
 |---|---|---|---|
 | 1. Abrir a LLC em Wyoming (nome neutro) | northwestregisteredagent.com | US$ 39 + US$ 100 do estado | 1 a 3 dias úteis |
-| 2. EIN sem SSN | SS-4 por fax pro IRS (internacional 304-707-9471), "N/A" na linha 7b, passaporte anexo, informar fax de retorno | grátis | ~4 dias úteis (pode ir a semanas) |
-| 3. Conta Mercury | mercury.com com LLC + EIN (carta CP-575) + passaporte | grátis | 1 a 5 dias úteis |
+| 2. EIN sem SSN | SS-4 por fax pro IRS (internacional 304-707-9471), "N/A" na linha 7b, informar fax de retorno; o IRS não pede documento de identidade | grátis | ~4 dias úteis (pode ir a semanas) |
+| 3. Conta Mercury | mercury.com com LLC + EIN (carta CP-575) + **passaporte** (RG/CNH não servem; Stripe também pede passaporte pro representante) | grátis | 1 a 5 dias úteis |
+
+**Passaporte é pré-requisito pra Mercury e Stripe.** LLC e EIN saem sem ele.
+Sem passaporte: agendar na Polícia Federal (R$ 257,25, ~6 a 10 dias úteis
+após o atendimento) em paralelo com os passos 1 e 2.
 | 4. Contrato de licença dos conteúdos (Gabriel PF → LLC, sem cobrança) | assinar antes da 1ª venda | grátis | 1 dia |
 | 5. Stripe pelo dashboard | LLC, EIN, CPF como tax ID do representante, telefone +1, Mercury, mananciall.org; Stripe Tax ligado | grátis, cobra por venda | 1 a 7 dias (revisão) |
 
