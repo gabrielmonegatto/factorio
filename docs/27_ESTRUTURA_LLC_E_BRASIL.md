@@ -146,7 +146,37 @@ Contador de bairro não sabe preencher a ficha de controlada.
 Mais 15% de IR sobre o lucro da LLC e as taxas do Stripe (2,9% + US$ 0,30,
 Stripe Tax 0,5%). Ano 2+: ~US$ 1.060 (EUA) + contador BR.
 
-## 4. Ordem de execução
+## 4. PLANO OFICIAL (decidido 10/09/2026): abrir com ~R$ 800 e pagar o resto com venda
+
+O Gabriel não tem caixa pra Globalfy ou doola agora. O caminho enxuto é o
+oficial: abre barato, começa a vender, e as obrigações que vencem em 2027 são
+pagas com a receita. O único erro caro é esquecer o Form 5472 em abril.
+
+**Hoje (custo total ~US$ 139, ~R$ 800):**
+
+| Passo | Onde | Custo | Prazo |
+|---|---|---|---|
+| 1. Abrir a LLC em Wyoming (nome neutro) | northwestregisteredagent.com | US$ 39 + US$ 100 do estado | 1 a 3 dias úteis |
+| 2. EIN sem SSN | SS-4 por fax pro IRS (internacional 304-707-9471), "N/A" na linha 7b, passaporte anexo, informar fax de retorno | grátis | ~4 dias úteis (pode ir a semanas) |
+| 3. Conta Mercury | mercury.com com LLC + EIN (carta CP-575) + passaporte | grátis | 1 a 5 dias úteis |
+| 4. Contrato de licença dos conteúdos (Gabriel PF → LLC, sem cobrança) | assinar antes da 1ª venda | grátis | 1 dia |
+| 5. Stripe pelo dashboard | LLC, EIN, CPF como tax ID do representante, telefone +1, Mercury, mananciall.org; Stripe Tax ligado | grátis, cobra por venda | 1 a 7 dias (revisão) |
+
+**Apto a vender: 2 a 4 semanas** no cenário normal (EIN em ~4 dias + Mercury +
+Stripe). Se o IRS demorar, até 8 semanas. Dá pra abrir o Stripe antes do
+EIN? Não pelo dashboard comum; só o Atlas permite, e custa US$ 500.
+
+**Depois, pago com venda:**
+
+| Quando | O quê | Quanto |
+|---|---|---|
+| até 15/04/2027 | Form 5472 + 1120 pro-forma (ex.: form5472.online) | ~US$ 450 |
+| abril a maio/2027 | balanço BR GAAP 31/12/2026 + DIRPF com controlada + DARF 15% do lucro | contador BR, US$ 1,5k a 3k (negociar já, pra LLC pequena) |
+| setembro/2027 | annual report Wyoming + renovação do agente Northwest | US$ 60 + US$ 125 |
+
+Fazer agora, grátis: conversar com um contador do §2 e fechar preço pra 2027.
+
+## 4b. Ordem de execução (versão completa)
 
 1. Fechar contador brasileiro (§2) e confirmar com ele: Cosit 56/2026, não
    optar por transparência, e a régua de virar ME.
